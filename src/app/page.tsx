@@ -1,65 +1,87 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { isLoggedIn } from "@/lib/auth";
+import Navbar from "@/components/Navbar";
+import { CalendarDays, ClipboardList, Clock } from "lucide-react";
+import Link from "next/link";
+
+const cards = [
+  {
+    href: "/apply",
+    icon: CalendarDays,
+    title: "申請請假",
+    description: "提交新的請假申請",
+    color: "bg-blue-50 text-blue-600",
+  },
+  {
+    href: "/records",
+    icon: ClipboardList,
+    title: "請假紀錄",
+    description: "查看所有請假申請狀態",
+    color: "bg-green-50 text-green-600",
+  },
+  {
+    href: "/records",
+    icon: Clock,
+    title: "待審核",
+    description: "尚有 0 筆申請待處理",
+    color: "bg-amber-50 text-amber-600",
+  },
+];
+
+export default function HomePage() {
+  const router = useRouter();
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      router.replace("/login");
+    } else {
+      setReady(true);
+    }
+  }, [router]);
+
+  if (!ready) return null;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <Navbar />
+      <main className="mx-auto max-w-6xl px-4 py-10">
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold">歡迎回來，admin</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            今天是{" "}
+            {new Date().toLocaleDateString("zh-TW", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+              weekday: "long",
+            })}
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="grid gap-4 sm:grid-cols-3">
+          {cards.map((card) => (
+            <Link
+              key={card.title}
+              href={card.href}
+              className="group rounded-2xl border border-border bg-card p-6 shadow-sm transition-shadow hover:shadow-md"
+            >
+              <div className={`mb-4 inline-flex rounded-xl p-3 ${card.color}`}>
+                <card.icon className="size-6" />
+              </div>
+              <h3 className="font-semibold group-hover:text-primary">
+                {card.title}
+              </h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {card.description}
+              </p>
+            </Link>
+          ))}
         </div>
       </main>
-    </div>
+    </>
   );
 }
