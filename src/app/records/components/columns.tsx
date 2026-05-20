@@ -1,0 +1,117 @@
+"use client"
+
+import { type ColumnDef } from "@tanstack/react-table"
+
+import { cn } from "@/lib/utils"
+import { hoursToApproxDays, LEAVE_QUOTAS } from "@/lib/leave"
+import { Checkbox } from "@/components/ui/checkbox"
+import { DataTableColumnHeader } from "./data-table-column-header"
+import { DataTableRowActions } from "./data-table-row-actions"
+import { type LeaveRecordRow } from "../data/schema"
+
+const STATUS_STYLE: Record<string, string> = {
+  待審核: "bg-amber-50 text-amber-600",
+  已通過: "bg-blue-50 text-blue-600",
+  已拒絕: "bg-red-50 text-red-600",
+}
+
+export function createColumns(onDelete: (id: string) => void): ColumnDef<LeaveRecordRow>[] {
+  return [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
+          aria-label="全選"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(val) => row.toggleSelected(!!val)}
+          aria-label="選取列"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "type",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="假別" />,
+      cell: ({ row }) => {
+        const type = row.getValue("type") as string
+        const q = LEAVE_QUOTAS[type as keyof typeof LEAVE_QUOTAS]
+        return (
+          <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", q?.bgColor, q?.textColor)}>
+            {type}
+          </span>
+        )
+      },
+      filterFn: (row, id, value: string[]) => value.includes(row.getValue(id)),
+    },
+    {
+      accessorKey: "startDate",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="開始日期" />,
+      cell: ({ row }) => <span className="tabular-nums">{row.getValue("startDate")}</span>,
+    },
+    {
+      accessorKey: "endDate",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="結束日期" />,
+      cell: ({ row }) => <span className="tabular-nums">{row.getValue("endDate")}</span>,
+    },
+    {
+      accessorKey: "hours",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="時數" />,
+      cell: ({ row }) => {
+        const h = row.getValue("hours") as number
+        return (
+          <span className="tabular-nums">
+            {h} 小時
+            <span className="ml-1 text-xs text-muted-foreground">（約 {hoursToApproxDays(h)} 天）</span>
+          </span>
+        )
+      },
+    },
+    {
+      accessorKey: "reason",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="原因" />,
+      cell: ({ row }) => (
+        <span className="max-w-[160px] truncate block text-muted-foreground">
+          {row.getValue("reason") || "—"}
+        </span>
+      ),
+      filterFn: "includesString",
+    },
+    {
+      accessorKey: "status",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="狀態" />,
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string
+        return (
+          <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", STATUS_STYLE[status])}>
+            {status}
+          </span>
+        )
+      },
+      filterFn: (row, id, value: string[]) => value.includes(row.getValue(id)),
+    },
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="申請日期" />,
+      cell: ({ row }) => (
+        <span className="tabular-nums text-muted-foreground">
+          {new Date(row.getValue("createdAt")).toLocaleDateString("zh-TW")}
+        </span>
+      ),
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => <DataTableRowActions row={row} onDelete={onDelete} />,
+      enableHiding: false,
+    },
+  ]
+}

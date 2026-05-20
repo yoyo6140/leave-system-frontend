@@ -6,6 +6,7 @@ import { login, isLoggedIn } from "@/lib/auth";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function LoginPage() {
 
     const success = login(username, password);
     if (success) {
-      router.push("/");
+      router.push("/dashboard");
     } else {
       setError("帳號或密碼錯誤，請重新輸入");
       setLoading(false);
@@ -36,7 +37,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40">
-      <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 shadow-sm">
+      <Card padding="xl" className="w-full max-w-sm">
         <div className="mb-6 flex flex-col items-center gap-2">
           <div className="flex size-12 items-center justify-center rounded-full bg-primary text-primary-foreground">
             <CalendarDays className="size-6" />
@@ -84,7 +85,7 @@ export default function LoginPage() {
             {loading ? "登入中..." : "登入"}
           </Button>
         </form>
-      </div>
+      </Card>
     </div>
   );
 }
