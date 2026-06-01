@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getCurrentUser } from "@/lib/auth"
 import { getRecords, LeaveRecord } from "@/lib/leave"
-import { DataTable } from "./components/data-table"
-import { createColumns } from "./components/columns"
+import { DataTable } from "@/components/records/data-table"
+import { createColumns } from "@/components/records/columns"
 
 const STORAGE_KEY = "leave_records"
 

@@ -12,10 +12,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ConfirmDialog } from "@/components/ui/app-dialog"
-import { type LeaveRecordRow } from "../data/schema"
+import { type LeaveRecord } from "@/lib/leave"
 
 interface DataTableRowActionsProps {
-  row: Row<LeaveRecordRow>
+  row: Row<LeaveRecord>
   onDelete: (id: string) => void
 }
 

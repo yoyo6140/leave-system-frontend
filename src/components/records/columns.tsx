@@ -7,7 +7,7 @@ import { hoursToApproxDays, LEAVE_QUOTAS } from "@/lib/leave"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableColumnHeader } from "./data-table-column-header"
 import { DataTableRowActions } from "./data-table-row-actions"
-import { type LeaveRecordRow } from "../data/schema"
+import { type LeaveRecord } from "@/lib/leave"
 
 const STATUS_STYLE: Record<string, string> = {
   待審核: "bg-amber-50 text-amber-600",
@@ -18,8 +18,8 @@ const STATUS_STYLE: Record<string, string> = {
 export function createColumns(
   onDelete: (id: string) => void,
   isAdmin = false
-): ColumnDef<LeaveRecordRow>[] {
-  const cols: ColumnDef<LeaveRecordRow>[] = [
+): ColumnDef<LeaveRecord>[] {
+  const cols: ColumnDef<LeaveRecord>[] = [
     {
       id: "select",
       header: ({ table }) => (
