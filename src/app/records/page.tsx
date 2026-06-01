@@ -37,7 +37,7 @@ export default function RecordsPage() {
       <div>
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-xl font-semibold">請假紀錄</h1>
-          <Button asChild size="sm">
+          <Button asChild size="sm" variant="outline">
             <Link href="/apply">新增申請</Link>
           </Button>
         </div>

@@ -41,7 +41,7 @@ export default function LeaveBalancePage() {
       <div className="max-w-[1024px]">
         <div className="mb-6 flex items-center justify-between gap-4">
           <h1 className="text-xl font-semibold">假別餘額</h1>
-          <Button asChild variant="outline" size="sm">
+          <Button asChild size="sm" variant="outline">
             <Link href="/apply">
               <CalendarPlus className="size-4" />
               申請請假
@@ -66,7 +66,7 @@ export default function LeaveBalancePage() {
           </div>
         </Card>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {quotas.map(({ type, total, used, remaining, bgColor, textColor }) => (
             <Card key={type} padding="default">
               <div className="mb-3 flex items-center justify-between">
@@ -78,15 +78,6 @@ export default function LeaveBalancePage() {
                 <span className="ml-1 text-sm text-muted-foreground">小時可用</span>
               </div>
               <p className="mb-3 text-xs text-muted-foreground">約 {hoursToApproxDays(remaining)} 天</p>
-              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{
-                    width: `${total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0}%`,
-                    backgroundColor: LEAVE_QUOTAS[type].barColor,
-                  }}
-                />
-              </div>
               <p className="mt-2 text-xs text-muted-foreground">已使用 {used} 小時</p>
             </Card>
           ))}

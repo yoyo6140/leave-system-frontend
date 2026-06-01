@@ -103,5 +103,5 @@ export function logout(): void {
 }
 
 export function getHomePath(role: UserRole): string {
-  return role === "admin" ? "/dashboard" : "/leave-balance"
+  return role === "admin" ? "/overview" : "/leave-balance"
 }

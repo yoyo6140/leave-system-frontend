@@ -241,8 +241,8 @@ export default function ApplyPage() {
               />
             </Field>
 
-            <div className="flex gap-3">
-              <Button type="submit" variant="success">送出申請</Button>
+            <div className="flex justify-end gap-3">
+              <Button type="submit">送出</Button>
               <Button type="button" variant="outline" onClick={() => router.back()}>取消</Button>
             </div>
           </form>

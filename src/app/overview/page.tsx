@@ -11,7 +11,7 @@ import { mockOverviewResponse } from "@/api/useOverview"
 import { LEAVE_QUOTAS, LeaveType } from "@/lib/leave"
 import { cn } from "@/lib/utils"
 
-function AdminDashboard() {
+function AdminOverview() {
   const [pending, setPending]   = useState<typeof mockOverviewResponse.pendingLeaveList>([])
   const [employeeYearLeaveHours, setEmployeeYearLeaveHours] = useState<typeof mockOverviewResponse.employeeYearLeaveHoursList>([])
   const [employeeCount, setEmployeeCount] = useState(0)
@@ -47,7 +47,7 @@ function AdminDashboard() {
           </Card>
         </div>
       </section>
-
+      <div className="grid grid-cols-2 gap-4">
       {/* 待審核列表 */}
       <section>
         <div className="mb-4 flex items-center justify-between">
@@ -118,16 +118,17 @@ function AdminDashboard() {
           )}
         </div>
       </section>
+      </div>
     </div>
   )
 }
 
-export default function DashboardPage() {
+export default function OverviewPage() {
   return (
     <AppLayout allowedRoles={["admin"]}>
       <div>
-        <h1 className="mb-6 text-xl font-semibold">儀表板</h1>
-        <AdminDashboard />
+        <h1 className="mb-6 text-xl font-semibold">總覽</h1>
+        <AdminOverview />
       </div>
     </AppLayout>
   )

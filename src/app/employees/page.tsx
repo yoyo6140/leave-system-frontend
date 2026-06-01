@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
-import { Pencil, Trash2, UserPlus } from "lucide-react"
+import { Edit, Trash2, UserPlus } from "lucide-react"
 
 import AppLayout from "@/components/AppLayout"
 import { Button } from "@/components/ui/button"
@@ -100,9 +100,9 @@ function AddDialog({ onAdd, onCancel }: AddDialogProps) {
             <Input type="date" value={form.hireDate} onChange={(e) => set("hireDate", e.target.value)} required />
           </Field>
         </div>
-        <div className="flex gap-3 pt-1">
-          <Button type="submit" size="sm" variant="success">確認新增</Button>
-          <Button type="button" size="sm" variant="outline" onClick={onCancel}>取消</Button>
+        <div className="grid grid-cols-2 gap-3 pt-1">
+          <Button type="button" size="sm" variant="outline" className="w-full" onClick={onCancel}>取消</Button>
+          <Button type="submit" size="sm" className="w-full">新增</Button>
         </div>
       </form>
     </ModalShell>
@@ -171,9 +171,9 @@ function EditDialog({ user, onSave, onCancel }: EditDialogProps) {
             <Input type="date" value={hireDate} onChange={(e) => setHireDate(e.target.value)} />
           </Field>
         </div>
-        <div className="flex gap-3 pt-1">
-          <Button type="submit" size="sm" variant="success">儲存變更</Button>
-          <Button type="button" size="sm" variant="outline" onClick={onCancel}>取消</Button>
+        <div className="grid grid-cols-2 gap-3 pt-1">
+          <Button type="button" size="sm" variant="outline" className="w-full" onClick={onCancel}>取消</Button>
+          <Button type="submit" size="sm" className="w-full">變更</Button>
         </div>
       </form>
     </ModalShell>
@@ -247,7 +247,7 @@ export default function EmployeesPage() {
             <h1 className="text-xl font-semibold">員工管理</h1>
             <p className="mt-0.5 text-sm text-muted-foreground">共 {employees.length} 位員工</p>
           </div>
-          <Button size="sm" variant="success" onClick={() => setShowAdd(true)}>
+          <Button size="sm" variant="outline" onClick={() => setShowAdd(true)}>
             <UserPlus className="size-3.5" />
             新增員工
           </Button>
@@ -292,7 +292,7 @@ export default function EmployeesPage() {
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-foreground" onClick={() => setEditTarget(u)}>
-                            <Pencil className="size-3.5" />
+                            <Edit className="size-3.5" />
                           </Button>
                           <Button variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(u)}>
                             <Trash2 className="size-3.5" />

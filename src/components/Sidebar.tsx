@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 type NavItem = { href: string; icon: React.ElementType; label: string; roles: UserRole[] }
 
 const ALL_NAV: NavItem[] = [
-  { href: "/dashboard",        icon: LayoutDashboard, label: "儀表板",   roles: ["admin"] },
+  { href: "/overview",         icon: LayoutDashboard, label: "總覽",     roles: ["admin"] },
   { href: "/leave-balance",    icon: PieChart,        label: "假別餘額", roles: ["admin", "employee"] },
   { href: "/review",     icon: ClipboardCheck,  label: "審核管理", roles: ["admin"] },
   { href: "/employees",  icon: Users,           label: "員工管理", roles: ["admin"] },
