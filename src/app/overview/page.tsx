@@ -8,7 +8,7 @@ import AppLayout from "@/components/AppLayout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { mockOverviewResponse } from "@/api/useOverview"
-import { LEAVE_QUOTAS, LeaveType } from "@/lib/leave"
+import { LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS, LeaveType } from "@/lib/leave"
 import { cn } from "@/lib/utils"
 
 function AdminOverview() {
@@ -28,7 +28,6 @@ function AdminOverview() {
     <div className="space-y-8">
       {/* 統計卡 */}
       <section>
-        <h2 className="mb-4 text-base font-semibold">團隊總覽</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           <Card padding="default">
             <p className="mb-1 text-xs text-muted-foreground">待審核申請</p>
@@ -51,7 +50,7 @@ function AdminOverview() {
       {/* 待審核列表 */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold">待審核申請</h2>
+          <h2 className=" font-semibold">待審核申請</h2>
           <Button asChild variant="ghost" size="sm">
             <Link href="/review">前往審核</Link>
           </Button>
@@ -69,7 +68,7 @@ function AdminOverview() {
                 <Card key={r.id} padding="sm" className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="text-sm font-medium shrink-0">{r.name}</span>
-                    <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium", q.bgColor, q.textColor)}>
+                    <span className={cn("shrink-0 px-2.5 py-0.5 text-xs font-medium", LEAVE_BADGE_ROUNDED, q.bgColor, q.textColor)}>
                       {r.type}
                     </span>
                     <span className="truncate text-sm text-muted-foreground">{r.hours} 小時</span>
@@ -89,7 +88,7 @@ function AdminOverview() {
       {/* 員工年請假總時數 */}
       <section>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold">員工年請假總時數</h2>
+          <h2 className=" font-semibold">員工年請假總時數</h2>
           <Button asChild variant="ghost" size="sm">
             <Link href="/employees">員工管理</Link>
           </Button>

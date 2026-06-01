@@ -15,10 +15,10 @@ export default function Navbar() {
   return (
     <header className="h-14 border-b border-blue-200 bg-white px-6">
       <div className="flex h-full items-center justify-between">
-        <div className="text-base font-semibold leading-tight">
+        <div className=" font-semibold leading-tight">
           歡迎回來，{user?.name ?? ""} {user?.username ?? ""}
         </div>
-        <div className="text-xs text-muted-foreground">今日是 {today}</div>
+        <div className="text-xs text-muted-foreground">{today}</div>
       </div>
     </header>
   )

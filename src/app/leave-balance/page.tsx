@@ -11,6 +11,7 @@ import { getCurrentUser } from "@/lib/auth"
 import {
   getUsedHours,
   hoursToApproxDays,
+  LEAVE_BADGE_ROUNDED,
   LEAVE_QUOTAS,
   LEAVE_TYPES,
   LeaveType,
@@ -70,7 +71,7 @@ export default function LeaveBalancePage() {
           {quotas.map(({ type, total, used, remaining, bgColor, textColor }) => (
             <Card key={type} padding="default">
               <div className="mb-3 flex items-center justify-between">
-                <span className={cn("rounded-lg px-2.5 py-1 text-xs font-medium", bgColor, textColor)}>{type}</span>
+                <span className={cn(LEAVE_BADGE_ROUNDED, "px-2.5 py-1 text-xs font-medium", bgColor, textColor)}>{type}</span>
                 <span className="text-xs text-muted-foreground">共 {total} 小時</span>
               </div>
               <div className="mb-1">

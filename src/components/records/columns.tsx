@@ -3,17 +3,10 @@
 import { type ColumnDef } from "@tanstack/react-table"
 
 import { cn } from "@/lib/utils"
-import { hoursToApproxDays, LEAVE_QUOTAS } from "@/lib/leave"
+import { hoursToApproxDays, LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS, LEAVE_STATUS_STYLE, type LeaveRecord, type LeaveStatus } from "@/lib/leave"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableColumnHeader } from "./data-table-column-header"
 import { DataTableRowActions } from "./data-table-row-actions"
-import { type LeaveRecord } from "@/lib/leave"
-
-const STATUS_STYLE: Record<string, string> = {
-  待審核: "bg-amber-50 text-amber-600",
-  已通過: "bg-blue-50 text-blue-600",
-  已拒絕: "bg-red-50 text-red-600",
-}
 
 export function createColumns(
   onDelete: (id: string) => void,
@@ -46,7 +39,7 @@ export function createColumns(
         const type = row.getValue("type") as string
         const q = LEAVE_QUOTAS[type as keyof typeof LEAVE_QUOTAS]
         return (
-          <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", q?.bgColor, q?.textColor)}>
+          <span className={cn(LEAVE_BADGE_ROUNDED, "px-2.5 py-0.5 text-xs font-medium", q?.bgColor, q?.textColor)}>
             {type}
           </span>
         )
@@ -92,7 +85,7 @@ export function createColumns(
       cell: ({ row }) => {
         const status = row.getValue("status") as string
         return (
-          <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", STATUS_STYLE[status])}>
+          <span className={cn(LEAVE_BADGE_ROUNDED, "px-2.5 py-0.5 text-xs font-medium", LEAVE_STATUS_STYLE[status as LeaveStatus])}>
             {status}
           </span>
         )

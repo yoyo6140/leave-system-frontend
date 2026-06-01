@@ -23,18 +23,14 @@ import {
   getRecords,
   getUsedHours,
   hoursToApproxDays,
+  LEAVE_BADGE_ROUNDED,
   LEAVE_QUOTAS,
+  LEAVE_STATUS_STYLE,
   LEAVE_TYPES,
   LeaveRecord,
   LeaveType,
 } from "@/lib/leave"
 import { cn } from "@/lib/utils"
-
-const STATUS_STYLE: Record<string, string> = {
-  待審核: "bg-amber-50 text-amber-600",
-  已通過: "bg-blue-50 text-blue-600",
-  已拒絕: "bg-red-50 text-red-600",
-}
 
 export default function ApplyPage() {
   const router = useRouter()
@@ -136,7 +132,7 @@ export default function ApplyPage() {
                 return (
                   <div key={r.id} className="flex items-center justify-between gap-4 rounded-lg border border-border px-3 py-2">
                     <div className="flex min-w-0 items-center gap-3">
-                      <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium", q.bgColor, q.textColor)}>
+                      <span className={cn("shrink-0 px-2.5 py-0.5 text-xs font-medium", LEAVE_BADGE_ROUNDED, q.bgColor, q.textColor)}>
                         {r.type}
                       </span>
                       <span className="truncate text-sm text-muted-foreground">
@@ -144,7 +140,7 @@ export default function ApplyPage() {
                         <span className="ml-1.5">{r.hours} 小時</span>
                       </span>
                     </div>
-                    <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium", STATUS_STYLE[r.status])}>
+                    <span className={cn("shrink-0 px-2.5 py-0.5 text-xs font-medium", LEAVE_BADGE_ROUNDED, LEAVE_STATUS_STYLE[r.status])}>
                       {r.status}
                     </span>
                   </div>

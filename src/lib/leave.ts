@@ -13,6 +13,14 @@ export type LeaveRecord = {
   createdAt: string
 }
 
+export const LEAVE_BADGE_ROUNDED = "rounded-[8px]"
+
+export const LEAVE_STATUS_STYLE: Record<LeaveStatus, string> = {
+  待審核: "bg-amber-50 text-amber-600",
+  已通過: "bg-blue-50 text-blue-600",
+  已拒絕: "bg-red-50 text-red-600",
+}
+
 export const LEAVE_QUOTAS: Record<
   LeaveType,
   { total: number; bgColor: string; textColor: string; barColor: string }

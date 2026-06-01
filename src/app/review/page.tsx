@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { SuccessDialog, ConfirmDialog } from "@/components/ui/app-dialog"
 import { cn } from "@/lib/utils"
-import { getRecords, LeaveRecord, LEAVE_QUOTAS } from "@/lib/leave"
+import { getRecords, LeaveRecord, LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS } from "@/lib/leave"
 
 const STORAGE_KEY = "leave_records"
 
@@ -68,7 +68,7 @@ export default function ReviewPage() {
                 <Card key={record.id} padding="default">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 min-w-0">
-                      <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium", q?.bgColor, q?.textColor)}>
+                      <span className={cn("shrink-0 px-2.5 py-0.5 text-xs font-medium", LEAVE_BADGE_ROUNDED, q?.bgColor, q?.textColor)}>
                         {record.type}
                       </span>
                       <div className="min-w-0">
