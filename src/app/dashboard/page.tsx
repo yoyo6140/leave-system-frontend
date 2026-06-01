@@ -53,7 +53,7 @@ function AdminDashboard() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold">待審核申請</h2>
           <Button asChild variant="ghost" size="sm">
-            <Link href="/admin/review">前往審核</Link>
+            <Link href="/review">前往審核</Link>
           </Button>
         </div>
         {pending.length === 0 ? (
@@ -79,7 +79,7 @@ function AdminDashboard() {
             })}
             {pending.length > 5 && (
               <p className="text-center text-xs text-muted-foreground">
-                還有 {pending.length - 5} 筆，<Link href="/admin/review" className="underline">前往查看</Link>
+                還有 {pending.length - 5} 筆，<Link href="/review" className="underline">前往查看</Link>
               </p>
             )}
           </div>
@@ -91,7 +91,7 @@ function AdminDashboard() {
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-semibold">員工年請假總時數</h2>
           <Button asChild variant="ghost" size="sm">
-            <Link href="/admin/employees">員工管理</Link>
+            <Link href="/employees">員工管理</Link>
           </Button>
         </div>
         <div className="flex flex-col gap-2">

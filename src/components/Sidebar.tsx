@@ -13,8 +13,8 @@ type NavItem = { href: string; icon: React.ElementType; label: string; roles: Us
 const ALL_NAV: NavItem[] = [
   { href: "/dashboard",        icon: LayoutDashboard, label: "儀表板",   roles: ["admin"] },
   { href: "/leave-balance",    icon: PieChart,        label: "假別餘額", roles: ["admin", "employee"] },
-  { href: "/admin/review",     icon: ClipboardCheck,  label: "審核管理", roles: ["admin"] },
-  { href: "/admin/employees",  icon: Users,           label: "員工管理", roles: ["admin"] },
+  { href: "/review",     icon: ClipboardCheck,  label: "審核管理", roles: ["admin"] },
+  { href: "/employees",  icon: Users,           label: "員工管理", roles: ["admin"] },
   { href: "/apply",            icon: CalendarPlus,    label: "申請請假", roles: ["admin", "employee"] },
   { href: "/records",          icon: ClipboardList,   label: "請假紀錄", roles: ["admin", "employee"] },
   { href: "/ai-analysis",      icon: Bot,             label: "AI 分析",  roles: ["admin"] },
@@ -74,7 +74,7 @@ export default function Sidebar() {
           >
             <link.icon className="size-4 shrink-0" />
             <span className="flex-1">{link.label}</span>
-            {link.href === "/admin/review" && pendingCount > 0 && (
+            {link.href === "/review" && pendingCount > 0 && (
               <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
                 {pendingCount > 99 ? "99+" : pendingCount}
               </span>
