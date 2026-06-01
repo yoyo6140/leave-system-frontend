@@ -1,32 +1,43 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { isLoggedIn } from "@/lib/auth";
-import Sidebar from "@/components/Sidebar";
-import Navbar from "@/components/Navbar";
+import { useEffect, useState } from "react"
+import { useRouter, usePathname } from "next/navigation"
+import { getCurrentUser, UserRole } from "@/lib/auth"
+import Sidebar from "@/components/Sidebar"
+import Navbar from "@/components/Navbar"
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const [ready, setReady] = useState(false);
+interface AppLayoutProps {
+  children: React.ReactNode
+  allowedRoles?: UserRole[]
+}
+
+export default function AppLayout({ children, allowedRoles }: AppLayoutProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
-    if (!isLoggedIn()) {
-      router.replace("/login");
-    } else {
-      setReady(true);
+    const user = getCurrentUser()
+    if (!user) {
+      router.replace("/login")
+      return
     }
-  }, [router]);
+    if (allowedRoles && !allowedRoles.includes(user.role)) {
+      router.replace("/dashboard")
+      return
+    }
+    setReady(true)
+  }, [router, pathname, allowedRoles])
 
-  if (!ready) return null;
+  if (!ready) return null
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-[#f3f4f6]">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar />
         <main className="flex-1 overflow-auto p-8">{children}</main>
       </div>
     </div>
-  );
+  )
 }

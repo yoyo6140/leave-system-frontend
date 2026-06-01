@@ -44,69 +44,6 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
           />
         </div>
 
-        {/* 假別篩選 */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 gap-1.5">
-              <SlidersHorizontal className="size-3.5" />
-              假別
-              {typeFilter?.length ? (
-                <Badge className="ml-1 px-1.5 py-0 text-xs">{typeFilter.length}</Badge>
-              ) : null}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-36">
-            <DropdownMenuLabel className="text-xs">篩選假別</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {LEAVE_TYPES.map((type) => (
-              <DropdownMenuCheckboxItem
-                key={type}
-                checked={typeFilter?.includes(type) ?? false}
-                onCheckedChange={(checked) => {
-                  const current = typeFilter ?? []
-                  table.getColumn("type")?.setFilterValue(
-                    checked ? [...current, type] : current.filter((v) => v !== type)
-                  )
-                }}
-                className="text-sm"
-              >
-                {type}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* 狀態篩選 */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8 gap-1.5">
-              <SlidersHorizontal className="size-3.5" />
-              狀態
-              {statusFilter?.length ? (
-                <Badge className="ml-1 px-1.5 py-0 text-xs">{statusFilter.length}</Badge>
-              ) : null}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-32">
-            <DropdownMenuLabel className="text-xs">篩選狀態</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {STATUSES.map((status) => (
-              <DropdownMenuCheckboxItem
-                key={status}
-                checked={statusFilter?.includes(status) ?? false}
-                onCheckedChange={(checked) => {
-                  const current = statusFilter ?? []
-                  table.getColumn("status")?.setFilterValue(
-                    checked ? [...current, status] : current.filter((v) => v !== status)
-                  )
-                }}
-                className="text-sm"
-              >
-                {status}
-              </DropdownMenuCheckboxItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
 
         {isFiltered && (
           <Button
@@ -124,39 +61,6 @@ export function DataTableToolbar<TData>({ table }: DataTableToolbarProps<TData>)
         )}
       </div>
 
-      {/* 欄位顯示 */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="h-8 gap-1.5">
-            <Eye className="size-3.5" />
-            欄位
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuLabel className="text-xs">顯示欄位</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {table
-            .getAllColumns()
-            .filter((col) => col.getCanHide())
-            .map((col) => (
-              <DropdownMenuCheckboxItem
-                key={col.id}
-                checked={col.getIsVisible()}
-                onCheckedChange={(val) => col.toggleVisibility(val)}
-                className="text-sm"
-              >
-                {col.id === "type" ? "假別"
-                  : col.id === "startDate" ? "開始"
-                  : col.id === "endDate" ? "結束"
-                  : col.id === "hours" ? "時數"
-                  : col.id === "reason" ? "原因"
-                  : col.id === "status" ? "狀態"
-                  : col.id === "createdAt" ? "申請日期"
-                  : col.id}
-              </DropdownMenuCheckboxItem>
-            ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
     </div>
   )
 }

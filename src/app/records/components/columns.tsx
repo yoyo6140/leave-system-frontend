@@ -15,16 +15,16 @@ const STATUS_STYLE: Record<string, string> = {
   已拒絕: "bg-red-50 text-red-600",
 }
 
-export function createColumns(onDelete: (id: string) => void): ColumnDef<LeaveRecordRow>[] {
-  return [
+export function createColumns(
+  onDelete: (id: string) => void,
+  isAdmin = false
+): ColumnDef<LeaveRecordRow>[] {
+  const cols: ColumnDef<LeaveRecordRow>[] = [
     {
       id: "select",
       header: ({ table }) => (
         <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
+          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
           onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
           aria-label="全選"
         />
@@ -114,4 +114,17 @@ export function createColumns(onDelete: (id: string) => void): ColumnDef<LeaveRe
       enableHiding: false,
     },
   ]
+
+  // 申請人欄位只在 admin 視角插入
+  if (isAdmin) {
+    cols.splice(1, 0, {
+      accessorKey: "username",
+      header: ({ column }) => <DataTableColumnHeader column={column} title="申請人" />,
+      cell: ({ row }) => (
+        <span className="text-sm font-medium">@{row.getValue("username")}</span>
+      ),
+    })
+  }
+
+  return cols
 }

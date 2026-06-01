@@ -6,6 +6,7 @@ import Link from "next/link"
 import AppLayout from "@/components/AppLayout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { getCurrentUser } from "@/lib/auth"
 import { getRecords, LeaveRecord } from "@/lib/leave"
 import { DataTable } from "./components/data-table"
 import { createColumns } from "./components/columns"
@@ -13,19 +14,23 @@ import { createColumns } from "./components/columns"
 const STORAGE_KEY = "leave_records"
 
 export default function RecordsPage() {
+  const user = getCurrentUser()
+  const isAdmin = user?.role === "admin"
+
   const [records, setRecords] = useState<LeaveRecord[]>([])
 
   useEffect(() => {
-    setRecords(getRecords())
-  }, [])
+    setRecords(isAdmin ? getRecords() : getRecords(user?.username))
+  }, [isAdmin, user?.username])
 
   const handleDelete = useCallback((id: string) => {
-    const updated = records.filter((r) => r.id !== id)
+    const all = getRecords()
+    const updated = all.filter((r) => r.id !== id)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
-    setRecords(updated)
-  }, [records])
+    setRecords(isAdmin ? updated : updated.filter((r) => r.username === user?.username))
+  }, [isAdmin, user?.username])
 
-  const columns = useMemo(() => createColumns(handleDelete), [handleDelete])
+  const columns = useMemo(() => createColumns(handleDelete, isAdmin), [handleDelete, isAdmin])
 
   return (
     <AppLayout>
