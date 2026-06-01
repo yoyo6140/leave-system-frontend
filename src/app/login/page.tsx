@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { login, isLoggedIn } from "@/lib/auth"
+import { login, isLoggedIn, getHomePath, getCurrentUser } from "@/lib/auth"
 import { CalendarDays, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,7 +32,8 @@ export default function LoginPage() {
     setLoading(true)
     const success = login(username, password)
     if (success) {
-      router.push("/dashboard")
+      const user = getCurrentUser()
+      router.push(getHomePath(user?.role ?? "employee"))
     } else {
       setError("帳號或密碼錯誤，請重新輸入")
       setLoading(false)

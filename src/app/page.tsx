@@ -2,14 +2,15 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { isLoggedIn } from "@/lib/auth";
+import { isLoggedIn, getCurrentUser, getHomePath } from "@/lib/auth";
 
 export default function HomePage() {
   const router = useRouter();
 
   useEffect(() => {
     if (isLoggedIn()) {
-      router.replace("/dashboard");
+      const user = getCurrentUser();
+      router.replace(getHomePath(user?.role ?? "employee"));
     } else {
       router.replace("/login");
     }

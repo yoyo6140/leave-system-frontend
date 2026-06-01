@@ -101,3 +101,7 @@ export function isLoggedIn(): boolean {
 export function logout(): void {
   localStorage.removeItem(AUTH_KEY)
 }
+
+export function getHomePath(role: UserRole): string {
+  return role === "admin" ? "/dashboard" : "/leave-balance"
+}

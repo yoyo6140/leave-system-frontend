@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { getCurrentUser, UserRole } from "@/lib/auth"
+import { getCurrentUser, getHomePath, UserRole } from "@/lib/auth"
 import Sidebar from "@/components/Sidebar"
 import Navbar from "@/components/Navbar"
 
@@ -23,7 +23,7 @@ export default function AppLayout({ children, allowedRoles }: AppLayoutProps) {
       return
     }
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-      router.replace("/dashboard")
+      router.replace(getHomePath(user.role))
       return
     }
     setReady(true)

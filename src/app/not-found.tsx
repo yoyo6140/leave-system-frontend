@@ -17,10 +17,10 @@ export default function NotFound() {
       </div>
 
       <Link
-        href="/dashboard"
+        href="/"
         className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
       >
-        回到儀表板
+        回到首頁
       </Link>
     </div>
   );
