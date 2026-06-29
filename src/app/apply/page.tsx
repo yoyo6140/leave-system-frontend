@@ -31,6 +31,7 @@ import {
   LeaveType,
 } from "@/lib/leave"
 import { cn } from "@/lib/utils"
+import { getMyQuota } from "@/api/useQuota"
 
 export default function ApplyPage() {
   const router = useRouter()
@@ -40,24 +41,39 @@ export default function ApplyPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const [hours,     setHours]     = useState<number | "">("")
   const [reason,    setReason]    = useState("")
-  const [remaining, setRemaining] = useState<Record<LeaveType, number>>(
-    () => Object.fromEntries(LEAVE_TYPES.map((t) => [t, LEAVE_QUOTAS[t].total])) as Record<LeaveType, number>
+  const [remaining,     setRemaining]     = useState<Record<LeaveType, number>>(
+    () => Object.fromEntries(LEAVE_TYPES.map((t) => [t, 0])) as Record<LeaveType, number>
   )
-  const [successOpen, setSuccessOpen] = useState(false)
-  const [alertMsg,    setAlertMsg]    = useState("")
-  const [recent, setRecent] = useState<LeaveRecord[]>([])
+  const [quotaLoading,  setQuotaLoading]  = useState(true)
+  const [successOpen,   setSuccessOpen]   = useState(false)
+  const [alertMsg,      setAlertMsg]      = useState("")
+  const [recent,        setRecent]        = useState<LeaveRecord[]>([])
 
   useEffect(() => {
-    const data = {} as Record<LeaveType, number>
-    LEAVE_TYPES.forEach((t) => {
-      data[t] = LEAVE_QUOTAS[t].total - getUsedHours(t, user?.username)
-    })
-    setRemaining(data)
+    let cancelled = false
+    async function load() {
+      setQuotaLoading(true)
+      const quota = await getMyQuota()
+      if (cancelled) return
+
+      const totals = Object.fromEntries(
+        LEAVE_TYPES.map((t) => {
+          const item  = quota?.quotas.find((q) => q.type === t)
+          const total = item?.total_hours ?? 0
+          return [t, Math.max(total - getUsedHours(t, user?.username), 0)]
+        })
+      ) as Record<LeaveType, number>
+
+      setRemaining(totals)
+      setQuotaLoading(false)
+    }
+    load()
     setRecent(
       getRecords(user?.username)
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 5)
     )
+    return () => { cancelled = true }
   }, [user?.username])
 
   const startDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : ""
@@ -160,11 +176,14 @@ export default function ApplyPage() {
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as LeaveType)}
-                className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20"
+                disabled={quotaLoading}
+                className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-ring focus:ring-3 focus:ring-ring/50 disabled:opacity-50"
               >
                 {LEAVE_TYPES.map((t) => (
                   <option key={t} value={t}>
-                    {t}（剩餘 {remaining[t]} 小時 / 約 {hoursToApproxDays(remaining[t])} 天）
+                    {quotaLoading
+                      ? t
+                      : `${t}（剩餘 ${remaining[t]} 小時 / 約 ${hoursToApproxDays(remaining[t])} 天）`}
                   </option>
                 ))}
               </select>

@@ -85,11 +85,11 @@ export default function ReviewPage() {
                     </div>
 
                     <div className="flex shrink-0 items-center gap-2">
-                      <Button size="sm" variant="success" onClick={() => handleApprove(record.id)}>
+                      <Button size="sm" onClick={() => handleApprove(record.id)}>
                         <Check className="size-3.5" />
                         核准
                       </Button>
-                      <Button size="sm" variant="destructive" onClick={() => setRejectTarget(record.id)}>
+                      <Button size="sm" variant="outline" onClick={() => setRejectTarget(record.id)}>
                         <X className="size-3.5" />
                         拒絕
                       </Button>

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { getCurrentUser, logout, type UserRole } from "@/lib/auth"
+import { Logout } from "@/api/useAuth"
+import { getCurrentUser, clearCurrentUser, type UserRole } from "@/lib/auth"
 import { getRecords } from "@/lib/leave"
 import { Bot, CalendarDays, CalendarPlus, ClipboardCheck, ClipboardList, LayoutDashboard, LogOut, PieChart, Users } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -46,8 +47,9 @@ export default function Sidebar() {
 
   const navLinks = ALL_NAV.filter((link) => link.roles.includes(role))
 
-  function handleLogout() {
-    logout()
+  async function handleLogout() {
+    await Logout()
+    clearCurrentUser()
     router.push("/login")
   }
 

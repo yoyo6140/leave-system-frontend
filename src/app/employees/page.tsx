@@ -10,15 +10,16 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { SuccessDialog, AlertDialog, ConfirmDialog } from "@/components/ui/app-dialog"
+import { type Gender } from "@/lib/auth"
 import {
-  addUser,
-  deleteUser,
-  updateUser,
-  getCurrentUser,
+  type ApiUser,
+  type UserCreateInput,
+  type UserUpdateInput,
   getUsers,
-  type User,
-  type Gender,
-} from "@/lib/auth"
+  createUser,
+  updateUser,
+  deleteUser,
+} from "@/api/useUsers"
 
 // ── Shared Modal Shell ────────────────────────────────────────────────────────
 
@@ -52,19 +53,21 @@ function GenderSelect({ value, onChange }: { value: Gender; onChange: (v: Gender
 
 // ── Add Dialog ────────────────────────────────────────────────────────────────
 
-const EMPTY_FORM = {
-  username: "", name: "", password: "",
-  gender: "男" as Gender, idNumber: "", hireDate: "", birthDate: "",
+const EMPTY_FORM: UserCreateInput = {
+  username: "", name: "", password: "", email: "",
+  role: "employee", gender: "男",
+  id_number: "", hire_date: "", birth_date: "",
 }
 
 interface AddDialogProps {
-  onAdd: (form: typeof EMPTY_FORM) => void
+  onAdd:    (form: UserCreateInput) => void
   onCancel: () => void
+  loading:  boolean
 }
 
-function AddDialog({ onAdd, onCancel }: AddDialogProps) {
+function AddDialog({ onAdd, onCancel, loading }: AddDialogProps) {
   const [form, setForm] = useState(EMPTY_FORM)
-  const set = (key: keyof typeof EMPTY_FORM, val: string) =>
+  const set = (key: keyof UserCreateInput, val: string) =>
     setForm((prev) => ({ ...prev, [key]: val }))
 
   return (
@@ -84,25 +87,29 @@ function AddDialog({ onAdd, onCancel }: AddDialogProps) {
             <Input value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="顯示名稱" required />
           </Field>
           <Field>
+            <FieldLabel>信箱 <span className="text-destructive">*</span></FieldLabel>
+            <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="email@example.com" required />
+          </Field>
+          <Field>
             <FieldLabel>性別 <span className="text-destructive">*</span></FieldLabel>
-            <GenderSelect value={form.gender} onChange={(v) => set("gender", v)} />
+            <GenderSelect value={form.gender as Gender} onChange={(v) => set("gender", v)} />
           </Field>
           <Field>
             <FieldLabel>身分證字號 <span className="text-destructive">*</span></FieldLabel>
-            <Input value={form.idNumber} onChange={(e) => set("idNumber", e.target.value)} placeholder="A123456789" maxLength={10} required />
+            <Input value={form.id_number} onChange={(e) => set("id_number", e.target.value)} placeholder="A123456789" maxLength={10} required />
           </Field>
           <Field>
             <FieldLabel>出生年月日 <span className="text-destructive">*</span></FieldLabel>
-            <Input type="date" value={form.birthDate} onChange={(e) => set("birthDate", e.target.value)} required />
+            <Input type="date" value={form.birth_date} onChange={(e) => set("birth_date", e.target.value)} required />
           </Field>
           <Field>
             <FieldLabel>任職日期 <span className="text-destructive">*</span></FieldLabel>
-            <Input type="date" value={form.hireDate} onChange={(e) => set("hireDate", e.target.value)} required />
+            <Input type="date" value={form.hire_date} onChange={(e) => set("hire_date", e.target.value)} required />
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-3 pt-1">
-          <Button type="button" size="sm" variant="outline" className="w-full" onClick={onCancel}>取消</Button>
-          <Button type="submit" size="sm" className="w-full">新增</Button>
+          <Button type="button" size="sm" variant="outline" className="w-full" onClick={onCancel} disabled={loading}>取消</Button>
+          <Button type="submit" size="sm" className="w-full" disabled={loading}>{loading ? "新增中..." : "新增"}</Button>
         </div>
       </form>
     </ModalShell>
@@ -112,29 +119,31 @@ function AddDialog({ onAdd, onCancel }: AddDialogProps) {
 // ── Edit Dialog ───────────────────────────────────────────────────────────────
 
 interface EditDialogProps {
-  user: User
-  onSave: (updates: Partial<User> & { password?: string }) => void
+  user:     ApiUser
+  onSave:   (updates: UserUpdateInput) => void
   onCancel: () => void
+  loading:  boolean
 }
 
-function EditDialog({ user, onSave, onCancel }: EditDialogProps) {
-  const [name, setDisplayName] = useState(user.name)
-  const [password,    setPassword]    = useState("")
-  const [gender,      setGender]      = useState<Gender>(user.gender ?? "男")
-  const [idNumber,    setIdNumber]    = useState(user.idNumber ?? "")
-  const [birthDate,   setBirthDate]   = useState(user.birthDate ?? "")
-  const [hireDate,    setHireDate]    = useState(user.hireDate ?? "")
+function EditDialog({ user, onSave, onCancel, loading }: EditDialogProps) {
+  const [name,      setName]      = useState(user.name)
+  const [email,     setEmail]     = useState(user.email)
+  const [gender,    setGender]    = useState<Gender>(user.gender as Gender)
+  const [idNumber,  setIdNumber]  = useState(user.id_number)
+  const [birthDate, setBirthDate] = useState(user.birth_date)
+  const [hireDate,  setHireDate]  = useState(user.hire_date)
 
   function handleSave(e: React.FormEvent) {
     e.preventDefault()
-    if (!name.trim()) return
     onSave({
-      name: name.trim(),
+      username:   user.username,
+      name:       name.trim(),
+      role:       user.role,
+      email:      email.trim(),
       gender,
-      idNumber:  idNumber.toUpperCase() || undefined,
-      birthDate: birthDate || undefined,
-      hireDate:  hireDate  || undefined,
-      ...(password ? { password } : {}),
+      id_number:  idNumber.toUpperCase(),
+      hire_date:  hireDate,
+      birth_date: birthDate,
     })
   }
 
@@ -147,12 +156,12 @@ function EditDialog({ user, onSave, onCancel }: EditDialogProps) {
             <Input value={user.username} disabled className="opacity-50" />
           </Field>
           <Field>
-            <FieldLabel>姓名</FieldLabel>
-            <Input value={name} onChange={(e) => setDisplayName(e.target.value)} required />
+            <FieldLabel>姓名 <span className="text-destructive">*</span></FieldLabel>
+            <Input value={name} onChange={(e) => setName(e.target.value)} required />
           </Field>
           <Field>
-            <FieldLabel>新密碼（留空不變）</FieldLabel>
-            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="輸入新密碼" />
+            <FieldLabel>信箱 <span className="text-destructive">*</span></FieldLabel>
+            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </Field>
           <Field>
             <FieldLabel>性別</FieldLabel>
@@ -172,8 +181,8 @@ function EditDialog({ user, onSave, onCancel }: EditDialogProps) {
           </Field>
         </div>
         <div className="grid grid-cols-2 gap-3 pt-1">
-          <Button type="button" size="sm" variant="outline" className="w-full" onClick={onCancel}>取消</Button>
-          <Button type="submit" size="sm" className="w-full">變更</Button>
+          <Button type="button" size="sm" variant="outline" className="w-full" onClick={onCancel} disabled={loading}>取消</Button>
+          <Button type="submit" size="sm" className="w-full" disabled={loading}>{loading ? "儲存中..." : "變更"}</Button>
         </div>
       </form>
     </ModalShell>
@@ -183,57 +192,67 @@ function EditDialog({ user, onSave, onCancel }: EditDialogProps) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function EmployeesPage() {
-  const currentUser = getCurrentUser()
-  const [users,        setUsers]        = useState<User[]>([])
+  const [users,        setUsers]        = useState<ApiUser[]>([])
+  const [loading,      setLoading]      = useState(true)
+  const [actionLoading, setActionLoading] = useState(false)
   const [showAdd,      setShowAdd]      = useState(false)
-  const [editTarget,   setEditTarget]   = useState<User | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
+  const [editTarget,   setEditTarget]   = useState<ApiUser | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<ApiUser | null>(null)
   const [successMsg,   setSuccessMsg]   = useState("")
   const [alertMsg,     setAlertMsg]     = useState("")
 
   useEffect(() => { refresh() }, [])
 
-  function refresh() {
-    setUsers(getUsers().filter((u) => u.username !== currentUser?.username))
+  async function refresh() {
+    setLoading(true)
+    const result = await getUsers({ limit: 100 })
+    if (result.ok) setUsers(result.data.data)
+    else setAlertMsg(result.message)
+    setLoading(false)
   }
 
-  function handleAdd(form: typeof EMPTY_FORM) {
-    if (!form.username.trim() || !form.name.trim() || !form.password.trim() ||
-        !form.idNumber.trim() || !form.birthDate || !form.hireDate) {
-      setAlertMsg("所有欄位皆為必填"); return
-    }
-    if (!/^[A-Z][12]\d{8}$/i.test(form.idNumber)) {
+  async function handleAdd(form: UserCreateInput) {
+    if (!/^[A-Z][12]\d{8}$/i.test(form.id_number)) {
       setAlertMsg("身分證字號格式不正確（例：A123456789）"); return
     }
-    const result = addUser({
-      username:    form.username.trim(),
-      password:    form.password.trim(),
-      name: form.name.trim(),
-      role:        "employee",
-      gender:      form.gender,
-      idNumber:    form.idNumber.toUpperCase() || undefined,
-      hireDate:    form.hireDate  || undefined,
-      birthDate:   form.birthDate || undefined,
-    })
-    if (!result.success) { setAlertMsg(result.error ?? "新增失敗"); return }
-    refresh()
-    setShowAdd(false)
-    setSuccessMsg(`員工「${form.name}」已成功新增`)
+    setActionLoading(true)
+    const result = await createUser(form)
+    setActionLoading(false)
+    if (result.ok) {
+      setShowAdd(false)
+      setSuccessMsg(`員工「${result.data.name}」已新增`)
+      await refresh()
+    } else {
+      setAlertMsg(result.message)
+    }
   }
 
-  function handleEditSave(updates: Partial<User> & { password?: string }) {
+  async function handleEditSave(updates: UserUpdateInput) {
     if (!editTarget) return
-    updateUser(editTarget.username, updates)
-    refresh()
-    setEditTarget(null)
-    setSuccessMsg("員工資料已更新")
+    setActionLoading(true)
+    const result = await updateUser(editTarget.id, updates)
+    setActionLoading(false)
+    if (result.ok) {
+      setEditTarget(null)
+      setSuccessMsg(`員工「${result.data.name}」資料已更新`)
+      await refresh()
+    } else {
+      setAlertMsg(result.message)
+    }
   }
 
-  function handleDeleteConfirm() {
+  async function handleDeleteConfirm() {
     if (!deleteTarget) return
-    deleteUser(deleteTarget.username)
-    refresh()
-    setDeleteTarget(null)
+    setActionLoading(true)
+    const result = await deleteUser(deleteTarget.id)
+    setActionLoading(false)
+    if (result.ok) {
+      setDeleteTarget(null)
+      setSuccessMsg(`員工「${deleteTarget.name}」帳號已刪除`)
+      await refresh()
+    } else {
+      setAlertMsg(result.message)
+    }
   }
 
   const employees = users.filter((u) => u.role === "employee")
@@ -253,9 +272,11 @@ export default function EmployeesPage() {
           </Button>
         </div>
 
-        {/* 員工條列表格 */}
+        {/* 員工列表 */}
         <section className="mb-6">
-          {employees.length === 0 ? (
+          {loading ? (
+            <Card padding="default" className="animate-pulse text-center text-sm text-muted-foreground">載入中…</Card>
+          ) : employees.length === 0 ? (
             <Card variant="dashed" padding="default" className="text-center text-sm text-muted-foreground">
               尚無員工帳號
             </Card>
@@ -266,6 +287,7 @@ export default function EmployeesPage() {
                   <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
                     <th className="px-4 py-3 text-left font-medium">姓名</th>
                     <th className="px-4 py-3 text-left font-medium">帳號</th>
+                    <th className="px-4 py-3 text-left font-medium">信箱</th>
                     <th className="px-4 py-3 text-left font-medium">性別</th>
                     <th className="px-4 py-3 text-left font-medium">身分證字號</th>
                     <th className="px-4 py-3 text-left font-medium">出生年月日</th>
@@ -275,20 +297,21 @@ export default function EmployeesPage() {
                 </thead>
                 <tbody>
                   {employees.map((u, idx) => (
-                    <tr key={u.username} className={idx !== employees.length - 1 ? "border-b border-border" : ""}>
+                    <tr key={u.id} className={idx !== employees.length - 1 ? "border-b border-border" : ""}>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                            {(u.name ?? u.username)?.[0] ?? "?"}
+                            {u.name?.[0] ?? "?"}
                           </div>
                           <span className="font-medium">{u.name}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">@{u.username}</td>
-                      <td className="px-4 py-3">{u.gender ?? "—"}</td>
-                      <td className="px-4 py-3 tabular-nums">{u.idNumber ?? "—"}</td>
-                      <td className="px-4 py-3 tabular-nums">{u.birthDate ?? "—"}</td>
-                      <td className="px-4 py-3 tabular-nums">{u.hireDate ?? "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
+                      <td className="px-4 py-3">{u.gender}</td>
+                      <td className="px-4 py-3 tabular-nums">{u.id_number}</td>
+                      <td className="px-4 py-3 tabular-nums">{u.birth_date}</td>
+                      <td className="px-4 py-3 tabular-nums">{u.hire_date}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon-sm" className="text-muted-foreground hover:text-foreground" onClick={() => setEditTarget(u)}>
@@ -307,7 +330,7 @@ export default function EmployeesPage() {
           )}
         </section>
 
-        {/* 其他主管 */}
+        {/* 主管列表 */}
         {admins.length > 0 && (
           <section>
             <h2 className="mb-3 text-sm font-medium text-muted-foreground">其他主管（{admins.length}）</h2>
@@ -317,21 +340,23 @@ export default function EmployeesPage() {
                   <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
                     <th className="px-4 py-3 text-left font-medium">姓名</th>
                     <th className="px-4 py-3 text-left font-medium">帳號</th>
+                    <th className="px-4 py-3 text-left font-medium">信箱</th>
                     <th className="px-4 py-3 text-left font-medium">角色</th>
                   </tr>
                 </thead>
                 <tbody>
                   {admins.map((u, idx) => (
-                    <tr key={u.username} className={idx !== admins.length - 1 ? "border-b border-border" : ""}>
+                    <tr key={u.id} className={idx !== admins.length - 1 ? "border-b border-border" : ""}>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
-                            {(u.name ?? u.username)?.[0] ?? "?"}
+                            {u.name?.[0] ?? "?"}
                           </div>
                           <span className="font-medium">{u.name}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">@{u.username}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
                       <td className="px-4 py-3">
                         <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600">主管</span>
                       </td>
@@ -344,11 +369,11 @@ export default function EmployeesPage() {
         )}
       </div>
 
-      {showAdd    && <AddDialog  onAdd={handleAdd}  onCancel={() => setShowAdd(false)} />}
-      {editTarget && <EditDialog user={editTarget}  onSave={handleEditSave} onCancel={() => setEditTarget(null)} />}
+      {showAdd    && <AddDialog  onAdd={handleAdd}  onCancel={() => setShowAdd(false)}    loading={actionLoading} />}
+      {editTarget && <EditDialog user={editTarget}  onSave={handleEditSave}               loading={actionLoading} onCancel={() => setEditTarget(null)} />}
 
-      <SuccessDialog open={!!successMsg}  title="Success" message={successMsg}  onClose={() => setSuccessMsg("")} />
-      <AlertDialog   open={!!alertMsg}    title="Alert"   message={alertMsg}    onClose={() => setAlertMsg("")} />
+      <SuccessDialog open={!!successMsg}  title="成功" message={successMsg}  onClose={() => setSuccessMsg("")} />
+      <AlertDialog   open={!!alertMsg}    title="錯誤" message={alertMsg}    onClose={() => setAlertMsg("")} />
       <ConfirmDialog
         open={!!deleteTarget}
         title="確認刪除員工？"
