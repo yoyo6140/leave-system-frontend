@@ -82,8 +82,7 @@ export default function ReviewPage() {
         <div className="mb-6">
           <h1 className="text-xl font-semibold">審核管理</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            待審核 {pending.length} 筆・已核准 {approved} 筆・已拒絕 {rejected}{" "}
-            筆
+            待審核 {pending.length} 筆
           </p>
         </div>
 
