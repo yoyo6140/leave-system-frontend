@@ -39,7 +39,7 @@ function ModalShell({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-pointer"
         onClick={onClose}
       />
       <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">

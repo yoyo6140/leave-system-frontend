@@ -13,7 +13,8 @@ export interface User {
   birthDate?: string;
 }
 
-const AUTH_KEY = "leave_system_auth";
+const AUTH_KEY  = "leave_system_auth";
+const TOKEN_KEY = "leave_system_token";
 
 function mapApiUser(user: {
   username: string;
@@ -49,6 +50,10 @@ export async function login(
   const body = await Login({ username, password });
   if (!body.success) {
     return { success: false, error: body.error?.message ?? "帳號或密碼錯誤" };
+  }
+
+  if (body.data?.token) {
+    localStorage.setItem(TOKEN_KEY, body.data.token);
   }
 
   const me = await apiGetMe();
@@ -90,6 +95,7 @@ export function getCurrentUser(): User | null {
 export function clearCurrentUser(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(AUTH_KEY);
+  localStorage.removeItem(TOKEN_KEY);
 }
 
 export function getHomePath(role: UserRole): string {

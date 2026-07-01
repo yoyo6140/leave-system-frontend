@@ -100,7 +100,7 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
         <span className="font-semibold text-primary">請假系統</span>
         {showClose && (
           <button
-            className="ml-auto rounded p-1 text-muted-foreground hover:bg-blue-100"
+            className="ml-auto rounded p-1 text-muted-foreground hover:bg-blue-100 cursor-pointer"
             onClick={onClose}
             aria-label="關閉選單"
           >
@@ -138,11 +138,11 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
         <button
           onClick={handleLogout}
           className={cn(
-            "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+            "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
             "text-muted-foreground hover:bg-blue-100 hover:text-foreground",
           )}
         >
-          <LogOut className="size-4 cursor-pointer" />
+          <LogOut className="size-4" />
           登出
         </button>
       </div>

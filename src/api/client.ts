@@ -30,6 +30,12 @@ export async function apiFetch<T>(
     headers.set("Content-Type", "application/json");
   }
 
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("leave_system_token")
+      : null;
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     credentials: "include",

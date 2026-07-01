@@ -30,7 +30,7 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           </div>
           {/* 漢堡按鈕（平板以下） */}
           <button
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-blue-100 hover:text-foreground lg:hidden"
+            className="rounded-md p-1.5 text-muted-foreground hover:bg-blue-100 hover:text-foreground lg:hidden cursor-pointer"
             onClick={onMenuToggle}
             aria-label="開啟選單"
           >

@@ -59,7 +59,7 @@ export function LeaveDetailDialog({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-pointer"
         onClick={onClose}
       />
       <div className="relative w-full max-w-sm rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
@@ -68,9 +68,9 @@ export function LeaveDetailDialog({
           <h2 className="font-semibold">請假詳情</h2>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
-            <X className="size-4 cursor-pointer" />
+            <X className="size-4" />
           </button>
         </div>
 
