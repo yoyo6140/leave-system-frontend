@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { Menu } from "lucide-react"
-import { getCurrentUser } from "@/lib/auth"
+import { Menu } from "lucide-react";
+import { getCurrentUser } from "@/lib/auth";
 
 interface NavbarProps {
-  onMenuToggle?: () => void
+  onMenuToggle?: () => void;
 }
 
 export default function Navbar({ onMenuToggle }: NavbarProps) {
-  const user = getCurrentUser()
+  const user = getCurrentUser();
 
   const today = new Date().toLocaleDateString("zh-TW", {
     year: "numeric",
     month: "long",
     day: "numeric",
     weekday: "long",
-  })
+  });
 
   return (
     <header className="h-14 border-b border-blue-200 bg-white px-4 lg:px-6">
@@ -25,7 +25,9 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
           <span className="hidden sm:inline"> {user?.username ?? ""}</span>
         </div>
         <div className="flex shrink-0 items-center gap-3">
-          <div className="hidden text-xs text-muted-foreground sm:block">{today}</div>
+          <div className="hidden text-xs text-muted-foreground sm:block">
+            {today}
+          </div>
           {/* 漢堡按鈕（平板以下） */}
           <button
             className="rounded-md p-1.5 text-muted-foreground hover:bg-blue-100 hover:text-foreground lg:hidden"
@@ -37,5 +39,5 @@ export default function Navbar({ onMenuToggle }: NavbarProps) {
         </div>
       </div>
     </header>
-  )
+  );
 }

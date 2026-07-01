@@ -1,31 +1,31 @@
-import { apiGetMe, Login } from "@/api/useAuth"
+import { apiGetMe, Login } from "@/api/useAuth";
 
-export type UserRole = "admin" | "employee"
-export type Gender   = "男" | "女"
+export type UserRole = "admin" | "employee";
+export type Gender = "男" | "女";
 
 export interface User {
-  username: string
-  role:     UserRole
-  name:     string
-  gender?:  Gender
-  idNumber?: string
-  hireDate?: string
-  birthDate?: string
+  username: string;
+  role: UserRole;
+  name: string;
+  gender?: Gender;
+  idNumber?: string;
+  hireDate?: string;
+  birthDate?: string;
 }
 
-const AUTH_KEY = "leave_system_auth"
+const AUTH_KEY = "leave_system_auth";
 
 function mapApiUser(user: {
-  username: string
-  name: string
-  role: string
-  gender?: string
-  id_number?: string
-  idNumber?: string
-  hire_date?: string
-  hireDate?: string
-  birth_date?: string
-  birthDate?: string
+  username: string;
+  name: string;
+  role: string;
+  gender?: string;
+  id_number?: string;
+  idNumber?: string;
+  hire_date?: string;
+  hireDate?: string;
+  birth_date?: string;
+  birthDate?: string;
 }): User {
   return {
     username: user.username,
@@ -35,56 +35,63 @@ function mapApiUser(user: {
     idNumber: user.id_number ?? user.idNumber,
     hireDate: user.hire_date ?? user.hireDate,
     birthDate: user.birth_date ?? user.birthDate,
-  }
+  };
 }
 
 function persistUser(user: User): void {
-  localStorage.setItem(AUTH_KEY, JSON.stringify(user))
+  localStorage.setItem(AUTH_KEY, JSON.stringify(user));
 }
 
 export async function login(
   username: string,
-  password: string
+  password: string,
 ): Promise<{ success: true; user: User } | { success: false; error: string }> {
-  const body = await Login({ username, password })
+  const body = await Login({ username, password });
   if (!body.success) {
-    return { success: false, error: body.error?.message ?? "帳號或密碼錯誤" }
+    return { success: false, error: body.error?.message ?? "帳號或密碼錯誤" };
   }
 
-  const me = await apiGetMe()
+  const me = await apiGetMe();
   if (!me) {
-    return { success: false, error: "登入成功但無法取得使用者資訊，請稍後再試" }
+    return {
+      success: false,
+      error: "登入成功但無法取得使用者資訊，請稍後再試",
+    };
   }
 
-  const user = mapApiUser(me)
-  persistUser(user)
-  return { success: true, user }
+  const user = mapApiUser(me);
+  persistUser(user);
+  return { success: true, user };
 }
 
 export async function restoreSession(): Promise<User | null> {
-  const me = await apiGetMe()
+  const me = await apiGetMe();
   if (!me) {
-    clearCurrentUser()
-    return null
+    clearCurrentUser();
+    return null;
   }
 
-  const user = mapApiUser(me)
-  persistUser(user)
-  return user
+  const user = mapApiUser(me);
+  persistUser(user);
+  return user;
 }
 
 export function getCurrentUser(): User | null {
-  if (typeof window === "undefined") return null
-  const raw = localStorage.getItem(AUTH_KEY)
-  if (!raw) return null
-  try { return JSON.parse(raw) as User } catch { return null }
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem(AUTH_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as User;
+  } catch {
+    return null;
+  }
 }
 
 export function clearCurrentUser(): void {
-  if (typeof window === "undefined") return
-  localStorage.removeItem(AUTH_KEY)
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(AUTH_KEY);
 }
 
 export function getHomePath(role: UserRole): string {
-  return role === "admin" ? "/overview" : "/leave-balance"
+  return role === "admin" ? "/overview" : "/leave-balance";
 }
