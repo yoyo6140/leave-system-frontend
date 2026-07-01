@@ -1,33 +1,40 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { type Row } from "@tanstack/react-table"
-import { MoreHorizontal, Trash2 } from "lucide-react"
+import { useState } from "react";
+import { type Row } from "@tanstack/react-table";
+import { MoreHorizontal, Trash2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { ConfirmDialog } from "@/components/ui/app-dialog"
-import { type ApiLeaveRecord } from "@/api/useLeaves"
+} from "@/components/ui/dropdown-menu";
+import { ConfirmDialog } from "@/components/ui/app-dialog";
+import { type ApiLeaveRecord } from "@/api/useLeaves";
 
 interface DataTableRowActionsProps {
-  row: Row<ApiLeaveRecord>
-  onDelete: (id: string) => void
+  row: Row<ApiLeaveRecord>;
+  onDelete: (id: string) => void;
 }
 
-export function DataTableRowActions({ row, onDelete }: DataTableRowActionsProps) {
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const canCancel = row.original.status === "待審核"
+export function DataTableRowActions({
+  row,
+  onDelete,
+}: DataTableRowActionsProps) {
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const canCancel = row.original.status === "待審核";
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon-sm" className="data-[state=open]:bg-muted">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="data-[state=open]:bg-muted"
+          >
             <MoreHorizontal className="size-4" />
             <span className="sr-only">開啟選單</span>
           </Button>
@@ -50,9 +57,12 @@ export function DataTableRowActions({ row, onDelete }: DataTableRowActionsProps)
         message="取消後此筆紀錄將刪除，無法復原。"
         confirmLabel="確認取消"
         variant="destructive"
-        onConfirm={() => { onDelete(row.original.id); setConfirmOpen(false) }}
+        onConfirm={() => {
+          onDelete(row.original.id);
+          setConfirmOpen(false);
+        }}
         onCancel={() => setConfirmOpen(false)}
       />
     </>
-  )
+  );
 }

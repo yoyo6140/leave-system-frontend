@@ -4,46 +4,46 @@
 
 ## 技術棧
 
-| 項目 | 版本 / 說明 |
-|------|-------------|
+| 項目      | 版本 / 說明              |
+| --------- | ------------------------ |
 | Framework | Next.js 16（App Router） |
-| UI | React 19 |
-| 樣式 | Tailwind CSS v4 |
-| 元件 | Radix UI / shadcn/ui |
-| 表格 | TanStack Table |
-| 圖示 | lucide-react |
-| 語言 | TypeScript |
+| UI        | React 19                 |
+| 樣式      | Tailwind CSS v4          |
+| 元件      | Radix UI / shadcn/ui     |
+| 表格      | TanStack Table           |
+| 圖示      | lucide-react             |
+| 語言      | TypeScript               |
 
 ## 功能概覽
 
 ### 管理員（admin）
 
-| 路由 | 說明 |
-|------|------|
-| `/overview` | 團隊總覽、待審核申請、員工年請假時數 |
-| `/leave-balance` | 假別餘額 |
-| `/review` | 審核請假申請（核准 / 拒絕） |
-| `/employees` | 員工帳號管理（新增、編輯、刪除） |
-| `/apply` | 申請請假 |
-| `/records` | 全部請假紀錄 |
-| `/ai-analysis` | AI 客服助理（串接 Gemini 後端） |
+| 路由             | 說明                                 |
+| ---------------- | ------------------------------------ |
+| `/overview`      | 團隊總覽、待審核申請、員工年請假時數 |
+| `/leave-balance` | 假別餘額                             |
+| `/review`        | 審核請假申請（核准 / 拒絕）          |
+| `/employees`     | 員工帳號管理（新增、編輯、刪除）     |
+| `/apply`         | 申請請假                             |
+| `/records`       | 全部請假紀錄                         |
+| `/ai-analysis`   | AI 客服助理（串接 Gemini 後端）      |
 
 ### 員工（employee）
 
-| 路由 | 說明 |
-|------|------|
+| 路由             | 說明                   |
+| ---------------- | ---------------------- |
 | `/leave-balance` | 假別餘額（登入後首頁） |
-| `/apply` | 申請請假 |
-| `/records` | 個人請假紀錄 |
+| `/apply`         | 申請請假               |
+| `/records`       | 個人請假紀錄           |
 
 > 側邊欄依角色顯示不同選項；無權限頁面會自動導回對應首頁。
 
 ## 測試帳號
 
-| 帳號 | 密碼 | 角色 | 登入後導向 |
-|------|------|------|------------|
-| `admin` | `111111` | 管理員 | `/overview` |
-| `employee` | `111111` | 員工 | `/leave-balance` |
+| 帳號       | 密碼     | 角色   | 登入後導向       |
+| ---------- | -------- | ------ | ---------------- |
+| `admin`    | `111111` | 管理員 | `/overview`      |
+| `employee` | `111111` | 員工   | `/leave-balance` |
 
 帳號資料存於瀏覽器 `localStorage`（key: `leave_system_users`）。若登入異常，可清除該 key 後重新整理以還原預設帳號。
 
@@ -109,11 +109,11 @@ src/
 
 ## 資料儲存（開發階段）
 
-| localStorage Key | 內容 |
-|------------------|------|
-| `leave_system_auth` | 目前登入使用者 |
+| localStorage Key     | 內容           |
+| -------------------- | -------------- |
+| `leave_system_auth`  | 目前登入使用者 |
 | `leave_system_users` | 使用者帳號列表 |
-| `leave_records` | 請假申請紀錄 |
+| `leave_records`      | 請假申請紀錄   |
 
 API 串接規格可參考 [`docs/api-spec.md`](docs/api-spec.md)。
 

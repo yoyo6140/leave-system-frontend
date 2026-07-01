@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import { Send } from "lucide-react"
+import { useEffect, useRef, useState } from "react";
+import { Send } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
-import { sendChatMessage, type ChatMessage } from "@/api/useChat"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { sendChatMessage, type ChatMessage } from "@/api/useChat";
 
 type Message = {
-  id: number
-  role: "user" | "model"
-  content: string
-  isError?: boolean
-}
+  id: number;
+  role: "user" | "model";
+  content: string;
+  isError?: boolean;
+};
 
 function BotAvatar() {
   return (
@@ -29,11 +29,20 @@ function BotAvatar() {
           strokeLinecap="round"
           fill="none"
         />
-        <rect x="10" y="3" width="4" height="2" rx="1" fill="#4195C3" stroke="white" strokeWidth="1" />
+        <rect
+          x="10"
+          y="3"
+          width="4"
+          height="2"
+          rx="1"
+          fill="#4195C3"
+          stroke="white"
+          strokeWidth="1"
+        />
         <line x1="12" y1="5" x2="12" y2="6" stroke="white" strokeWidth="1" />
       </svg>
     </div>
-  )
+  );
 }
 
 function TypingDots() {
@@ -47,7 +56,7 @@ function TypingDots() {
         />
       ))}
     </div>
-  )
+  );
 }
 
 export default function AiChat() {
@@ -57,33 +66,36 @@ export default function AiChat() {
       role: "model",
       content: "您好！我是 AI 客服助理，請問有什麼我可以幫您的嗎？",
     },
-  ])
-  const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(false)
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages, loading])
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
 
   async function sendMessage() {
-    const text = input.trim()
-    if (!text || loading) return
+    const text = input.trim();
+    if (!text || loading) return;
 
-    const userMsg: Message = { id: Date.now(), role: "user", content: text }
-    const updated = [...messages, userMsg]
-    setMessages(updated)
-    setInput("")
-    setLoading(true)
+    const userMsg: Message = { id: Date.now(), role: "user", content: text };
+    const updated = [...messages, userMsg];
+    setMessages(updated);
+    setInput("");
+    setLoading(true);
 
     try {
-      const history: ChatMessage[] = updated.map((m) => ({ role: m.role, content: m.content }))
-      const reply = await sendChatMessage(history)
+      const history: ChatMessage[] = updated.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+      const reply = await sendChatMessage(history);
       setMessages((prev) => [
         ...prev,
         { id: Date.now() + 1, role: "model", content: reply },
-      ])
+      ]);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -93,17 +105,17 @@ export default function AiChat() {
           content: "抱歉，目前服務發生問題，請稍後再試。",
           isError: true,
         },
-      ])
+      ]);
     } finally {
-      setLoading(false)
-      inputRef.current?.focus()
+      setLoading(false);
+      inputRef.current?.focus();
     }
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
-      e.preventDefault()
-      void sendMessage()
+      e.preventDefault();
+      void sendMessage();
     }
   }
 
@@ -131,7 +143,7 @@ export default function AiChat() {
             key={msg.id}
             className={cn(
               "flex gap-3",
-              msg.role === "user" ? "flex-row-reverse" : "flex-row"
+              msg.role === "user" ? "flex-row-reverse" : "flex-row",
             )}
           >
             {msg.role === "model" && <BotAvatar />}
@@ -142,7 +154,7 @@ export default function AiChat() {
                   ? "bg-primary text-primary-foreground"
                   : msg.isError
                     ? "border border-destructive/20 bg-destructive/10 text-destructive"
-                    : "bg-muted text-foreground"
+                    : "bg-muted text-foreground",
               )}
             >
               {msg.content}
@@ -183,5 +195,5 @@ export default function AiChat() {
         </Button>
       </div>
     </div>
-  )
+  );
 }

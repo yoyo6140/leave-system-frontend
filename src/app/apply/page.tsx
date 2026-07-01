@@ -1,23 +1,27 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { format } from "date-fns"
-import { zhTW } from "date-fns/locale"
-import { type DateRange } from "react-day-picker"
-import { CalendarIcon } from "lucide-react"
+import * as React from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { format } from "date-fns";
+import { zhTW } from "date-fns/locale";
+import { type DateRange } from "react-day-picker";
+import { CalendarIcon } from "lucide-react";
 
-import AppLayout from "@/components/AppLayout"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Calendar } from "@/components/ui/calendar"
-import { Field, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { SuccessDialog, AlertDialog } from "@/components/ui/app-dialog"
-import { getCurrentUser } from "@/lib/auth"
+import AppLayout from "@/components/AppLayout";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { SuccessDialog, AlertDialog } from "@/components/ui/app-dialog";
+import { getCurrentUser } from "@/lib/auth";
 import {
   hoursToApproxDays,
   LEAVE_BADGE_ROUNDED,
@@ -25,89 +29,109 @@ import {
   LEAVE_STATUS_STYLE,
   LEAVE_TYPES,
   LeaveType,
-} from "@/lib/leave"
-import { cn } from "@/lib/utils"
-import { getMyQuota } from "@/api/useQuota"
-import { type ApiLeaveRecord, createLeave, getLeaves } from "@/api/useLeaves"
+} from "@/lib/leave";
+import { cn } from "@/lib/utils";
+import { getMyQuota } from "@/api/useQuota";
+import { type ApiLeaveRecord, createLeave, getLeaves } from "@/api/useLeaves";
 
 export default function ApplyPage() {
-  const router = useRouter()
-  const user   = getCurrentUser()
+  const router = useRouter();
+  const user = getCurrentUser();
 
-  const [type,         setType]         = useState<LeaveType>("特休")
-  const [dateRange,    setDateRange]    = useState<DateRange | undefined>()
-  const [hours,        setHours]        = useState<number | "">("")
-  const [reason,       setReason]       = useState("")
-  const [remaining,    setRemaining]    = useState<Record<LeaveType, number | null>>(
-    () => Object.fromEntries(LEAVE_TYPES.map((t) => [t, 0])) as Record<LeaveType, number | null>
-  )
-  const [quotaLoading, setQuotaLoading] = useState(true)
-  const [successOpen,  setSuccessOpen]  = useState(false)
-  const [alertMsg,     setAlertMsg]     = useState("")
-  const [recent,       setRecent]       = useState<ApiLeaveRecord[]>([])
+  const [type, setType] = useState<LeaveType>("特休");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [hours, setHours] = useState<number | "">("");
+  const [reason, setReason] = useState("");
+  const [remaining, setRemaining] = useState<Record<LeaveType, number | null>>(
+    () =>
+      Object.fromEntries(LEAVE_TYPES.map((t) => [t, 0])) as Record<
+        LeaveType,
+        number | null
+      >,
+  );
+  const [quotaLoading, setQuotaLoading] = useState(true);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [alertMsg, setAlertMsg] = useState("");
+  const [recent, setRecent] = useState<ApiLeaveRecord[]>([]);
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
     async function load() {
-      setQuotaLoading(true)
+      setQuotaLoading(true);
 
       const [quota, leavesResult] = await Promise.all([
         getMyQuota(),
         getLeaves({ limit: 5 }),
-      ])
-      if (cancelled) return
+      ]);
+      if (cancelled) return;
 
       const totals = Object.fromEntries(
         LEAVE_TYPES.map((t) => {
-          const item = quota?.quotas.find((q) => q.type === t)
+          const item = quota?.quotas.find((q) => q.type === t);
           // null = 無上限
-          return [t, item?.remaining_hours ?? (item?.total_hours === null ? null : 0)]
-        })
-      ) as Record<LeaveType, number | null>
-      setRemaining(totals)
+          return [
+            t,
+            item?.remaining_hours ?? (item?.total_hours === null ? null : 0),
+          ];
+        }),
+      ) as Record<LeaveType, number | null>;
+      setRemaining(totals);
 
-      if (leavesResult.ok) setRecent(leavesResult.data.data)
-      setQuotaLoading(false)
+      if (leavesResult.ok) setRecent(leavesResult.data.data);
+      setQuotaLoading(false);
     }
-    load()
-    return () => { cancelled = true }
-  }, [])
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  const startDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : ""
-  const endDate   = dateRange?.to   ? format(dateRange.to,   "yyyy-MM-dd") : ""
+  const startDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "";
+  const endDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : "";
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!startDate)                { setAlertMsg("請選擇請假日期"); return }
-    if (!hours || Number(hours) <= 0) { setAlertMsg("請填寫請假時數"); return }
-    const rem = remaining[type]
+    e.preventDefault();
+    if (!startDate) {
+      setAlertMsg("請選擇請假日期");
+      return;
+    }
+    if (!hours || Number(hours) <= 0) {
+      setAlertMsg("請填寫請假時數");
+      return;
+    }
+    const rem = remaining[type];
     if (rem !== null && Number(hours) > rem) {
-      setAlertMsg(`${type} 剩餘時數不足（剩餘 ${rem} 小時，申請 ${hours} 小時）`)
-      return
+      setAlertMsg(
+        `${type} 剩餘時數不足（剩餘 ${rem} 小時，申請 ${hours} 小時）`,
+      );
+      return;
     }
 
     const result = await createLeave({
       type,
       start_date: startDate,
-      end_date:   endDate || startDate,
-      hours:      Number(hours),
+      end_date: endDate || startDate,
+      hours: Number(hours),
       reason,
-    })
+    });
 
-    if (!result.ok) { setAlertMsg(result.message); return }
-    setSuccessOpen(true)
+    if (!result.ok) {
+      setAlertMsg(result.message);
+      return;
+    }
+    setSuccessOpen(true);
   }
 
   function handleSuccessClose() {
-    setSuccessOpen(false)
-    router.push("/records")
+    setSuccessOpen(false);
+    router.push("/records");
   }
 
   const remainingDisplay = (t: LeaveType) => {
-    const r = remaining[t]
-    if (r === null) return "無上限"
-    return `剩餘 ${r} 小時`
-  }
+    const r = remaining[t];
+    if (r === null) return "無上限";
+    return `剩餘 ${r} 小時`;
+  };
 
   return (
     <AppLayout>
@@ -124,7 +148,9 @@ export default function ApplyPage() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
               <p className="text-xs text-muted-foreground">員工編號</p>
-              <p className="mt-0.5 text-sm font-medium tabular-nums">{user?.username ?? "—"}</p>
+              <p className="mt-0.5 text-sm font-medium tabular-nums">
+                {user?.username ?? "—"}
+              </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">姓名</p>
@@ -132,16 +158,16 @@ export default function ApplyPage() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">入職日期</p>
-              <p className="mt-0.5 text-sm font-medium tabular-nums">{user?.hireDate ?? "—"}</p>
+              <p className="mt-0.5 text-sm font-medium tabular-nums">
+                {user?.hireDate ?? "—"}
+              </p>
             </div>
           </div>
         </Card>
 
-
         {/* 請假表單 */}
         <Card asChild padding="lg">
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-
             {/* 假別 */}
             <Field>
               <FieldLabel>假別</FieldLabel>
@@ -167,14 +193,29 @@ export default function ApplyPage() {
                 <FieldLabel>請假日期</FieldLabel>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start px-3 font-normal text-left">
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start px-3 font-normal text-left"
+                    >
                       <CalendarIcon className="mr-2 size-4 text-muted-foreground" />
                       {dateRange?.from ? (
-                        dateRange.to
-                          ? <>{format(dateRange.from, "yyyy/MM/dd", { locale: zhTW })} — {format(dateRange.to, "yyyy/MM/dd", { locale: zhTW })}</>
-                          : format(dateRange.from, "yyyy/MM/dd", { locale: zhTW })
+                        dateRange.to ? (
+                          <>
+                            {format(dateRange.from, "yyyy/MM/dd", {
+                              locale: zhTW,
+                            })}{" "}
+                            —{" "}
+                            {format(dateRange.to, "yyyy/MM/dd", {
+                              locale: zhTW,
+                            })}
+                          </>
+                        ) : (
+                          format(dateRange.from, "yyyy/MM/dd", { locale: zhTW })
+                        )
                       ) : (
-                        <span className="text-muted-foreground">選擇請假日期</span>
+                        <span className="text-muted-foreground">
+                          選擇請假日期
+                        </span>
                       )}
                     </Button>
                   </PopoverTrigger>
@@ -199,11 +240,17 @@ export default function ApplyPage() {
                     min={1}
                     max={remaining[type] ?? undefined}
                     value={hours}
-                    onChange={(e) => setHours(e.target.value === "" ? "" : Number(e.target.value))}
+                    onChange={(e) =>
+                      setHours(
+                        e.target.value === "" ? "" : Number(e.target.value),
+                      )
+                    }
                     placeholder="輸入時數"
                     required
                   />
-                  <span className="shrink-0 text-sm text-muted-foreground">小時</span>
+                  <span className="shrink-0 text-sm text-muted-foreground">
+                    小時
+                  </span>
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {hours !== "" && Number(hours) > 0
@@ -217,7 +264,9 @@ export default function ApplyPage() {
             <Field>
               <FieldLabel>
                 請假原因
-                <span className="ml-1 text-xs font-normal text-muted-foreground">（選填）</span>
+                <span className="ml-1 text-xs font-normal text-muted-foreground">
+                  （選填）
+                </span>
               </FieldLabel>
               <textarea
                 value={reason}
@@ -229,8 +278,17 @@ export default function ApplyPage() {
             </Field>
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => router.back()}>取消</Button>
-              <Button type="submit" className="w-full sm:w-auto">送出</Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => router.back()}
+              >
+                取消
+              </Button>
+              <Button type="submit" className="w-full sm:w-auto">
+                送出
+              </Button>
             </div>
           </form>
         </Card>
@@ -249,5 +307,5 @@ export default function ApplyPage() {
         onClose={() => setAlertMsg("")}
       />
     </AppLayout>
-  )
+  );
 }

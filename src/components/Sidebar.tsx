@@ -1,57 +1,94 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import Link from "next/link"
-import { useRouter, usePathname } from "next/navigation"
-import { Logout } from "@/api/useAuth"
-import { getLeaves } from "@/api/useLeaves"
-import { getCurrentUser, clearCurrentUser, type UserRole } from "@/lib/auth"
-import { Bot, CalendarDays, CalendarPlus, ClipboardCheck, ClipboardList, LayoutDashboard, LogOut, PieChart, Users, X } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { Logout } from "@/api/useAuth";
+import { getLeaves } from "@/api/useLeaves";
+import { getCurrentUser, clearCurrentUser, type UserRole } from "@/lib/auth";
+import {
+  Bot,
+  CalendarDays,
+  CalendarPlus,
+  ClipboardCheck,
+  ClipboardList,
+  LayoutDashboard,
+  LogOut,
+  PieChart,
+  Users,
+  X,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-type NavItem = { href: string; icon: React.ElementType; label: string; roles: UserRole[] }
+type NavItem = {
+  href: string;
+  icon: React.ElementType;
+  label: string;
+  roles: UserRole[];
+};
 
 const ALL_NAV: NavItem[] = [
-  { href: "/overview",      icon: LayoutDashboard, label: "總覽",     roles: ["admin"] },
-  { href: "/leave-balance", icon: PieChart,        label: "假別餘額", roles: ["admin", "employee"] },
-  { href: "/review",        icon: ClipboardCheck,  label: "審核管理", roles: ["admin"] },
-  { href: "/employees",     icon: Users,           label: "員工管理", roles: ["admin"] },
-  { href: "/apply",         icon: CalendarPlus,    label: "申請請假", roles: ["admin", "employee"] },
-  { href: "/records",       icon: ClipboardList,   label: "請假紀錄", roles: ["admin", "employee"] },
-  { href: "/ai-analysis",   icon: Bot,             label: "AI 分析",  roles: ["admin"] },
-]
+  { href: "/overview", icon: LayoutDashboard, label: "總覽", roles: ["admin"] },
+  {
+    href: "/leave-balance",
+    icon: PieChart,
+    label: "假別餘額",
+    roles: ["admin", "employee"],
+  },
+  {
+    href: "/review",
+    icon: ClipboardCheck,
+    label: "審核管理",
+    roles: ["admin"],
+  },
+  { href: "/employees", icon: Users, label: "員工管理", roles: ["admin"] },
+  {
+    href: "/apply",
+    icon: CalendarPlus,
+    label: "申請請假",
+    roles: ["admin", "employee"],
+  },
+  {
+    href: "/records",
+    icon: ClipboardList,
+    label: "請假紀錄",
+    roles: ["admin", "employee"],
+  },
+  { href: "/ai-analysis", icon: Bot, label: "AI 分析", roles: ["admin"] },
+];
 
 interface SidebarProps {
-  open?: boolean
-  onClose?: () => void
+  open?: boolean;
+  onClose?: () => void;
 }
 
 export default function Sidebar({ open = false, onClose }: SidebarProps) {
-  const router   = useRouter()
-  const pathname = usePathname()
-  const user     = getCurrentUser()
-  const role     = user?.role ?? "employee"
+  const router = useRouter();
+  const pathname = usePathname();
+  const user = getCurrentUser();
+  const role = user?.role ?? "employee";
 
-  const [pendingCount, setPending] = useState(0)
+  const [pendingCount, setPending] = useState(0);
 
   useEffect(() => {
-    if (role !== "admin") return
+    if (role !== "admin") return;
     getLeaves({ limit: 200 }).then((res) => {
-      if (res.ok) setPending(res.data.data.filter((r) => r.status === "待審核").length)
-    })
-  }, [role, pathname])
+      if (res.ok)
+        setPending(res.data.data.filter((r) => r.status === "待審核").length);
+    });
+  }, [role, pathname]);
 
   // 手機導航後自動關閉抽屜
   useEffect(() => {
-    onClose?.()
-  }, [pathname])
+    onClose?.();
+  }, [pathname]);
 
-  const navLinks = ALL_NAV.filter((link) => link.roles.includes(role))
+  const navLinks = ALL_NAV.filter((link) => link.roles.includes(role));
 
   async function handleLogout() {
-    await Logout()
-    clearCurrentUser()
-    router.push("/login")
+    await Logout();
+    clearCurrentUser();
+    router.push("/login");
   }
 
   // 共用的導覽內容
@@ -82,7 +119,7 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
               pathname === link.href
                 ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-blue-100 hover:text-foreground"
+                : "text-muted-foreground hover:bg-blue-100 hover:text-foreground",
             )}
           >
             <link.icon className="size-4 shrink-0" />
@@ -102,7 +139,7 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
           onClick={handleLogout}
           className={cn(
             "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-            "text-muted-foreground hover:bg-blue-100 hover:text-foreground"
+            "text-muted-foreground hover:bg-blue-100 hover:text-foreground",
           )}
         >
           <LogOut className="size-4 cursor-pointer" />
@@ -110,7 +147,7 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
         </button>
       </div>
     </>
-  )
+  );
 
   return (
     <>
@@ -129,11 +166,11 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
       <aside
         className={cn(
           "fixed inset-y-0 right-0 z-50 flex w-56 flex-col border-l border-blue-200 bg-white transition-transform duration-300 ease-in-out lg:hidden",
-          open ? "translate-x-0" : "translate-x-full"
+          open ? "translate-x-0" : "translate-x-full",
         )}
       >
         {navContent(true)}
       </aside>
     </>
-  )
+  );
 }

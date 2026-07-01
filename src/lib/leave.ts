@@ -1,43 +1,72 @@
-export type LeaveType = "特休" | "病假" | "事假" | "婚假" | "喪假" | "公假" | "其他"
-export type LeaveStatus = "待審核" | "已通過" | "已拒絕"
+export type LeaveType =
+  "特休" | "病假" | "事假" | "婚假" | "喪假" | "公假" | "其他";
+export type LeaveStatus = "待審核" | "已通過" | "已拒絕";
 
 export type LeaveRecord = {
-  id: string
-  username: string
-  type: LeaveType
-  startDate: string
-  endDate: string
-  hours: number
-  reason: string
-  status: LeaveStatus
-  createdAt: string
-}
+  id: string;
+  username: string;
+  type: LeaveType;
+  startDate: string;
+  endDate: string;
+  hours: number;
+  reason: string;
+  status: LeaveStatus;
+  createdAt: string;
+};
 
-export const LEAVE_BADGE_ROUNDED = "rounded-[8px]"
+export const LEAVE_BADGE_ROUNDED = "rounded-[8px]";
 
 export const LEAVE_STATUS_STYLE: Record<LeaveStatus, string> = {
   待審核: "bg-amber-50 text-amber-600",
   已通過: "bg-blue-50 text-blue-600",
   已拒絕: "bg-red-50 text-red-600",
-}
+};
 
 export const LEAVE_QUOTAS: Record<
   LeaveType,
   { bgColor: string; textColor: string; barColor: string }
 > = {
-  特休: { bgColor: "bg-blue-50",  textColor: "text-blue-600",  barColor: "#3b82f6" },
-  病假: { bgColor: "bg-red-50",   textColor: "text-red-600",   barColor: "#ef4444" },
-  事假: { bgColor: "bg-amber-50", textColor: "text-amber-600", barColor: "#f59e0b" },
-  婚假: { bgColor: "bg-red-50",   textColor: "text-red-600",   barColor: "#ef4444" },
-  喪假: { bgColor: "bg-red-50",   textColor: "text-red-600",   barColor: "#ef4444" },
-  公假: { bgColor: "bg-amber-50", textColor: "text-amber-600", barColor: "#f59e0b" },
-  其他: { bgColor: "bg-amber-50", textColor: "text-amber-600", barColor: "#f59e0b" },
-}
+  特休: {
+    bgColor: "bg-blue-50",
+    textColor: "text-blue-600",
+    barColor: "#3b82f6",
+  },
+  病假: {
+    bgColor: "bg-red-50",
+    textColor: "text-red-600",
+    barColor: "#ef4444",
+  },
+  事假: {
+    bgColor: "bg-amber-50",
+    textColor: "text-amber-600",
+    barColor: "#f59e0b",
+  },
+  婚假: {
+    bgColor: "bg-red-50",
+    textColor: "text-red-600",
+    barColor: "#ef4444",
+  },
+  喪假: {
+    bgColor: "bg-red-50",
+    textColor: "text-red-600",
+    barColor: "#ef4444",
+  },
+  公假: {
+    bgColor: "bg-amber-50",
+    textColor: "text-amber-600",
+    barColor: "#f59e0b",
+  },
+  其他: {
+    bgColor: "bg-amber-50",
+    textColor: "text-amber-600",
+    barColor: "#f59e0b",
+  },
+};
 
-export const LEAVE_TYPES = Object.keys(LEAVE_QUOTAS) as LeaveType[]
+export const LEAVE_TYPES = Object.keys(LEAVE_QUOTAS) as LeaveType[];
 
-const STORAGE_KEY = "leave_records"
-const PENDING_SEED_ID = "seed-pending-001"
+const STORAGE_KEY = "leave_records";
+const PENDING_SEED_ID = "seed-pending-001";
 
 const DEFAULT_RECORDS: LeaveRecord[] = [
   {
@@ -51,55 +80,55 @@ const DEFAULT_RECORDS: LeaveRecord[] = [
     status: "待審核",
     createdAt: "2026-06-01T09:30:00.000Z",
   },
-]
+];
 
 function loadAllRecords(): LeaveRecord[] {
-  const raw = localStorage.getItem(STORAGE_KEY)
+  const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_RECORDS))
-    return DEFAULT_RECORDS
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_RECORDS));
+    return DEFAULT_RECORDS;
   }
 
   const all = (JSON.parse(raw) as Partial<LeaveRecord>[]).map((r) => ({
     ...r,
     username: r.username ?? "admin",
-  })) as LeaveRecord[]
+  })) as LeaveRecord[];
 
   if (!all.some((r) => r.id === PENDING_SEED_ID)) {
-    const withSeed = [...all, ...DEFAULT_RECORDS]
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(withSeed))
-    return withSeed
+    const withSeed = [...all, ...DEFAULT_RECORDS];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(withSeed));
+    return withSeed;
   }
 
-  return all
+  return all;
 }
 
 export function getRecords(username?: string): LeaveRecord[] {
-  if (typeof window === "undefined") return []
-  const all = loadAllRecords()
-  return username ? all.filter((r) => r.username === username) : all
+  if (typeof window === "undefined") return [];
+  const all = loadAllRecords();
+  return username ? all.filter((r) => r.username === username) : all;
 }
 
 export function addRecord(
-  data: Omit<LeaveRecord, "id" | "createdAt" | "status">
+  data: Omit<LeaveRecord, "id" | "createdAt" | "status">,
 ): LeaveRecord {
-  const all = getRecords()
+  const all = getRecords();
   const record: LeaveRecord = {
     ...data,
     id: crypto.randomUUID(),
     status: "待審核",
     createdAt: new Date().toISOString(),
-  }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...all, record]))
-  return record
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...all, record]));
+  return record;
 }
 
 export function getUsedHours(type: LeaveType, username?: string): number {
   return getRecords(username)
     .filter((r) => r.type === type && r.status !== "已拒絕")
-    .reduce((sum, r) => sum + r.hours, 0)
+    .reduce((sum, r) => sum + r.hours, 0);
 }
 
 export function hoursToApproxDays(hours: number): number {
-  return Math.round((hours / 8) * 10) / 10
+  return Math.round((hours / 8) * 10) / 10;
 }

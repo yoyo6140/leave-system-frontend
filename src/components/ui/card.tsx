@@ -1,33 +1,30 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Slot } from "radix-ui"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Slot } from "radix-ui";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-const cardVariants = cva(
-  "border border-border bg-white rounded-2xl",
-  {
-    variants: {
-      variant: {
-        default:  "shadow-sm",
-        elevated: "shadow-md hover:shadow-lg transition-shadow duration-200",
-        flat:     "",
-        dashed:   "border-dashed shadow-none",
-      },
-      padding: {
-        none:    "",
-        sm:      "p-4",
-        default: "p-5",
-        lg:      "p-6",
-        xl:      "p-8",
-      },
+const cardVariants = cva("border border-border bg-white rounded-2xl", {
+  variants: {
+    variant: {
+      default: "shadow-sm",
+      elevated: "shadow-md hover:shadow-lg transition-shadow duration-200",
+      flat: "",
+      dashed: "border-dashed shadow-none",
     },
-    defaultVariants: {
-      variant: "default",
-      padding: "default",
+    padding: {
+      none: "",
+      sm: "p-4",
+      default: "p-5",
+      lg: "p-6",
+      xl: "p-8",
     },
-  }
-)
+  },
+  defaultVariants: {
+    variant: "default",
+    padding: "default",
+  },
+});
 
 function Card({
   className,
@@ -37,9 +34,9 @@ function Card({
   ...props
 }: React.ComponentProps<"div"> &
   VariantProps<typeof cardVariants> & {
-    asChild?: boolean
+    asChild?: boolean;
   }) {
-  const Comp = asChild ? Slot.Root : "div"
+  const Comp = asChild ? Slot.Root : "div";
 
   return (
     <Comp
@@ -47,7 +44,7 @@ function Card({
       className={cn(cardVariants({ variant, padding }), className)}
       {...props}
     />
-  )
+  );
 }
 
-export { Card, cardVariants }
+export { Card, cardVariants };

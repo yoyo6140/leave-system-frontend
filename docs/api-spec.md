@@ -10,6 +10,7 @@
 所有 API 回應皆包含 `success` 欄位，用以判斷呼叫是否成功。
 
 **成功**
+
 ```json
 {
   "success": true,
@@ -18,6 +19,7 @@
 ```
 
 **失敗**
+
 ```json
 {
   "success": false,
@@ -32,24 +34,26 @@
 
 ## 使用者欄位說明
 
-| 欄位 | 型別 | 說明 |
-|------|------|------|
-| `username` | `string` | 登入帳號（唯一） |
-| `name` | `string` | 當事人姓名 |
-| `role` | `"admin"` \| `"employee"` | 角色 |
-| `gender` | `"男"` \| `"女"` | 性別 |
-| `idNumber` | `string` | 身分證字號 |
-| `birthDate` | `string` | 出生年月日（`YYYY-MM-DD`） |
-| `hireDate` | `string` | 任職日期（`YYYY-MM-DD`） |
+| 欄位        | 型別                      | 說明                       |
+| ----------- | ------------------------- | -------------------------- |
+| `username`  | `string`                  | 登入帳號（唯一）           |
+| `name`      | `string`                  | 當事人姓名                 |
+| `role`      | `"admin"` \| `"employee"` | 角色                       |
+| `gender`    | `"男"` \| `"女"`          | 性別                       |
+| `idNumber`  | `string`                  | 身分證字號                 |
+| `birthDate` | `string`                  | 出生年月日（`YYYY-MM-DD`） |
+| `hireDate`  | `string`                  | 任職日期（`YYYY-MM-DD`）   |
 
 ---
 
 ## 認證 Auth
 
 ### POST `/api/auth/login`
+
 登入取得 token。
 
 **Request Body**
+
 ```json
 {
   "username": "admin",
@@ -58,6 +62,7 @@
 ```
 
 **Response — 成功**
+
 ```json
 {
   "success": true,
@@ -73,6 +78,7 @@
 ```
 
 **Response — 失敗**
+
 ```json
 {
   "success": false,
@@ -88,9 +94,11 @@
 ---
 
 ### POST `/api/auth/logout`
+
 登出。
 
 **Response**
+
 ```json
 {
   "success": true,
@@ -103,9 +111,11 @@
 ---
 
 ### GET `/api/auth/me`
+
 取得當前登入使用者資訊。
 
 **Response — 成功**
+
 ```json
 {
   "success": true,
@@ -118,6 +128,7 @@
 ```
 
 **Response — 失敗**
+
 ```json
 {
   "success": false,
@@ -135,14 +146,17 @@
 ## 員工管理 Users
 
 ### GET `/api/users`
+
 取得所有帳號列表（admin only）。
 
 **Query Params**
-| 參數 | 說明 |
-|------|------|
+
+| 參數   | 說明                  |
+| ------ | --------------------- |
 | `role` | `admin` \| `employee` |
 
 **Response — 成功**
+
 ```json
 {
   "success": true,
@@ -161,6 +175,7 @@
 ```
 
 **Response — 失敗**
+
 ```json
 {
   "success": false,
@@ -173,9 +188,11 @@
 ---
 
 ### POST `/api/users`
+
 新增帳號（admin only）。
 
 **Request Body**
+
 ```json
 {
   "username": "employee01",
@@ -190,6 +207,7 @@
 ```
 
 **Response — 成功**
+
 ```json
 {
   "success": true,
@@ -198,6 +216,7 @@
 ```
 
 **Response — 失敗**
+
 ```json
 {
   "success": false,
@@ -210,9 +229,11 @@
 ---
 
 ### PATCH `/api/users/:username`
+
 更新帳號資料（admin only）。
 
 **Request Body**（僅需帶入要更新的欄位）
+
 ```json
 {
   "name": "王大明",
@@ -225,6 +246,7 @@
 ```
 
 **Response — 成功**
+
 ```json
 {
   "success": true,
@@ -233,6 +255,7 @@
 ```
 
 **Response — 失敗**
+
 ```json
 {
   "success": false,
@@ -245,9 +268,11 @@
 ---
 
 ### DELETE `/api/users/:username`
+
 刪除帳號（admin only）。
 
 **Response — 成功**
+
 ```json
 {
   "success": true,
@@ -256,6 +281,7 @@
 ```
 
 **Response — 失敗**
+
 ```json
 {
   "success": false,
@@ -270,17 +296,20 @@
 ## 請假申請 Leave Records
 
 ### GET `/api/leaves`
+
 取得請假紀錄。
 
 **Query Params**
-| 參數 | 說明 |
-|------|------|
+
+| 參數       | 說明                                |
+| ---------- | ----------------------------------- |
 | `username` | employee 只能查自己，admin 可查全部 |
-| `status` | `待審核` \| `已通過` \| `已拒絕` |
-| `type` | 假別，例如 `特休` |
-| `year` | 年份，例如 `2026` |
+| `status`   | `待審核` \| `已通過` \| `已拒絕`    |
+| `type`     | 假別，例如 `特休`                   |
+| `year`     | 年份，例如 `2026`                   |
 
 **Response — 成功**
+
 ```json
 {
   "success": true,
@@ -301,6 +330,7 @@
 ```
 
 **Response — 失敗**
+
 ```json
 {
   "success": false,
@@ -313,9 +343,11 @@
 ---
 
 ### POST `/api/leaves`
+
 送出請假申請。
 
 **Request Body**
+
 ```json
 {
   "type": "特休",
@@ -327,6 +359,7 @@
 ```
 
 **Response — 成功**
+
 ```json
 {
   "success": true,
@@ -339,6 +372,7 @@
 ```
 
 **Response — 失敗**
+
 ```json
 {
   "success": false,
@@ -351,14 +385,17 @@
 ---
 
 ### PATCH `/api/leaves/:id/status`
+
 更新審核狀態（admin only）。
 
 **Request Body**
+
 ```json
 { "status": "已通過" }
 ```
 
 **Response — 成功**
+
 ```json
 {
   "success": true,
@@ -367,6 +404,7 @@
 ```
 
 **Response — 失敗**
+
 ```json
 {
   "success": false,
@@ -379,9 +417,11 @@
 ---
 
 ### DELETE `/api/leaves/:id`
+
 取消申請（僅限 `待審核` 狀態）。
 
 **Response — 成功**
+
 ```json
 {
   "success": true,
@@ -390,6 +430,7 @@
 ```
 
 **Response — 失敗**
+
 ```json
 {
   "success": false,
@@ -404,14 +445,22 @@
 ## 假別額度 Leave Quotas
 
 ### GET `/api/quotas`
+
 取得假別額度設定。
 
 **Response — 成功**
+
 ```json
 {
   "success": true,
   "data": [
-    { "type": "特休", "totalHours": 112, "bgColor": "bg-blue-50", "textColor": "text-blue-600", "barColor": "#3b82f6" }
+    {
+      "type": "特休",
+      "totalHours": 112,
+      "bgColor": "bg-blue-50",
+      "textColor": "text-blue-600",
+      "barColor": "#3b82f6"
+    }
   ]
 }
 ```
@@ -421,25 +470,27 @@
 ---
 
 ### GET `/api/quotas/usage`
+
 取得使用者各假別已使用時數。
 
 **Query Params**
-| 參數 | 說明 |
-|------|------|
+
+| 參數       | 說明                |
+| ---------- | ------------------- |
 | `username` | employee 只能查自己 |
-| `year` | 年份 |
+| `year`     | 年份                |
 
 **Response — 成功**
+
 ```json
 {
   "success": true,
-  "data": [
-    { "type": "特休", "used": 40, "total": 112, "remaining": 72 }
-  ]
+  "data": [{ "type": "特休", "used": 40, "total": 112, "remaining": 72 }]
 }
 ```
 
 **Response — 失敗**
+
 ```json
 {
   "success": false,
@@ -453,30 +504,30 @@
 
 ## HTTP 狀態碼
 
-| 狀態碼 | `success` | 說明 |
-|--------|-----------|------|
-| `200` | `true` | 成功 |
-| `201` | `true` | 新增成功 |
-| `400` | `false` | 請求參數錯誤 |
-| `401` | `false` | 未登入 |
-| `403` | `false` | 權限不足 |
-| `404` | `false` | 資源不存在 |
-| `409` | `false` | 衝突（帳號已存在） |
+| 狀態碼 | `success` | 說明               |
+| ------ | --------- | ------------------ |
+| `200`  | `true`    | 成功               |
+| `201`  | `true`    | 新增成功           |
+| `400`  | `false`   | 請求參數錯誤       |
+| `401`  | `false`   | 未登入             |
+| `403`  | `false`   | 權限不足           |
+| `404`  | `false`   | 資源不存在         |
+| `409`  | `false`   | 衝突（帳號已存在） |
 
 ---
 
 ## Error Code 一覽
 
-| Code | 說明 |
-|------|------|
-| `INVALID_CREDENTIALS` | 帳號或密碼錯誤 |
-| `UNAUTHORIZED` | 未登入 |
-| `FORBIDDEN` | 權限不足 |
-| `USER_NOT_FOUND` | 查無使用者 |
-| `USER_ALREADY_EXISTS` | 帳號已存在 |
-| `LEAVE_NOT_FOUND` | 查無請假紀錄 |
-| `QUOTA_EXCEEDED` | 假別時數超額 |
-| `INVALID_STATUS` | 狀態不允許此操作 |
+| Code                  | 說明             |
+| --------------------- | ---------------- |
+| `INVALID_CREDENTIALS` | 帳號或密碼錯誤   |
+| `UNAUTHORIZED`        | 未登入           |
+| `FORBIDDEN`           | 權限不足         |
+| `USER_NOT_FOUND`      | 查無使用者       |
+| `USER_ALREADY_EXISTS` | 帳號已存在       |
+| `LEAVE_NOT_FOUND`     | 查無請假紀錄     |
+| `QUOTA_EXCEEDED`      | 假別時數超額     |
+| `INVALID_STATUS`      | 狀態不允許此操作 |
 
 ---
 
