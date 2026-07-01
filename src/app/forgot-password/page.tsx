@@ -1,29 +1,29 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { CalendarDays } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
-import { forgotPassword } from "@/api/useAuth"
+import { useState } from "react";
+import Link from "next/link";
+import { CalendarDays } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { forgotPassword } from "@/api/useAuth";
 
 export default function ForgotPasswordPage() {
-  const [email,   setEmail]   = useState("")
-  const [loading, setLoading] = useState(false)
-  const [sent,    setSent]    = useState(false)
-  const [error,   setError]   = useState("")
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError("")
-    setLoading(true)
-    const result = await forgotPassword(email)
-    setLoading(false)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    const result = await forgotPassword(email);
+    setLoading(false);
     if (result.ok) {
-      setSent(true)
+      setSent(true);
     } else {
-      setError(result.message)
+      setError(result.message);
     }
   }
 
@@ -46,13 +46,17 @@ export default function ForgotPasswordPage() {
               若此信箱已註冊，您將收到密碼重設信件，請確認信箱（含垃圾郵件）。
             </div>
             <Link href="/login">
-              <Button variant="outline" className="w-full">返回登入</Button>
+              <Button variant="outline" className="w-full">
+                返回登入
+              </Button>
             </Link>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="email" className="text-sm font-medium">信箱</label>
+              <label htmlFor="email" className="text-sm font-medium">
+                信箱
+              </label>
               <Input
                 id="email"
                 type="email"
@@ -73,12 +77,15 @@ export default function ForgotPasswordPage() {
               {loading ? "送出中..." : "送出重設連結"}
             </Button>
 
-            <Link href="/login" className="text-center text-sm text-muted-foreground hover:text-foreground">
+            <Link
+              href="/login"
+              className="text-center text-sm text-muted-foreground hover:text-foreground"
+            >
               返回登入
             </Link>
           </form>
         )}
       </Card>
     </div>
-  )
+  );
 }

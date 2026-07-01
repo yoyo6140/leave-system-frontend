@@ -18,7 +18,9 @@ export default function HomePage() {
     }
 
     redirect();
-    return () => { cancelled = true };
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   return null;

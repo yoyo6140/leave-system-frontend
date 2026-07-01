@@ -1,60 +1,62 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { login, getCurrentUser, getHomePath, restoreSession } from "@/lib/auth"
-import { CalendarDays, Eye, EyeOff } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card } from "@/components/ui/card"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { login, getCurrentUser, getHomePath, restoreSession } from "@/lib/auth";
+import { CalendarDays, Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [username,    setUsername]    = useState("")
-  const [password,    setPassword]    = useState("")
-  const [showPwd,     setShowPwd]     = useState(false)
-  const [error,       setError]       = useState("")
-  const [loading,     setLoading]     = useState(false)
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
 
     async function checkExistingSession() {
-      const cached = getCurrentUser()
+      const cached = getCurrentUser();
       if (cached) {
-        router.replace(getHomePath(cached.role))
-        return
+        router.replace(getHomePath(cached.role));
+        return;
       }
-      const user = await restoreSession()
-      if (!cancelled && user) router.replace(getHomePath(user.role))
+      const user = await restoreSession();
+      if (!cancelled && user) router.replace(getHomePath(user.role));
     }
 
-    checkExistingSession()
-    return () => { cancelled = true }
-  }, [router])
+    checkExistingSession();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
 
     if (password.length < 6 || password.length > 12) {
-      setError("密碼須為 6～12 個字元")
-      return
+      setError("密碼須為 6～12 個字元");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const result = await login(username, password)
+      const result = await login(username, password);
       if (result.success) {
-        router.push(getHomePath(result.user.role))
+        router.push(getHomePath(result.user.role));
       } else {
-        setError(result.error)
-        setLoading(false)
+        setError(result.error);
+        setLoading(false);
       }
     } catch {
-      setError("無法連線至伺服器，請確認後端是否已啟動")
-      setLoading(false)
+      setError("無法連線至伺服器，請確認後端是否已啟動");
+      setLoading(false);
     }
   }
 
@@ -71,7 +73,9 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="username" className="text-sm font-medium">帳號</label>
+            <label htmlFor="username" className="text-sm font-medium">
+              帳號
+            </label>
             <Input
               id="username"
               type="text"
@@ -83,7 +87,9 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="password" className="text-sm font-medium">密碼</label>
+            <label htmlFor="password" className="text-sm font-medium">
+              密碼
+            </label>
             <div className="relative">
               <Input
                 id="password"
@@ -102,7 +108,11 @@ export default function LoginPage() {
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 tabIndex={-1}
               >
-                {showPwd ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                {showPwd ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
               </button>
             </div>
           </div>
@@ -117,11 +127,14 @@ export default function LoginPage() {
             {loading ? "登入中..." : "登入"}
           </Button>
 
-          <Link href="/forgot-password" className="text-center text-sm text-muted-foreground hover:text-foreground">
+          <Link
+            href="/forgot-password"
+            className="text-center text-sm text-muted-foreground hover:text-foreground"
+          >
             忘記密碼？
           </Link>
         </form>
       </Card>
     </div>
-  )
+  );
 }

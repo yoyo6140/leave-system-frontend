@@ -1,5 +1,5 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 function Field({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -8,7 +8,7 @@ function Field({ className, ...props }: React.ComponentProps<"div">) {
       className={cn("flex flex-col gap-1.5", className)}
       {...props}
     />
-  )
+  );
 }
 
 function FieldLabel({ className, ...props }: React.ComponentProps<"label">) {
@@ -18,7 +18,7 @@ function FieldLabel({ className, ...props }: React.ComponentProps<"label">) {
       className={cn("text-sm font-medium", className)}
       {...props}
     />
-  )
+  );
 }
 
-export { Field, FieldLabel }
+export { Field, FieldLabel };
