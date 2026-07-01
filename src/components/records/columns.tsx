@@ -3,23 +3,17 @@
 import { type ColumnDef } from "@tanstack/react-table"
 
 import { cn } from "@/lib/utils"
-import { hoursToApproxDays, LEAVE_QUOTAS } from "@/lib/leave"
+import { hoursToApproxDays, LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS, LEAVE_STATUS_STYLE, type LeaveStatus } from "@/lib/leave"
+import { type ApiLeaveRecord } from "@/api/useLeaves"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableColumnHeader } from "./data-table-column-header"
 import { DataTableRowActions } from "./data-table-row-actions"
-import { type LeaveRecord } from "@/lib/leave"
-
-const STATUS_STYLE: Record<string, string> = {
-  待審核: "bg-amber-50 text-amber-600",
-  已通過: "bg-blue-50 text-blue-600",
-  已拒絕: "bg-red-50 text-red-600",
-}
 
 export function createColumns(
   onDelete: (id: string) => void,
   isAdmin = false
-): ColumnDef<LeaveRecord>[] {
-  const cols: ColumnDef<LeaveRecord>[] = [
+): ColumnDef<ApiLeaveRecord>[] {
+  const cols: ColumnDef<ApiLeaveRecord>[] = [
     {
       id: "select",
       header: ({ table }) => (
@@ -46,7 +40,7 @@ export function createColumns(
         const type = row.getValue("type") as string
         const q = LEAVE_QUOTAS[type as keyof typeof LEAVE_QUOTAS]
         return (
-          <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", q?.bgColor, q?.textColor)}>
+          <span className={cn(LEAVE_BADGE_ROUNDED, "px-2.5 py-0.5 text-xs font-medium", q?.bgColor, q?.textColor)}>
             {type}
           </span>
         )
@@ -54,14 +48,14 @@ export function createColumns(
       filterFn: (row, id, value: string[]) => value.includes(row.getValue(id)),
     },
     {
-      accessorKey: "startDate",
+      accessorKey: "start_date",
       header: ({ column }) => <DataTableColumnHeader column={column} title="開始日期" />,
-      cell: ({ row }) => <span className="tabular-nums">{row.getValue("startDate")}</span>,
+      cell: ({ row }) => <span className="tabular-nums">{row.getValue("start_date")}</span>,
     },
     {
-      accessorKey: "endDate",
+      accessorKey: "end_date",
       header: ({ column }) => <DataTableColumnHeader column={column} title="結束日期" />,
-      cell: ({ row }) => <span className="tabular-nums">{row.getValue("endDate")}</span>,
+      cell: ({ row }) => <span className="tabular-nums">{row.getValue("end_date")}</span>,
     },
     {
       accessorKey: "hours",
@@ -92,7 +86,7 @@ export function createColumns(
       cell: ({ row }) => {
         const status = row.getValue("status") as string
         return (
-          <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", STATUS_STYLE[status])}>
+          <span className={cn(LEAVE_BADGE_ROUNDED, "px-2.5 py-0.5 text-xs font-medium", LEAVE_STATUS_STYLE[status as LeaveStatus])}>
             {status}
           </span>
         )
@@ -100,11 +94,11 @@ export function createColumns(
       filterFn: (row, id, value: string[]) => value.includes(row.getValue(id)),
     },
     {
-      accessorKey: "createdAt",
+      accessorKey: "created_at",
       header: ({ column }) => <DataTableColumnHeader column={column} title="申請日期" />,
       cell: ({ row }) => (
         <span className="tabular-nums text-muted-foreground">
-          {new Date(row.getValue("createdAt")).toLocaleDateString("zh-TW")}
+          {new Date(row.getValue("created_at")).toLocaleDateString("zh-TW")}
         </span>
       ),
     },
@@ -115,14 +109,18 @@ export function createColumns(
     },
   ]
 
-  // 申請人欄位只在 admin 視角插入
   if (isAdmin) {
     cols.splice(1, 0, {
-      accessorKey: "username",
+      accessorKey: "_username",
       header: ({ column }) => <DataTableColumnHeader column={column} title="申請人" />,
-      cell: ({ row }) => (
-        <span className="text-sm font-medium">@{row.getValue("username")}</span>
-      ),
+      cell: ({ row }) => {
+        const username = row.getValue("_username") as string | undefined
+        return (
+          <span className="text-sm font-medium">
+            {username ? `@${username}` : `#${row.original.user_id}`}
+          </span>
+        )
+      },
     })
   }
 

@@ -1,62 +1,37 @@
-// 儀表板 API
+import { API_ENDPOINTS } from "./constants"
+import { apiFetch } from "./client"
 
-// --團隊總覽--
-export interface OverviewResponse {
-  pendingCount: number
-  approvedMonthCount: number
-  employeeCount: number
-  pendingLeaveList: {
-    id: string
-    name: string
-    type: string
-    hours: number
-  }[]
-  employeeYearLeaveHoursList: {
-    id: string
-    name: string
-    hours: number
-  }[]
+export interface PendingLeaveItem {
+  id:         string
+  user_id:    number
+  user_name:  string
+  type:       string
+  hours:      number
+  start_date: string
+  end_date:   string
+  created_at: string
 }
 
-export const mockOverviewResponse: OverviewResponse = {
-  pendingCount: 6,
-  approvedMonthCount: 14,
-  employeeCount: 48,
-  pendingLeaveList: [
-    {
-      id: "LV-202605-001",
-      name: "王小明",
-      type: "事假",
-      hours: 8,
-    },
-    {
-      id: "LV-202605-004",
-      name: "李佳穎",
-      type: "病假",
-      hours: 4,
-    },
-    {
-      id: "LV-202605-007",
-      name: "張志豪",
-      type: "特休",
-      hours: 16,
-    },
-  ],
-  employeeYearLeaveHoursList: [
-    {
-      id: "EMP-0032",
-      name: "陳怡君",
-      hours: 72,
-    },
-    {
-      id: "EMP-0015",
-      name: "林冠廷",
-      hours: 64,
-    },
-    {
-      id: "EMP-0041",
-      name: "吳佩珊",
-      hours: 58,
-    },
-  ],
+export interface TopLeaveHoursItem {
+  user_id: number
+  name:    string
+  hours:   number
+}
+
+export interface OverviewData {
+  pending_count:       number
+  approved_this_month: number
+  employee_count:      number
+  pending_list:        PendingLeaveItem[]
+  top_leave_hours:     TopLeaveHoursItem[]
+}
+
+type Result<T> =
+  | { ok: true;  data: T }
+  | { ok: false; message: string }
+
+export async function getOverview(): Promise<Result<OverviewData>> {
+  const res = await apiFetch<OverviewData>(API_ENDPOINTS.overview)
+  if (res.success && res.data) return { ok: true, data: res.data }
+  return { ok: false, message: res.error?.message ?? "載入總覽失敗" }
 }

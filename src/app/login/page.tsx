@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { login, isLoggedIn, getHomePath, getCurrentUser } from "@/lib/auth"
+import Link from "next/link"
+import { login, getCurrentUser, getHomePath, restoreSession } from "@/lib/auth"
 import { CalendarDays, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,25 +18,42 @@ export default function LoginPage() {
   const [loading,     setLoading]     = useState(false)
 
   useEffect(() => {
-    if (isLoggedIn()) router.replace("/")
+    let cancelled = false
+
+    async function checkExistingSession() {
+      const cached = getCurrentUser()
+      if (cached) {
+        router.replace(getHomePath(cached.role))
+        return
+      }
+      const user = await restoreSession()
+      if (!cancelled && user) router.replace(getHomePath(user.role))
+    }
+
+    checkExistingSession()
+    return () => { cancelled = true }
   }, [router])
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault()
     setError("")
 
-    if (password.length < 6 || password.length > 18) {
-      setError("密碼須為 6～18 個字元")
+    if (password.length < 6 || password.length > 12) {
+      setError("密碼須為 6～12 個字元")
       return
     }
 
     setLoading(true)
-    const success = login(username, password)
-    if (success) {
-      const user = getCurrentUser()
-      router.push(getHomePath(user?.role ?? "employee"))
-    } else {
-      setError("帳號或密碼錯誤，請重新輸入")
+    try {
+      const result = await login(username, password)
+      if (result.success) {
+        router.push(getHomePath(result.user.role))
+      } else {
+        setError(result.error)
+        setLoading(false)
+      }
+    } catch {
+      setError("無法連線至伺服器，請確認後端是否已啟動")
       setLoading(false)
     }
   }
@@ -72,9 +90,9 @@ export default function LoginPage() {
                 type={showPwd ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="請輸入密碼（6～18 字元）"
+                placeholder="請輸入密碼（6～12 字元）"
                 minLength={6}
-                maxLength={18}
+                maxLength={12}
                 required
                 className="pr-10"
               />
@@ -98,6 +116,10 @@ export default function LoginPage() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "登入中..." : "登入"}
           </Button>
+
+          <Link href="/forgot-password" className="text-center text-sm text-muted-foreground hover:text-foreground">
+            忘記密碼？
+          </Link>
         </form>
       </Card>
     </div>

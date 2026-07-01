@@ -8,40 +8,69 @@ import AppLayout from "@/components/AppLayout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getCurrentUser } from "@/lib/auth"
-import {
-  getUsedHours,
-  hoursToApproxDays,
-  LEAVE_QUOTAS,
-  LEAVE_TYPES,
-  LeaveType,
-} from "@/lib/leave"
+import { hoursToApproxDays, LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS, LeaveType } from "@/lib/leave"
 import { cn } from "@/lib/utils"
+import { getMyQuota, type QuotaItem } from "@/api/useQuota"
 
-const YEAR = new Date().getFullYear()
+interface DisplayQuota {
+  type:       LeaveType
+  total:      number | null
+  used:       number
+  remaining:  number | null
+  bgColor:    string
+  textColor:  string
+  note:       string | null
+}
+
+function buildDisplay(apiItems: QuotaItem[]): DisplayQuota[] {
+  return apiItems.map((item) => {
+    const style = LEAVE_QUOTAS[item.type as LeaveType]
+    return {
+      type:      item.type as LeaveType,
+      total:     item.total_hours,
+      used:      item.used_hours,
+      remaining: item.remaining_hours,
+      bgColor:   style?.bgColor   ?? "bg-gray-100",
+      textColor: style?.textColor ?? "text-gray-600",
+      note:      item.note,
+    }
+  })
+}
 
 export default function LeaveBalancePage() {
   const user = getCurrentUser()
 
-  const [quotas, setQuotas] = useState<
-    { type: LeaveType; total: number; used: number; remaining: number; bgColor: string; textColor: string }[]
-  >([])
+  const [quotas,     setQuotas]     = useState<DisplayQuota[]>([])
+  const [loading,    setLoading]    = useState(true)
+  const [seniority,  setSeniority]  = useState("")
+  const [yearStart,  setYearStart]  = useState("")
+  const [yearEnd,    setYearEnd]    = useState("")
 
   useEffect(() => {
-    setQuotas(
-      LEAVE_TYPES.map((type) => {
-        const { total, bgColor, textColor } = LEAVE_QUOTAS[type]
-        const used = getUsedHours(type, user?.username)
-        return { type, total, used, remaining: total - used, bgColor, textColor }
-      })
-    )
-  }, [user?.username])
+    let cancelled = false
+    async function load() {
+      setLoading(true)
+      const data = await getMyQuota()
+      if (cancelled) return
+      if (data) {
+        const annual = data.quotas.find((q) => q.type === "特休")
+        if (annual?.note) setSeniority(annual.note)
+        setYearStart(data.year_start)
+        setYearEnd(data.year_end)
+        setQuotas(buildDisplay(data.quotas))
+      }
+      setLoading(false)
+    }
+    load()
+    return () => { cancelled = true }
+  }, [])
 
   return (
     <AppLayout>
       <div className="max-w-[1024px]">
         <div className="mb-6 flex items-center justify-between gap-4">
           <h1 className="text-xl font-semibold">假別餘額</h1>
-          <Button asChild variant="outline" size="sm">
+          <Button asChild size="sm" variant="outline">
             <Link href="/apply">
               <CalendarPlus className="size-4" />
               申請請假
@@ -50,7 +79,7 @@ export default function LeaveBalancePage() {
         </div>
 
         <Card padding="default" className="mb-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
               <p className="text-xs text-muted-foreground">員工編號</p>
               <p className="mt-0.5 text-sm font-medium tabular-nums">{user?.username ?? "—"}</p>
@@ -60,37 +89,57 @@ export default function LeaveBalancePage() {
               <p className="mt-0.5 text-sm font-medium">{user?.name ?? "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">統計期間</p>
-              <p className="mt-0.5 text-sm font-medium tabular-nums">{YEAR}/01/01 ～ {YEAR}/12/31</p>
+              <p className="text-xs text-muted-foreground">統計週年度</p>
+              <p className="mt-0.5 text-sm font-medium tabular-nums">
+                {yearStart ? `${yearStart} ～ ${yearEnd}` : "—"}
+              </p>
             </div>
           </div>
+          {seniority && (
+            <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
+              特休計算基準：{seniority}（依勞基法第 38 條）
+            </p>
+          )}
         </Card>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {quotas.map(({ type, total, used, remaining, bgColor, textColor }) => (
-            <Card key={type} padding="default">
-              <div className="mb-3 flex items-center justify-between">
-                <span className={cn("rounded-lg px-2.5 py-1 text-xs font-medium", bgColor, textColor)}>{type}</span>
-                <span className="text-xs text-muted-foreground">共 {total} 小時</span>
-              </div>
-              <div className="mb-1">
-                <span className="text-3xl font-bold tabular-nums">{remaining}</span>
-                <span className="ml-1 text-sm text-muted-foreground">小時可用</span>
-              </div>
-              <p className="mb-3 text-xs text-muted-foreground">約 {hoursToApproxDays(remaining)} 天</p>
-              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{
-                    width: `${total > 0 ? Math.min(100, Math.round((used / total) * 100)) : 0}%`,
-                    backgroundColor: LEAVE_QUOTAS[type].barColor,
-                  }}
-                />
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">已使用 {used} 小時</p>
-            </Card>
-          ))}
-        </div>
+        {loading ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Card key={i} padding="default" className="animate-pulse">
+                <div className="mb-3 h-5 w-16 rounded bg-muted" />
+                <div className="mb-1 h-8 w-20 rounded bg-muted" />
+                <div className="h-3 w-12 rounded bg-muted" />
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {quotas.map(({ type, total, used, remaining, bgColor, textColor, note }) => (
+              <Card key={type} padding="default">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className={cn(LEAVE_BADGE_ROUNDED, "px-2.5 py-1 text-xs font-medium", bgColor, textColor)}>
+                    {type}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {total !== null ? `共 ${total} 小時` : "無上限"}
+                  </span>
+                </div>
+                {remaining !== null ? (
+                  <>
+                    <div className="mb-1">
+                      <span className="text-3xl font-bold tabular-nums">{remaining}</span>
+                      <span className="ml-1 text-sm text-muted-foreground">小時可用</span>
+                    </div>
+                    <p className="mb-3 text-xs text-muted-foreground">約 {hoursToApproxDays(remaining)} 天</p>
+                    <p className="mt-2 text-xs text-muted-foreground">已使用 {used} 小時</p>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm text-muted-foreground">{note ?? "依實際需要申請"}</p>
+                )}
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </AppLayout>
   )

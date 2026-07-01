@@ -1,3 +1,5 @@
+import { apiGetMe, Login } from "@/api/useAuth"
+
 export type UserRole = "admin" | "employee"
 export type Gender   = "男" | "女"
 
@@ -11,80 +13,64 @@ export interface User {
   birthDate?: string
 }
 
-interface StoredUser extends User {
-  password: string
-}
+const AUTH_KEY = "leave_system_auth"
 
-const AUTH_KEY  = "leave_system_auth"
-const USERS_KEY = "leave_system_users"
-
-const DEFAULT_USERS: StoredUser[] = [
-  { username: "admin",    password: "111111", role: "admin",    name: "主管" },
-  { username: "employee", password: "111111", role: "employee", name: "員工" },
-]
-
-function getStoredUsers(): StoredUser[] {
-  if (typeof window === "undefined") return DEFAULT_USERS
-  const raw = localStorage.getItem(USERS_KEY)
-  if (!raw) {
-    localStorage.setItem(USERS_KEY, JSON.stringify(DEFAULT_USERS))
-    return DEFAULT_USERS
-  }
-  return (JSON.parse(raw) as (StoredUser & { displayName?: string })[]).map((u) => ({
-    ...u,
-    name: u.name ?? u.displayName ?? u.username,
-  }))
-}
-
-export function getUsers(): User[] {
-  return getStoredUsers().map(({ password: _pw, ...u }) => u)
-}
-
-export interface AddUserPayload {
-  username:  string
-  password:  string
-  name:      string
-  role:      UserRole
-  gender?:   Gender
+function mapApiUser(user: {
+  username: string
+  name: string
+  role: string
+  gender?: string
+  id_number?: string
   idNumber?: string
+  hire_date?: string
   hireDate?: string
+  birth_date?: string
   birthDate?: string
-}
-
-export function addUser(payload: AddUserPayload): { success: boolean; error?: string } {
-  const users = getStoredUsers()
-  if (users.some((u) => u.username === payload.username)) {
-    return { success: false, error: "帳號已存在" }
+}): User {
+  return {
+    username: user.username,
+    name: user.name,
+    role: user.role?.toLowerCase() === "admin" ? "admin" : "employee",
+    gender: user.gender as Gender | undefined,
+    idNumber: user.id_number ?? user.idNumber,
+    hireDate: user.hire_date ?? user.hireDate,
+    birthDate: user.birth_date ?? user.birthDate,
   }
-  users.push(payload)
-  localStorage.setItem(USERS_KEY, JSON.stringify(users))
-  return { success: true }
 }
 
-export function updateUser(
+function persistUser(user: User): void {
+  localStorage.setItem(AUTH_KEY, JSON.stringify(user))
+}
+
+export async function login(
   username: string,
-  updates: Partial<Omit<StoredUser, "username">>
-): void {
-  const users = getStoredUsers()
-  const idx = users.findIndex((u) => u.username === username)
-  if (idx === -1) return
-  users[idx] = { ...users[idx], ...updates }
-  localStorage.setItem(USERS_KEY, JSON.stringify(users))
+  password: string
+): Promise<{ success: true; user: User } | { success: false; error: string }> {
+  const body = await Login({ username, password })
+  if (!body.success) {
+    return { success: false, error: body.error?.message ?? "帳號或密碼錯誤" }
+  }
+
+  const me = await apiGetMe()
+  if (!me) {
+    return { success: false, error: "登入成功但無法取得使用者資訊，請稍後再試" }
+  }
+
+  const user = mapApiUser(me)
+  persistUser(user)
+  return { success: true, user }
 }
 
-export function deleteUser(username: string): void {
-  const users = getStoredUsers().filter((u) => u.username !== username)
-  localStorage.setItem(USERS_KEY, JSON.stringify(users))
-}
+export async function restoreSession(): Promise<User | null> {
+  const me = await apiGetMe()
+  if (!me) {
+    clearCurrentUser()
+    return null
+  }
 
-export function login(username: string, password: string): boolean {
-  const user = getStoredUsers().find(
-    (u) => u.username === username && u.password === password
-  )
-  if (!user) return false
-  const { password: _pw, ...data } = user
-  localStorage.setItem(AUTH_KEY, JSON.stringify(data))
-  return true
+  const user = mapApiUser(me)
+  persistUser(user)
+  return user
 }
 
 export function getCurrentUser(): User | null {
@@ -94,14 +80,11 @@ export function getCurrentUser(): User | null {
   try { return JSON.parse(raw) as User } catch { return null }
 }
 
-export function isLoggedIn(): boolean {
-  return getCurrentUser() !== null
-}
-
-export function logout(): void {
+export function clearCurrentUser(): void {
+  if (typeof window === "undefined") return
   localStorage.removeItem(AUTH_KEY)
 }
 
 export function getHomePath(role: UserRole): string {
-  return role === "admin" ? "/dashboard" : "/leave-balance"
+  return role === "admin" ? "/overview" : "/leave-balance"
 }

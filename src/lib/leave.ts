@@ -13,32 +13,70 @@ export type LeaveRecord = {
   createdAt: string
 }
 
+export const LEAVE_BADGE_ROUNDED = "rounded-[8px]"
+
+export const LEAVE_STATUS_STYLE: Record<LeaveStatus, string> = {
+  待審核: "bg-amber-50 text-amber-600",
+  已通過: "bg-blue-50 text-blue-600",
+  已拒絕: "bg-red-50 text-red-600",
+}
+
 export const LEAVE_QUOTAS: Record<
   LeaveType,
-  { total: number; bgColor: string; textColor: string; barColor: string }
+  { bgColor: string; textColor: string; barColor: string }
 > = {
-  特休: { total: 112, bgColor: "bg-blue-50",  textColor: "text-blue-600",  barColor: "#3b82f6" },
-  病假: { total: 240, bgColor: "bg-red-50",   textColor: "text-red-600",   barColor: "#ef4444" },
-  事假: { total: 112, bgColor: "bg-amber-50", textColor: "text-amber-600", barColor: "#f59e0b" },
-  婚假: { total: 64,  bgColor: "bg-red-50",   textColor: "text-red-600",   barColor: "#ef4444" },
-  喪假: { total: 48,  bgColor: "bg-red-50",   textColor: "text-red-600",   barColor: "#ef4444" },
-  公假: { total: 40,  bgColor: "bg-amber-50", textColor: "text-amber-600", barColor: "#f59e0b" },
-  其他: { total: 999, bgColor: "bg-amber-50", textColor: "text-amber-600", barColor: "#f59e0b" },
+  特休: { bgColor: "bg-blue-50",  textColor: "text-blue-600",  barColor: "#3b82f6" },
+  病假: { bgColor: "bg-red-50",   textColor: "text-red-600",   barColor: "#ef4444" },
+  事假: { bgColor: "bg-amber-50", textColor: "text-amber-600", barColor: "#f59e0b" },
+  婚假: { bgColor: "bg-red-50",   textColor: "text-red-600",   barColor: "#ef4444" },
+  喪假: { bgColor: "bg-red-50",   textColor: "text-red-600",   barColor: "#ef4444" },
+  公假: { bgColor: "bg-amber-50", textColor: "text-amber-600", barColor: "#f59e0b" },
+  其他: { bgColor: "bg-amber-50", textColor: "text-amber-600", barColor: "#f59e0b" },
 }
 
 export const LEAVE_TYPES = Object.keys(LEAVE_QUOTAS) as LeaveType[]
 
 const STORAGE_KEY = "leave_records"
+const PENDING_SEED_ID = "seed-pending-001"
+
+const DEFAULT_RECORDS: LeaveRecord[] = [
+  {
+    id: PENDING_SEED_ID,
+    username: "employee",
+    type: "特休",
+    startDate: "2026-06-10",
+    endDate: "2026-06-11",
+    hours: 16,
+    reason: "家庭旅遊",
+    status: "待審核",
+    createdAt: "2026-06-01T09:30:00.000Z",
+  },
+]
+
+function loadAllRecords(): LeaveRecord[] {
+  const raw = localStorage.getItem(STORAGE_KEY)
+  if (!raw) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_RECORDS))
+    return DEFAULT_RECORDS
+  }
+
+  const all = (JSON.parse(raw) as Partial<LeaveRecord>[]).map((r) => ({
+    ...r,
+    username: r.username ?? "admin",
+  })) as LeaveRecord[]
+
+  if (!all.some((r) => r.id === PENDING_SEED_ID)) {
+    const withSeed = [...all, ...DEFAULT_RECORDS]
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(withSeed))
+    return withSeed
+  }
+
+  return all
+}
 
 export function getRecords(username?: string): LeaveRecord[] {
   if (typeof window === "undefined") return []
-  const data = localStorage.getItem(STORAGE_KEY)
-  const all = data
-    ? (JSON.parse(data) as Partial<LeaveRecord>[]).map((r) => ({
-        ...r,
-        username: r.username ?? "admin",
-      })) as LeaveRecord[]
-    : []
+  const all = loadAllRecords()
   return username ? all.filter((r) => r.username === username) : all
 }
 

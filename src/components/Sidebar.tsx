@@ -3,60 +3,73 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { getCurrentUser, logout, type UserRole } from "@/lib/auth"
-import { getRecords } from "@/lib/leave"
-import { Bot, CalendarDays, CalendarPlus, ClipboardCheck, ClipboardList, LayoutDashboard, LogOut, PieChart, Users } from "lucide-react"
+import { Logout } from "@/api/useAuth"
+import { getLeaves } from "@/api/useLeaves"
+import { getCurrentUser, clearCurrentUser, type UserRole } from "@/lib/auth"
+import { Bot, CalendarDays, CalendarPlus, ClipboardCheck, ClipboardList, LayoutDashboard, LogOut, PieChart, Users, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type NavItem = { href: string; icon: React.ElementType; label: string; roles: UserRole[] }
 
 const ALL_NAV: NavItem[] = [
-  { href: "/dashboard",        icon: LayoutDashboard, label: "儀表板",   roles: ["admin"] },
-  { href: "/leave-balance",    icon: PieChart,        label: "假別餘額", roles: ["admin", "employee"] },
-  { href: "/review",     icon: ClipboardCheck,  label: "審核管理", roles: ["admin"] },
-  { href: "/employees",  icon: Users,           label: "員工管理", roles: ["admin"] },
-  { href: "/apply",            icon: CalendarPlus,    label: "申請請假", roles: ["admin", "employee"] },
-  { href: "/records",          icon: ClipboardList,   label: "請假紀錄", roles: ["admin", "employee"] },
-  { href: "/ai-analysis",      icon: Bot,             label: "AI 分析",  roles: ["admin"] },
+  { href: "/overview",      icon: LayoutDashboard, label: "總覽",     roles: ["admin"] },
+  { href: "/leave-balance", icon: PieChart,        label: "假別餘額", roles: ["admin", "employee"] },
+  { href: "/review",        icon: ClipboardCheck,  label: "審核管理", roles: ["admin"] },
+  { href: "/employees",     icon: Users,           label: "員工管理", roles: ["admin"] },
+  { href: "/apply",         icon: CalendarPlus,    label: "申請請假", roles: ["admin", "employee"] },
+  { href: "/records",       icon: ClipboardList,   label: "請假紀錄", roles: ["admin", "employee"] },
+  { href: "/ai-analysis",   icon: Bot,             label: "AI 分析",  roles: ["admin"] },
 ]
 
-export default function Sidebar() {
+interface SidebarProps {
+  open?: boolean
+  onClose?: () => void
+}
+
+export default function Sidebar({ open = false, onClose }: SidebarProps) {
   const router   = useRouter()
   const pathname = usePathname()
   const user     = getCurrentUser()
   const role     = user?.role ?? "employee"
 
-  const [now, setNow]               = useState(new Date())
-  const [pendingCount, setPending]  = useState(0)
+  const [pendingCount, setPending] = useState(0)
 
   useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 1000)
-    return () => clearInterval(interval)
-  }, [])
+    if (role !== "admin") return
+    getLeaves({ limit: 200 }).then((res) => {
+      if (res.ok) setPending(res.data.data.filter((r) => r.status === "待審核").length)
+    })
+  }, [role, pathname])
 
+  // 手機導航後自動關閉抽屜
   useEffect(() => {
-    if (role === "admin") {
-      setPending(getRecords().filter((r) => r.status === "待審核").length)
-    }
-  }, [role, pathname])  // pathname 變動時重新計算（例如從 review 頁回來）
-
-  const timeStr = now.toLocaleTimeString("zh-TW", {
-    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
-  })
+    onClose?.()
+  }, [pathname])
 
   const navLinks = ALL_NAV.filter((link) => link.roles.includes(role))
 
-  function handleLogout() {
-    logout()
+  async function handleLogout() {
+    await Logout()
+    clearCurrentUser()
     router.push("/login")
   }
 
-  return (
-    <aside className="flex w-56 shrink-0 flex-col border-r border-blue-200 bg-white">
+  // 共用的導覽內容
+  const navContent = (showClose: boolean) => (
+    <>
       {/* Logo */}
       <div className="flex h-14 items-center gap-2 px-4">
         <CalendarDays className="size-5 text-primary" />
         <span className="font-semibold text-primary">請假系統</span>
+        {showClose && (
+          <button
+            className="ml-auto rounded p-1 text-muted-foreground hover:bg-blue-100"
+            onClick={onClose}
+            aria-label="關閉選單"
+          >
+            <X className="size-4" />
+          </button>
+        )}
       </div>
 
       {/* 導覽連結 */}
@@ -92,10 +105,35 @@ export default function Sidebar() {
             "text-muted-foreground hover:bg-blue-100 hover:text-foreground"
           )}
         >
-          <LogOut className="size-4" />
+          <LogOut className="size-4 cursor-pointer" />
           登出
         </button>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      {/* 桌面版：左側靜態 sidebar */}
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-blue-200 bg-white lg:flex">
+        {navContent(false)}
+      </aside>
+
+      {/* 手機/平板：右側抽屜 */}
+      {open && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={onClose}
+        />
+      )}
+      <aside
+        className={cn(
+          "fixed inset-y-0 right-0 z-50 flex w-56 flex-col border-l border-blue-200 bg-white transition-transform duration-300 ease-in-out lg:hidden",
+          open ? "translate-x-0" : "translate-x-full"
+        )}
+      >
+        {navContent(true)}
+      </aside>
+    </>
   )
 }
