@@ -19,88 +19,94 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { SuccessDialog, AlertDialog } from "@/components/ui/app-dialog"
 import { getCurrentUser } from "@/lib/auth"
 import {
-  addRecord,
-  getRecords,
-  getUsedHours,
   hoursToApproxDays,
   LEAVE_BADGE_ROUNDED,
   LEAVE_QUOTAS,
   LEAVE_STATUS_STYLE,
   LEAVE_TYPES,
-  LeaveRecord,
   LeaveType,
 } from "@/lib/leave"
 import { cn } from "@/lib/utils"
 import { getMyQuota } from "@/api/useQuota"
+import { type ApiLeaveRecord, createLeave, getLeaves } from "@/api/useLeaves"
 
 export default function ApplyPage() {
   const router = useRouter()
   const user   = getCurrentUser()
 
-  const [type,      setType]      = useState<LeaveType>("特休")
-  const [dateRange, setDateRange] = useState<DateRange | undefined>()
-  const [hours,     setHours]     = useState<number | "">("")
-  const [reason,    setReason]    = useState("")
-  const [remaining,     setRemaining]     = useState<Record<LeaveType, number>>(
-    () => Object.fromEntries(LEAVE_TYPES.map((t) => [t, 0])) as Record<LeaveType, number>
+  const [type,         setType]         = useState<LeaveType>("特休")
+  const [dateRange,    setDateRange]    = useState<DateRange | undefined>()
+  const [hours,        setHours]        = useState<number | "">("")
+  const [reason,       setReason]       = useState("")
+  const [remaining,    setRemaining]    = useState<Record<LeaveType, number | null>>(
+    () => Object.fromEntries(LEAVE_TYPES.map((t) => [t, 0])) as Record<LeaveType, number | null>
   )
-  const [quotaLoading,  setQuotaLoading]  = useState(true)
-  const [successOpen,   setSuccessOpen]   = useState(false)
-  const [alertMsg,      setAlertMsg]      = useState("")
-  const [recent,        setRecent]        = useState<LeaveRecord[]>([])
+  const [quotaLoading, setQuotaLoading] = useState(true)
+  const [successOpen,  setSuccessOpen]  = useState(false)
+  const [alertMsg,     setAlertMsg]     = useState("")
+  const [recent,       setRecent]       = useState<ApiLeaveRecord[]>([])
 
   useEffect(() => {
     let cancelled = false
     async function load() {
       setQuotaLoading(true)
-      const quota = await getMyQuota()
+
+      const [quota, leavesResult] = await Promise.all([
+        getMyQuota(),
+        getLeaves({ limit: 5 }),
+      ])
       if (cancelled) return
 
       const totals = Object.fromEntries(
         LEAVE_TYPES.map((t) => {
-          const item  = quota?.quotas.find((q) => q.type === t)
-          const total = item?.total_hours ?? 0
-          return [t, Math.max(total - getUsedHours(t, user?.username), 0)]
+          const item = quota?.quotas.find((q) => q.type === t)
+          // null = 無上限
+          return [t, item?.remaining_hours ?? (item?.total_hours === null ? null : 0)]
         })
-      ) as Record<LeaveType, number>
-
+      ) as Record<LeaveType, number | null>
       setRemaining(totals)
+
+      if (leavesResult.ok) setRecent(leavesResult.data.data)
       setQuotaLoading(false)
     }
     load()
-    setRecent(
-      getRecords(user?.username)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 5)
-    )
     return () => { cancelled = true }
-  }, [user?.username])
+  }, [])
 
   const startDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : ""
   const endDate   = dateRange?.to   ? format(dateRange.to,   "yyyy-MM-dd") : ""
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!startDate) { setAlertMsg("請選擇請假日期"); return }
+    if (!startDate)                { setAlertMsg("請選擇請假日期"); return }
     if (!hours || Number(hours) <= 0) { setAlertMsg("請填寫請假時數"); return }
-    if (Number(hours) > remaining[type]) {
-      setAlertMsg(`${type} 剩餘時數不足（剩餘 ${remaining[type]} 小時，申請 ${hours} 小時）`)
+    const rem = remaining[type]
+    if (rem !== null && Number(hours) > rem) {
+      setAlertMsg(`${type} 剩餘時數不足（剩餘 ${rem} 小時，申請 ${hours} 小時）`)
       return
     }
-    addRecord({
-      username: user?.username ?? "employee",
+
+    const result = await createLeave({
       type,
-      startDate,
-      endDate: endDate || startDate,
-      hours: Number(hours),
+      start_date: startDate,
+      end_date:   endDate || startDate,
+      hours:      Number(hours),
       reason,
     })
+
+    if (!result.ok) { setAlertMsg(result.message); return }
     setSuccessOpen(true)
   }
 
   function handleSuccessClose() {
     setSuccessOpen(false)
     router.push("/records")
+  }
+
+  const remainingDisplay = (t: LeaveType) => {
+    const r = remaining[t]
+    if (r === null) return "無上限"
+    return `剩餘 ${r} 小時`
   }
 
   return (
@@ -115,7 +121,7 @@ export default function ApplyPage() {
 
         {/* 員工資訊 */}
         <Card padding="default" className="mb-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
               <p className="text-xs text-muted-foreground">員工編號</p>
               <p className="mt-0.5 text-sm font-medium tabular-nums">{user?.username ?? "—"}</p>
@@ -131,40 +137,6 @@ export default function ApplyPage() {
           </div>
         </Card>
 
-        {/* 最新申請狀態 */}
-        <Card padding="default" className="mb-4">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-sm font-semibold">最新申請狀態</h2>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/records">查看全部</Link>
-            </Button>
-          </div>
-          {recent.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground">尚無申請紀錄</p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {recent.map((r) => {
-                const q = LEAVE_QUOTAS[r.type]
-                return (
-                  <div key={r.id} className="flex items-center justify-between gap-4 rounded-lg border border-border px-3 py-2">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className={cn("shrink-0 px-2.5 py-0.5 text-xs font-medium", LEAVE_BADGE_ROUNDED, q.bgColor, q.textColor)}>
-                        {r.type}
-                      </span>
-                      <span className="truncate text-sm text-muted-foreground">
-                        {r.startDate} ～ {r.endDate}
-                        <span className="ml-1.5">{r.hours} 小時</span>
-                      </span>
-                    </div>
-                    <span className={cn("shrink-0 px-2.5 py-0.5 text-xs font-medium", LEAVE_BADGE_ROUNDED, LEAVE_STATUS_STYLE[r.status])}>
-                      {r.status}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </Card>
 
         {/* 請假表單 */}
         <Card asChild padding="lg">
@@ -183,14 +155,14 @@ export default function ApplyPage() {
                   <option key={t} value={t}>
                     {quotaLoading
                       ? t
-                      : `${t}（剩餘 ${remaining[t]} 小時 / 約 ${hoursToApproxDays(remaining[t])} 天）`}
+                      : `${t}（${remainingDisplay(t)}${remaining[t] !== null ? ` / 約 ${hoursToApproxDays(remaining[t]!)} 天` : ""}）`}
                   </option>
                 ))}
               </select>
             </Field>
 
-            {/* 日期範圍 + 時數（同行） */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* 日期範圍 + 時數 */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field>
                 <FieldLabel>請假日期</FieldLabel>
                 <Popover>
@@ -225,7 +197,7 @@ export default function ApplyPage() {
                   <Input
                     type="number"
                     min={1}
-                    max={remaining[type]}
+                    max={remaining[type] ?? undefined}
                     value={hours}
                     onChange={(e) => setHours(e.target.value === "" ? "" : Number(e.target.value))}
                     placeholder="輸入時數"
@@ -236,7 +208,7 @@ export default function ApplyPage() {
                 <p className="text-xs text-muted-foreground">
                   {hours !== "" && Number(hours) > 0
                     ? `約 ${hoursToApproxDays(Number(hours))} 天`
-                    : `剩餘 ${remaining[type]} 小時可申請`}
+                    : remainingDisplay(type)}
                 </p>
               </Field>
             </div>
@@ -256,9 +228,9 @@ export default function ApplyPage() {
               />
             </Field>
 
-            <div className="flex justify-end gap-3">
-              <Button type="submit">送出</Button>
-              <Button type="button" variant="outline" onClick={() => router.back()}>取消</Button>
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => router.back()}>取消</Button>
+              <Button type="submit" className="w-full sm:w-auto">送出</Button>
             </div>
           </form>
         </Card>

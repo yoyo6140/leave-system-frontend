@@ -41,14 +41,16 @@ export default function AppLayout({ children, allowedRoles }: AppLayoutProps) {
     return () => { cancelled = true }
   }, [router, pathname, allowedRoles])
 
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   if (!ready) return null
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#f3f4f6]">
-      <Sidebar />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Navbar />
-        <main className="flex-1 overflow-auto p-8">{children}</main>
+        <Navbar onMenuToggle={() => setSidebarOpen((v) => !v)} />
+        <main className="flex-1 overflow-auto p-4 lg:p-8">{children}</main>
       </div>
     </div>
   )

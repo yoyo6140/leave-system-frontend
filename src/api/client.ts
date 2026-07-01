@@ -11,6 +11,13 @@ export interface ApiResponse<T = unknown> {
   error?: ApiError
 }
 
+function handleUnauthorized() {
+  localStorage.removeItem("leave_system_auth")
+  if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+    window.location.href = "/login"
+  }
+}
+
 export async function apiFetch<T>(
   path: string,
   init: RequestInit = {}
@@ -25,6 +32,14 @@ export async function apiFetch<T>(
     credentials: "include",
     headers,
   })
+
+  if (res.status === 401 && !path.startsWith("/auth/login")) {
+    handleUnauthorized()
+    return {
+      success: false,
+      error: { code: "UNAUTHORIZED", message: "登入已過期，請重新登入" },
+    }
+  }
 
   try {
     return (await res.json()) as ApiResponse<T>

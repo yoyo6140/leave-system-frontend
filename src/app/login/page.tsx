@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { login, getCurrentUser, getHomePath, restoreSession } from "@/lib/auth"
 import { CalendarDays, Eye, EyeOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -37,8 +38,8 @@ export default function LoginPage() {
     e.preventDefault()
     setError("")
 
-    if (password.length < 6 || password.length > 18) {
-      setError("密碼須為 6～18 個字元")
+    if (password.length < 6 || password.length > 12) {
+      setError("密碼須為 6～12 個字元")
       return
     }
 
@@ -89,9 +90,9 @@ export default function LoginPage() {
                 type={showPwd ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="請輸入密碼（6～18 字元）"
+                placeholder="請輸入密碼（6～12 字元）"
                 minLength={6}
-                maxLength={18}
+                maxLength={12}
                 required
                 className="pr-10"
               />
@@ -115,6 +116,10 @@ export default function LoginPage() {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "登入中..." : "登入"}
           </Button>
+
+          <Link href="/forgot-password" className="text-center text-sm text-muted-foreground hover:text-foreground">
+            忘記密碼？
+          </Link>
         </form>
       </Card>
     </div>

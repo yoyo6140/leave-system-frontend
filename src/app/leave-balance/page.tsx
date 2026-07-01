@@ -8,11 +8,9 @@ import AppLayout from "@/components/AppLayout"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { getCurrentUser } from "@/lib/auth"
-import { getUsedHours, hoursToApproxDays, LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS, LeaveType } from "@/lib/leave"
+import { hoursToApproxDays, LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS, LeaveType } from "@/lib/leave"
 import { cn } from "@/lib/utils"
 import { getMyQuota, type QuotaItem } from "@/api/useQuota"
-
-const YEAR = new Date().getFullYear()
 
 interface DisplayQuota {
   type:       LeaveType
@@ -24,17 +22,14 @@ interface DisplayQuota {
   note:       string | null
 }
 
-function buildDisplay(apiItems: QuotaItem[], username: string | undefined): DisplayQuota[] {
+function buildDisplay(apiItems: QuotaItem[]): DisplayQuota[] {
   return apiItems.map((item) => {
-    const style    = LEAVE_QUOTAS[item.type as LeaveType]
-    const used     = getUsedHours(item.type as LeaveType, username)
-    const total    = item.total_hours
-    const remaining = total !== null ? Math.max(total - used, 0) : null
+    const style = LEAVE_QUOTAS[item.type as LeaveType]
     return {
       type:      item.type as LeaveType,
-      total,
-      used,
-      remaining,
+      total:     item.total_hours,
+      used:      item.used_hours,
+      remaining: item.remaining_hours,
       bgColor:   style?.bgColor   ?? "bg-gray-100",
       textColor: style?.textColor ?? "text-gray-600",
       note:      item.note,
@@ -45,9 +40,11 @@ function buildDisplay(apiItems: QuotaItem[], username: string | undefined): Disp
 export default function LeaveBalancePage() {
   const user = getCurrentUser()
 
-  const [quotas,  setQuotas]  = useState<DisplayQuota[]>([])
-  const [loading, setLoading] = useState(true)
-  const [seniority, setSeniority] = useState<string>("")
+  const [quotas,     setQuotas]     = useState<DisplayQuota[]>([])
+  const [loading,    setLoading]    = useState(true)
+  const [seniority,  setSeniority]  = useState("")
+  const [yearStart,  setYearStart]  = useState("")
+  const [yearEnd,    setYearEnd]    = useState("")
 
   useEffect(() => {
     let cancelled = false
@@ -58,13 +55,15 @@ export default function LeaveBalancePage() {
       if (data) {
         const annual = data.quotas.find((q) => q.type === "特休")
         if (annual?.note) setSeniority(annual.note)
-        setQuotas(buildDisplay(data.quotas, user?.username))
+        setYearStart(data.year_start)
+        setYearEnd(data.year_end)
+        setQuotas(buildDisplay(data.quotas))
       }
       setLoading(false)
     }
     load()
     return () => { cancelled = true }
-  }, [user?.username])
+  }, [])
 
   return (
     <AppLayout>
@@ -80,7 +79,7 @@ export default function LeaveBalancePage() {
         </div>
 
         <Card padding="default" className="mb-4">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
               <p className="text-xs text-muted-foreground">員工編號</p>
               <p className="mt-0.5 text-sm font-medium tabular-nums">{user?.username ?? "—"}</p>
@@ -90,8 +89,10 @@ export default function LeaveBalancePage() {
               <p className="mt-0.5 text-sm font-medium">{user?.name ?? "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">統計期間</p>
-              <p className="mt-0.5 text-sm font-medium tabular-nums">{YEAR}/01/01 ～ {YEAR}/12/31</p>
+              <p className="text-xs text-muted-foreground">統計週年度</p>
+              <p className="mt-0.5 text-sm font-medium tabular-nums">
+                {yearStart ? `${yearStart} ～ ${yearEnd}` : "—"}
+              </p>
             </div>
           </div>
           {seniority && (

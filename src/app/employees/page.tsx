@@ -80,7 +80,7 @@ function AddDialog({ onAdd, onCancel, loading }: AddDialogProps) {
           </Field>
           <Field>
             <FieldLabel>密碼 <span className="text-destructive">*</span></FieldLabel>
-            <Input type="password" value={form.password} onChange={(e) => set("password", e.target.value)} placeholder="初始密碼" required />
+            <Input type="password" value={form.password} onChange={(e) => set("password", e.target.value)} placeholder="初始密碼（6～12 字元）" minLength={6} maxLength={12} required />
           </Field>
           <Field>
             <FieldLabel>姓名 <span className="text-destructive">*</span></FieldLabel>
@@ -212,6 +212,9 @@ export default function EmployeesPage() {
   }
 
   async function handleAdd(form: UserCreateInput) {
+    if (form.password.length < 6 || form.password.length > 12) {
+      setAlertMsg("密碼須為 6～12 個字元"); return
+    }
     if (!/^[A-Z][12]\d{8}$/i.test(form.id_number)) {
       setAlertMsg("身分證字號格式不正確（例：A123456789）"); return
     }
@@ -282,12 +285,11 @@ export default function EmployeesPage() {
             </Card>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
                     <th className="px-4 py-3 text-left font-medium">姓名</th>
-                    <th className="px-4 py-3 text-left font-medium">帳號</th>
-                    <th className="px-4 py-3 text-left font-medium">信箱</th>
                     <th className="px-4 py-3 text-left font-medium">性別</th>
                     <th className="px-4 py-3 text-left font-medium">身分證字號</th>
                     <th className="px-4 py-3 text-left font-medium">出生年月日</th>
@@ -298,16 +300,7 @@ export default function EmployeesPage() {
                 <tbody>
                   {employees.map((u, idx) => (
                     <tr key={u.id} className={idx !== employees.length - 1 ? "border-b border-border" : ""}>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                            {u.name?.[0] ?? "?"}
-                          </div>
-                          <span className="font-medium">{u.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">@{u.username}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
+                      <td className="px-4 py-3 font-medium">{u.name}</td>
                       <td className="px-4 py-3">{u.gender}</td>
                       <td className="px-4 py-3 tabular-nums">{u.id_number}</td>
                       <td className="px-4 py-3 tabular-nums">{u.birth_date}</td>
@@ -326,6 +319,7 @@ export default function EmployeesPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </section>
@@ -335,28 +329,18 @@ export default function EmployeesPage() {
           <section>
             <h2 className="mb-3 text-sm font-medium text-muted-foreground">其他主管（{admins.length}）</h2>
             <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
+              <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
                     <th className="px-4 py-3 text-left font-medium">姓名</th>
-                    <th className="px-4 py-3 text-left font-medium">帳號</th>
-                    <th className="px-4 py-3 text-left font-medium">信箱</th>
                     <th className="px-4 py-3 text-left font-medium">角色</th>
                   </tr>
                 </thead>
                 <tbody>
                   {admins.map((u, idx) => (
                     <tr key={u.id} className={idx !== admins.length - 1 ? "border-b border-border" : ""}>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
-                            {u.name?.[0] ?? "?"}
-                          </div>
-                          <span className="font-medium">{u.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">@{u.username}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{u.email}</td>
+                      <td className="px-4 py-3 font-medium">{u.name}</td>
                       <td className="px-4 py-3">
                         <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600">主管</span>
                       </td>
@@ -364,6 +348,7 @@ export default function EmployeesPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           </section>
         )}

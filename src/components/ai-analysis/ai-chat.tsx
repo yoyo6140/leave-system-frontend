@@ -6,8 +6,7 @@ import { Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-
-const API_URL = process.env.NEXT_PUBLIC_CHAT_API_URL ?? "http://localhost:8000/chat"
+import { sendChatMessage, type ChatMessage } from "@/api/useChat"
 
 type Message = {
   id: number
@@ -79,18 +78,11 @@ export default function AiChat() {
     setLoading(true)
 
     try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: updated.map((m) => ({ role: m.role, content: m.content })),
-        }),
-      })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      const data = (await res.json()) as { reply: string }
+      const history: ChatMessage[] = updated.map((m) => ({ role: m.role, content: m.content }))
+      const reply = await sendChatMessage(history)
       setMessages((prev) => [
         ...prev,
-        { id: Date.now() + 1, role: "model", content: data.reply },
+        { id: Date.now() + 1, role: "model", content: reply },
       ])
     } catch {
       setMessages((prev) => [
