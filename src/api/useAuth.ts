@@ -7,6 +7,7 @@ interface LoginInput {
 
 interface LoginResponse {
   success: boolean;
+  data?: { token: string };
   error?: {
     code: string;
     message: string;
@@ -37,8 +38,16 @@ export async function Logout() {
 }
 
 export async function apiGetMe() {
+  const token =
+    typeof window !== "undefined"
+      ? localStorage.getItem("leave_system_token")
+      : null;
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
   const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.auth.me}`, {
     credentials: "include",
+    headers,
   });
   if (!res.ok) return null;
   const body = await res.json();
