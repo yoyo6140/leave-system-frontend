@@ -1,3 +1,4 @@
+import axios from "axios";
 import { API_BASE_URL } from "./constants";
 
 export interface ApiError {
@@ -21,14 +22,10 @@ function handleUnauthorized() {
   }
 }
 
-export async function apiFetch<T>(
-  path: string,
-  init: RequestInit = {},
-): Promise<ApiResponse<T>> {
-  const headers = new Headers(init.headers);
-  if (init.body && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+});
 
   const token =
     typeof window !== "undefined"
@@ -42,20 +39,35 @@ export async function apiFetch<T>(
     headers,
   });
 
-  if (res.status === 401 && !path.startsWith("/auth/login")) {
-    handleUnauthorized();
-    return {
-      success: false,
-      error: { code: "UNAUTHORIZED", message: "登入已過期，請重新登入" },
-    };
-  }
+apiClient.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      const path = error.config?.url ?? "";
+      if (!path.endsWith("/auth/login")) handleUnauthorized();
+    }
+    return Promise.reject(error);
+  },
+);
 
+export async function apiFetch<T>(
+  path: string,
+  init: { method?: string; body?: string } = {},
+): Promise<ApiResponse<T>> {
   try {
-    return (await res.json()) as ApiResponse<T>;
-  } catch {
+    const res = await apiClient.request<ApiResponse<T>>({
+      url: path,
+      method: init.method ?? "GET",
+      data: init.body ? (JSON.parse(init.body) as unknown) : undefined,
+    });
+    return res.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      return error.response.data as ApiResponse<T>;
+    }
     return {
       success: false,
-      error: { code: "INVALID_RESPONSE", message: "伺服器回應格式錯誤" },
+      error: { code: "NETWORK_ERROR", message: "網路錯誤，請稍後再試" },
     };
   }
 }

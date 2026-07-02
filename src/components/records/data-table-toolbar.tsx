@@ -47,7 +47,7 @@ export function DataTableToolbar<TData>({
             onChange={(e) =>
               table.getColumn("reason")?.setFilterValue(e.target.value)
             }
-            className="pl-8 h-8 text-sm"
+            className="pl-8 h-8 text-sm bg-white"
           />
         </div>
 

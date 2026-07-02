@@ -1,4 +1,5 @@
-import { API_BASE_URL, API_ENDPOINTS } from "./constants";
+import { API_ENDPOINTS } from "./constants";
+import { apiClient } from "./client";
 
 export interface ChatMessage {
   role: "user" | "model";
@@ -12,13 +13,8 @@ export async function sendChatMessage(
   const firstUserIdx = messages.findIndex((m) => m.role === "user");
   const payload = firstUserIdx > 0 ? messages.slice(firstUserIdx) : messages;
 
-  const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.chat}`, {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages: payload }),
+  const res = await apiClient.post<{ reply: string }>(API_ENDPOINTS.chat, {
+    messages: payload,
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = (await res.json()) as { reply: string };
-  return data.reply;
+  return res.data.reply;
 }
