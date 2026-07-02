@@ -59,9 +59,9 @@ export async function Logout() {
 
 export async function apiGetMe(): Promise<ApiUserData | null> {
   try {
-    const res = await apiClient.get<{ data?: ApiUserData } & Partial<ApiUserData>>(
-      API_ENDPOINTS.auth.me,
-    );
+    const res = await apiClient.get<
+      { data?: ApiUserData } & Partial<ApiUserData>
+    >(API_ENDPOINTS.auth.me);
     const body = res.data;
     return body.data ?? (body as ApiUserData);
   } catch {
@@ -78,7 +78,8 @@ export async function forgotPassword(
       { email },
     );
     const body = res.data;
-    if (body.success) return { ok: true, message: body.data?.message ?? "已送出" };
+    if (body.success)
+      return { ok: true, message: body.data?.message ?? "已送出" };
     return { ok: false, message: body.error?.message ?? "發生錯誤" };
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {

@@ -13,7 +13,7 @@ export interface User {
   birthDate?: string;
 }
 
-const AUTH_KEY  = "leave_system_auth";
+const AUTH_KEY = "leave_system_auth";
 const TOKEN_KEY = "leave_system_token";
 
 function mapApiUser(user: {

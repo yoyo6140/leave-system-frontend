@@ -1,5 +1,6 @@
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "https://leave-system-backend-ozw0.onrender.com";
+  process.env.NEXT_PUBLIC_API_URL ??
+  "https://leave-system-backend-ozw0.onrender.com";
 
 export const API_ENDPOINTS = {
   auth: {
