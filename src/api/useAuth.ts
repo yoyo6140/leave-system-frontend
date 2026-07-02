@@ -60,21 +60,16 @@ export async function Logout() {
   }
 }
 
-export async function apiGetMe() {
-  const token =
-    typeof window !== "undefined"
-      ? localStorage.getItem("leave_system_token")
-      : null;
-  const headers: Record<string, string> = {};
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-
-  const res = await fetch(`${API_BASE_URL}${API_ENDPOINTS.auth.me}`, {
-    credentials: "include",
-    headers,
-  });
-  if (!res.ok) return null;
-  const body = await res.json();
-  return body.data ?? body;
+export async function apiGetMe(): Promise<ApiUserData | null> {
+  try {
+    const res = await apiClient.get<
+      { data?: ApiUserData } & Partial<ApiUserData>
+    >(API_ENDPOINTS.auth.me);
+    const body = res.data;
+    return body.data ?? (body as ApiUserData);
+  } catch {
+    return null;
+  }
 }
 
 export async function forgotPassword(
@@ -86,7 +81,8 @@ export async function forgotPassword(
       { email },
     );
     const body = res.data;
-    if (body.success) return { ok: true, message: body.data?.message ?? "已送出" };
+    if (body.success)
+      return { ok: true, message: body.data?.message ?? "已送出" };
     return { ok: false, message: body.error?.message ?? "發生錯誤" };
   } catch (error) {
     if (axios.isAxiosError(error) && error.response) {
