@@ -76,6 +76,10 @@ export default function AiChat() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  useEffect(() => {
+    if (!loading) inputRef.current?.focus();
+  }, [loading]);
+
   async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
@@ -108,7 +112,6 @@ export default function AiChat() {
       ]);
     } finally {
       setLoading(false);
-      inputRef.current?.focus();
     }
   }
 

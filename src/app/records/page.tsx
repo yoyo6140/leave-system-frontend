@@ -35,13 +35,10 @@ export default function RecordsPage() {
     if (isAdmin) {
       const usersResult = await getUsers({ limit: 200 });
       if (usersResult.ok) {
-        const map = Object.fromEntries(
-          usersResult.data.data.map((u) => [u.id, u.username]),
-        );
         const nameMap = Object.fromEntries(
           usersResult.data.data.map((u) => [u.id, u.name]),
         );
-        rows = rows.map((r) => ({ ...r, _username: map[r.user_id] }));
+        rows = rows.map((r) => ({ ...r, _username: nameMap[r.user_id] }));
         setUserMap(nameMap);
       }
     }

@@ -11,7 +11,6 @@ import {
   type LeaveStatus,
 } from "@/lib/leave";
 import { type ApiLeaveRecord } from "@/api/useLeaves";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 
@@ -20,28 +19,6 @@ export function createColumns(
   isAdmin = false,
 ): ColumnDef<ApiLeaveRecord>[] {
   const cols: ColumnDef<ApiLeaveRecord>[] = [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(val) => table.toggleAllPageRowsSelected(!!val)}
-          aria-label="全選"
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(val) => row.toggleSelected(!!val)}
-          aria-label="選取列"
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
     {
       accessorKey: "type",
       header: ({ column }) => (
@@ -158,10 +135,10 @@ export function createColumns(
         <DataTableColumnHeader column={column} title="申請人" />
       ),
       cell: ({ row }) => {
-        const username = row.getValue("_username") as string | undefined;
+        const name = row.getValue("_username") as string | undefined;
         return (
           <span className="text-sm font-medium">
-            {username ? `@${username}` : `#${row.original.user_id}`}
+            {name ?? `#${row.original.user_id}`}
           </span>
         );
       },
