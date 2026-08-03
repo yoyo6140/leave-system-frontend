@@ -9,6 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
+const TEST_ACCOUNTS = [
+  { label: "管理員", username: "admin", password: "admin1234" },
+  { label: "員工（陳志明）", username: "chen_zhiming", password: "pass1234" },
+];
+
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -134,6 +139,28 @@ export default function LoginPage() {
             忘記密碼？
           </Link>
         </form>
+
+        <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+          <p className="font-semibold mb-1">⚠️ 後端說明</p>
+          <p>後端部署於 Render 免費方案，閒置後會進入睡眠。<br />第一次登入可能需要等待 <strong>10～30 秒</strong>，請耐心等候。</p>
+        </div>
+
+        <div className="mt-4">
+          <p className="mb-2 text-xs font-medium text-muted-foreground">測試帳號（點擊自動填入）</p>
+          <div className="flex flex-col gap-2">
+            {TEST_ACCOUNTS.map((acc) => (
+              <button
+                key={acc.username}
+                type="button"
+                onClick={() => { setUsername(acc.username); setPassword(acc.password); setError(""); }}
+                className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-xs hover:bg-accent transition-colors cursor-pointer text-left"
+              >
+                <span className="font-medium">{acc.label}</span>
+                <span className="text-muted-foreground font-mono">{acc.username} / {acc.password}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </Card>
     </div>
   );
