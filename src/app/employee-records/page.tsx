@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import AppLayout from "@/components/AppLayout";
 import { Card } from "@/components/ui/card";
-import { type ApiLeaveRecord, getLeaves, deleteLeave } from "@/api/useLeaves";
+import { type ApiLeaveRecord, getLeaves } from "@/api/useLeaves";
 import { getUsers } from "@/api/useUsers";
 import { DataTable } from "@/components/records/data-table";
 import { createColumns } from "@/components/records/columns";
@@ -23,7 +23,7 @@ export default function EmployeeRecordsPage() {
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const t = setTimeout(() => setSearch(searchInput), 300);
+    const t = setTimeout(() => setSearch(searchInput), 1000);
     return () => clearTimeout(t);
   }, [searchInput]);
 
@@ -56,18 +56,8 @@ export default function EmployeeRecordsPage() {
     load();
   }, [load]);
 
-  const handleDelete = useCallback(
-    async (id: string) => {
-      await deleteLeave(id);
-      await load();
-    },
-    [load],
-  );
-
-  const columns = useMemo(
-    () => createColumns(handleDelete, true),
-    [handleDelete],
-  );
+  // 唯讀列表，不提供取消／刪除操作（別人的紀錄不在此頁動）
+  const columns = useMemo(() => createColumns(undefined, true), []);
 
   return (
     <AppLayout allowedRoles={["admin"]}>
@@ -79,14 +69,7 @@ export default function EmployeeRecordsPage() {
           </p>
         </div>
 
-        {loading ? (
-          <Card
-            padding="default"
-            className="animate-pulse text-center text-sm text-muted-foreground"
-          >
-            載入中…
-          </Card>
-        ) : records.length === 0 && !searchInput ? (
+        {!loading && records.length === 0 && !searchInput ? (
           <Card
             variant="dashed"
             padding="none"
@@ -104,6 +87,7 @@ export default function EmployeeRecordsPage() {
             search={searchInput}
             onSearchChange={setSearchInput}
             searchPlaceholder="搜尋姓名、帳號或原因..."
+            loading={loading}
           />
         )}
       </div>

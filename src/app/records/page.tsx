@@ -10,6 +10,7 @@ import { type ApiLeaveRecord, getLeaves, deleteLeave } from "@/api/useLeaves";
 import { DataTable } from "@/components/records/data-table";
 import { createColumns } from "@/components/records/columns";
 import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
+import { EditLeaveDialog } from "@/components/records/edit-leave-dialog";
 
 // 個人請假紀錄：不分角色，一律只顯示登入者自己的申請。
 // 用 mine=true 交給後端強制篩選（即使是 admin 也只回傳自己的），
@@ -18,13 +19,14 @@ export default function RecordsPage() {
   const [records, setRecords] = useState<ApiLeaveRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [detailRecord, setDetailRecord] = useState<ApiLeaveRecord | null>(null);
+  const [editRecord, setEditRecord] = useState<ApiLeaveRecord | null>(null);
 
-  // 搜尋框即時輸入 / 實際拿去打 API 的關鍵字（debounce 300ms 再送）
+  // 搜尋框即時輸入 / 實際拿去打 API 的關鍵字（debounce 1 秒再送）
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const t = setTimeout(() => setSearch(searchInput), 300);
+    const t = setTimeout(() => setSearch(searchInput), 1000);
     return () => clearTimeout(t);
   }, [searchInput]);
 
@@ -47,7 +49,10 @@ export default function RecordsPage() {
     [load],
   );
 
-  const columns = useMemo(() => createColumns(handleDelete, false), [handleDelete]);
+  const columns = useMemo(
+    () => createColumns(handleDelete, false, setEditRecord),
+    [handleDelete],
+  );
 
   return (
     <AppLayout>
@@ -59,14 +64,7 @@ export default function RecordsPage() {
           </Button>
         </div>
 
-        {loading ? (
-          <Card
-            padding="default"
-            className="animate-pulse text-center text-sm text-muted-foreground"
-          >
-            載入中…
-          </Card>
-        ) : records.length === 0 && !searchInput ? (
+        {!loading && records.length === 0 && !searchInput ? (
           <Card
             variant="dashed"
             padding="none"
@@ -87,6 +85,7 @@ export default function RecordsPage() {
             search={searchInput}
             onSearchChange={setSearchInput}
             searchPlaceholder="搜尋原因..."
+            loading={loading}
           />
         )}
       </div>
@@ -94,6 +93,11 @@ export default function RecordsPage() {
         record={detailRecord}
         isAdmin={false}
         onClose={() => setDetailRecord(null)}
+      />
+      <EditLeaveDialog
+        record={editRecord}
+        onClose={() => setEditRecord(null)}
+        onSaved={load}
       />
     </AppLayout>
   );

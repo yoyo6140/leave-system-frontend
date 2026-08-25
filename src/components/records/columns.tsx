@@ -15,8 +15,11 @@ import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 
 export function createColumns(
-  onDelete: (id: string) => void,
+  /** 不帶 onDelete（例如員工請假紀錄頁）就不顯示「操作」欄位 */
+  onDelete?: (id: string) => void,
   isAdmin = false,
+  /** 不帶就不顯示「編輯」選項 */
+  onEdit?: (record: ApiLeaveRecord) => void,
 ): ColumnDef<ApiLeaveRecord>[] {
   const cols: ColumnDef<ApiLeaveRecord>[] = [
     {
@@ -121,12 +124,17 @@ export function createColumns(
         </span>
       ),
     },
-    {
-      id: "actions",
-      cell: ({ row }) => <DataTableRowActions row={row} onDelete={onDelete} />,
-      enableHiding: false,
-    },
   ];
+
+  if (onDelete) {
+    cols.push({
+      id: "actions",
+      cell: ({ row }) => (
+        <DataTableRowActions row={row} onDelete={onDelete} onEdit={onEdit} />
+      ),
+      enableHiding: false,
+    });
+  }
 
   if (isAdmin) {
     cols.splice(1, 0, {

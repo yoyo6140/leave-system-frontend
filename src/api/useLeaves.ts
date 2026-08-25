@@ -115,13 +115,13 @@ export async function updateLeaveStatus(
 }
 
 /**
- * 取消請假申請＝整筆刪除，僅限「待審核」狀態（審核完成後任何身分都不可再取消）。
- * 沒有另外的「軟取消」端點，狀態語意完全交給 status 欄位（待審核/已通過/已拒絕）。
+ * 取消請假申請＝軟刪除，狀態改為「已取消」並保留紀錄，僅限「待審核」狀態
+ * （審核完成後任何身分都不可再取消）。回傳更新後的紀錄（status: "已取消"）。
  */
-export async function deleteLeave(id: string): Promise<Result<null>> {
-  const res = await apiFetch(API_ENDPOINTS.leaves.delete(id), {
+export async function deleteLeave(id: string): Promise<Result<ApiLeaveRecord>> {
+  const res = await apiFetch<ApiLeaveRecord>(API_ENDPOINTS.leaves.delete(id), {
     method: "DELETE",
   });
-  if (res.success) return { ok: true, data: null };
+  if (res.success && res.data) return { ok: true, data: res.data };
   return { ok: false, message: res.error?.message ?? "取消申請失敗" };
 }
