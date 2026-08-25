@@ -5,21 +5,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
-import { zhTW } from "date-fns/locale";
 import { type DateRange } from "react-day-picker";
-import { CalendarIcon } from "lucide-react";
 
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { SuccessDialog, AlertDialog } from "@/components/ui/app-dialog";
 import { getCurrentUser } from "@/lib/auth";
 import {
@@ -191,45 +184,7 @@ export default function ApplyPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field>
                 <FieldLabel>請假日期</FieldLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start px-3 font-normal text-left"
-                    >
-                      <CalendarIcon className="mr-2 size-4 text-muted-foreground" />
-                      {dateRange?.from ? (
-                        dateRange.to ? (
-                          <>
-                            {format(dateRange.from, "yyyy/MM/dd", {
-                              locale: zhTW,
-                            })}{" "}
-                            —{" "}
-                            {format(dateRange.to, "yyyy/MM/dd", {
-                              locale: zhTW,
-                            })}
-                          </>
-                        ) : (
-                          format(dateRange.from, "yyyy/MM/dd", { locale: zhTW })
-                        )
-                      ) : (
-                        <span className="text-muted-foreground">
-                          選擇請假日期
-                        </span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="range"
-                      defaultMonth={dateRange?.from}
-                      selected={dateRange}
-                      onSelect={setDateRange}
-                      numberOfMonths={2}
-                      locale={zhTW}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <DateRangePicker value={dateRange} onChange={setDateRange} />
               </Field>
 
               <Field>

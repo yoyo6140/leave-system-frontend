@@ -31,6 +31,8 @@ interface DataTableProps<TData, TValue> {
   search: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
+  /** 資料重新載入中；只換表格內容，搜尋框繼續掛著、不會被卸載掉焦點 */
+  loading?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -40,6 +42,7 @@ export function DataTable<TData, TValue>({
   search,
   onSearchChange,
   searchPlaceholder,
+  loading = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "created_at", desc: true },
@@ -89,7 +92,16 @@ export function DataTable<TData, TValue>({
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows.length ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-32 text-center text-muted-foreground"
+                  >
+                    <span className="animate-pulse">載入中…</span>
+                  </TableCell>
+                </TableRow>
+              ) : table.getRowModel().rows.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}

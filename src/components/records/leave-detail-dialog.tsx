@@ -21,6 +21,8 @@ interface LeaveDetailDialogProps {
   isAdmin?: boolean;
   userMap?: Record<number, string>;
   onClose: () => void;
+  /** 額外的頁尾按鈕（例如審核管理的核准／拒絕），排在「關閉」左邊 */
+  footerActions?: React.ReactNode;
 }
 
 function Row({
@@ -45,6 +47,7 @@ export function LeaveDetailDialog({
   isAdmin,
   userMap,
   onClose,
+  footerActions,
 }: LeaveDetailDialogProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -153,7 +156,8 @@ export function LeaveDetailDialog({
           )}
         </div>
 
-        <div className="px-6 pb-5 pt-3 flex justify-end">
+        <div className="px-6 pb-5 pt-3 flex justify-end gap-2">
+          {footerActions}
           <Button variant="outline" onClick={onClose}>
             關閉
           </Button>
