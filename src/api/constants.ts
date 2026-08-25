@@ -30,7 +30,7 @@ export const API_ENDPOINTS = {
     update: (id: string) => `/leaves/${id}`,
     delete: (id: string) => `/leaves/${id}`,
     updateStatus: (id: string) => `/leaves/${id}/status`,
-    cancel: (id: string) => `/leaves/${id}/cancel`,
+    // 取消申請＝刪除整筆（delete 端點），沒有另外的 cancel 端點
     statusLogs: (id: string) => `/leaves/${id}/status-logs`,
   },
 } as const;
