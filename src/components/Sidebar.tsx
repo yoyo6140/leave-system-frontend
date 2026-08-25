@@ -58,7 +58,7 @@ const ALL_NAV: NavItem[] = [
   {
     href: "/records",
     icon: ClipboardList,
-    label: "請假紀錄",
+    label: "個別請假紀錄",
     roles: ["admin", "employee"],
   },
   { href: "/ai-analysis", icon: Bot, label: "AI 分析", roles: ["admin"] },

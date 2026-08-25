@@ -49,6 +49,8 @@ type Result<T> = { ok: true; data: T } | { ok: false; message: string };
 
 export async function getLeaves(params?: {
   status?: string;
+  /** 關鍵字搜尋原因；admin 查全公司時一併搜尋申請人姓名／帳號 */
+  search?: string;
   page?: number;
   limit?: number;
   /** 強制只查自己的紀錄，即使是 admin 也一樣（個人請假紀錄頁專用） */
@@ -56,6 +58,7 @@ export async function getLeaves(params?: {
 }): Promise<Result<LeaveListData>> {
   const qs = new URLSearchParams();
   if (params?.status) qs.set("status", params.status);
+  if (params?.search) qs.set("search", params.search);
   if (params?.page) qs.set("page", String(params.page));
   if (params?.limit) qs.set("limit", String(params.limit));
   if (params?.mine) qs.set("mine", "true");
@@ -111,18 +114,14 @@ export async function updateLeaveStatus(
   return { ok: false, message: res.error?.message ?? "更新假單狀態失敗" };
 }
 
-export async function cancelLeave(id: string): Promise<Result<ApiLeaveRecord>> {
-  const res = await apiFetch<ApiLeaveRecord>(API_ENDPOINTS.leaves.cancel(id), {
-    method: "PATCH",
-  });
-  if (res.success && res.data) return { ok: true, data: res.data };
-  return { ok: false, message: res.error?.message ?? "取消假單失敗" };
-}
-
+/**
+ * 取消請假申請＝整筆刪除，僅限「待審核」狀態（審核完成後任何身分都不可再取消）。
+ * 沒有另外的「軟取消」端點，狀態語意完全交給 status 欄位（待審核/已通過/已拒絕）。
+ */
 export async function deleteLeave(id: string): Promise<Result<null>> {
   const res = await apiFetch(API_ENDPOINTS.leaves.delete(id), {
     method: "DELETE",
   });
   if (res.success) return { ok: true, data: null };
-  return { ok: false, message: res.error?.message ?? "刪除假單失敗" };
+  return { ok: false, message: res.error?.message ?? "取消申請失敗" };
 }

@@ -17,10 +17,20 @@ export default function EmployeeRecordsPage() {
   const [loading, setLoading] = useState(true);
   const [detailRecord, setDetailRecord] = useState<ApiLeaveRecord | null>(null);
 
+  // 搜尋框即時輸入 / 實際拿去打 API 的關鍵字（debounce 300ms 再送）
+  // admin 查全公司時，後端 search 會一併比對申請人姓名／帳號
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
   const load = useCallback(async () => {
     setLoading(true);
     const [leavesResult, usersResult] = await Promise.all([
-      getLeaves({ limit: 200 }),
+      getLeaves({ limit: 200, search }),
       getUsers({ limit: 200 }),
     ]);
 
@@ -40,7 +50,7 @@ export default function EmployeeRecordsPage() {
 
     setRecords(rows);
     setLoading(false);
-  }, []);
+  }, [search]);
 
   useEffect(() => {
     load();
@@ -76,7 +86,7 @@ export default function EmployeeRecordsPage() {
           >
             載入中…
           </Card>
-        ) : records.length === 0 ? (
+        ) : records.length === 0 && !searchInput ? (
           <Card
             variant="dashed"
             padding="none"
@@ -91,6 +101,9 @@ export default function EmployeeRecordsPage() {
             columns={columns}
             data={records}
             onRowClick={setDetailRecord}
+            search={searchInput}
+            onSearchChange={setSearchInput}
+            searchPlaceholder="搜尋姓名、帳號或原因..."
           />
         )}
       </div>

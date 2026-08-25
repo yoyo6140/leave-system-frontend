@@ -6,44 +6,34 @@ import Link from "next/link";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getCurrentUser, restoreSession, type User } from "@/lib/auth";
 import { type ApiLeaveRecord, getLeaves, deleteLeave } from "@/api/useLeaves";
 import { DataTable } from "@/components/records/data-table";
 import { createColumns } from "@/components/records/columns";
 import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
 
-// 個人請假紀錄：不分角色，一律只顯示登入者自己的申請
-// （員工管理全公司紀錄請至「員工請假紀錄」/employee-records，僅 admin 可見）
+// 個人請假紀錄：不分角色，一律只顯示登入者自己的申請。
+// 用 mine=true 交給後端強制篩選（即使是 admin 也只回傳自己的），
+// 與 admin 專用的「員工請假紀錄」/employee-records 查詢分開。
 export default function RecordsPage() {
-  const [user, setUser] = useState<User | null>(() => getCurrentUser());
   const [records, setRecords] = useState<ApiLeaveRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [detailRecord, setDetailRecord] = useState<ApiLeaveRecord | null>(null);
 
-  // 確保拿到含 id 的最新使用者資料，才能篩出「自己的」紀錄
-  useEffect(() => {
-    let cancelled = false;
-    restoreSession().then((fresh) => {
-      if (!cancelled && fresh) setUser(fresh);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // 搜尋框即時輸入 / 實際拿去打 API 的關鍵字（debounce 300ms 再送）
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
 
-  const userId = user?.id;
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   const load = useCallback(async () => {
-    if (userId == null) return;
     setLoading(true);
-    const result = await getLeaves({ limit: 100 });
-    if (!result.ok) {
-      setLoading(false);
-      return;
-    }
-    setRecords(result.data.data.filter((r) => r.user_id === userId));
+    const result = await getLeaves({ limit: 100, mine: true, search });
+    if (result.ok) setRecords(result.data.data);
     setLoading(false);
-  }, [userId]);
+  }, [search]);
 
   useEffect(() => {
     load();
@@ -63,7 +53,7 @@ export default function RecordsPage() {
     <AppLayout>
       <div>
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-xl font-semibold">請假紀錄</h1>
+          <h1 className="text-xl font-semibold">個別請假紀錄</h1>
           <Button asChild size="sm" variant="outline">
             <Link href="/apply">新增申請</Link>
           </Button>
@@ -76,7 +66,7 @@ export default function RecordsPage() {
           >
             載入中…
           </Card>
-        ) : records.length === 0 ? (
+        ) : records.length === 0 && !searchInput ? (
           <Card
             variant="dashed"
             padding="none"
@@ -94,6 +84,9 @@ export default function RecordsPage() {
             columns={columns}
             data={records}
             onRowClick={setDetailRecord}
+            search={searchInput}
+            onSearchChange={setSearchInput}
+            searchPlaceholder="搜尋原因..."
           />
         )}
       </div>
