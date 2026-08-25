@@ -51,11 +51,14 @@ export async function getLeaves(params?: {
   status?: string;
   page?: number;
   limit?: number;
+  /** 強制只查自己的紀錄，即使是 admin 也一樣（個人請假紀錄頁專用） */
+  mine?: boolean;
 }): Promise<Result<LeaveListData>> {
   const qs = new URLSearchParams();
   if (params?.status) qs.set("status", params.status);
   if (params?.page) qs.set("page", String(params.page));
   if (params?.limit) qs.set("limit", String(params.limit));
+  if (params?.mine) qs.set("mine", "true");
   const url = qs.size
     ? `${API_ENDPOINTS.leaves.list}?${qs}`
     : API_ENDPOINTS.leaves.list;

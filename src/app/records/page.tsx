@@ -6,46 +6,44 @@ import Link from "next/link";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, restoreSession, type User } from "@/lib/auth";
 import { type ApiLeaveRecord, getLeaves, deleteLeave } from "@/api/useLeaves";
-import { getUsers } from "@/api/useUsers";
 import { DataTable } from "@/components/records/data-table";
 import { createColumns } from "@/components/records/columns";
 import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
 
+// 個人請假紀錄：不分角色，一律只顯示登入者自己的申請
+// （員工管理全公司紀錄請至「員工請假紀錄」/employee-records，僅 admin 可見）
 export default function RecordsPage() {
-  const user = getCurrentUser();
-  const isAdmin = user?.role === "admin";
-
+  const [user, setUser] = useState<User | null>(() => getCurrentUser());
   const [records, setRecords] = useState<ApiLeaveRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [detailRecord, setDetailRecord] = useState<ApiLeaveRecord | null>(null);
-  const [userMap, setUserMap] = useState<Record<number, string>>({});
+
+  // 確保拿到含 id 的最新使用者資料，才能篩出「自己的」紀錄
+  useEffect(() => {
+    let cancelled = false;
+    restoreSession().then((fresh) => {
+      if (!cancelled && fresh) setUser(fresh);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const userId = user?.id;
 
   const load = useCallback(async () => {
+    if (userId == null) return;
     setLoading(true);
     const result = await getLeaves({ limit: 100 });
     if (!result.ok) {
       setLoading(false);
       return;
     }
-
-    let rows = result.data.data;
-
-    if (isAdmin) {
-      const usersResult = await getUsers({ limit: 200 });
-      if (usersResult.ok) {
-        const nameMap = Object.fromEntries(
-          usersResult.data.data.map((u) => [u.id, u.name]),
-        );
-        rows = rows.map((r) => ({ ...r, _username: nameMap[r.user_id] }));
-        setUserMap(nameMap);
-      }
-    }
-
-    setRecords(rows);
+    setRecords(result.data.data.filter((r) => r.user_id === userId));
     setLoading(false);
-  }, [isAdmin]);
+  }, [userId]);
 
   useEffect(() => {
     load();
@@ -59,10 +57,7 @@ export default function RecordsPage() {
     [load],
   );
 
-  const columns = useMemo(
-    () => createColumns(handleDelete, isAdmin),
-    [handleDelete, isAdmin],
-  );
+  const columns = useMemo(() => createColumns(handleDelete, false), [handleDelete]);
 
   return (
     <AppLayout>
@@ -104,8 +99,7 @@ export default function RecordsPage() {
       </div>
       <LeaveDetailDialog
         record={detailRecord}
-        isAdmin={isAdmin}
-        userMap={userMap}
+        isAdmin={false}
         onClose={() => setDetailRecord(null)}
       />
     </AppLayout>

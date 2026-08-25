@@ -12,6 +12,7 @@ import {
   CalendarPlus,
   ClipboardCheck,
   ClipboardList,
+  Files,
   LayoutDashboard,
   LogOut,
   PieChart,
@@ -29,11 +30,12 @@ type NavItem = {
 
 const ALL_NAV: NavItem[] = [
   { href: "/overview", icon: LayoutDashboard, label: "總覽", roles: ["admin"] },
+  { href: "/employees", icon: Users, label: "員工管理", roles: ["admin"] },
   {
-    href: "/leave-balance",
-    icon: PieChart,
-    label: "假別餘額",
-    roles: ["admin", "employee"],
+    href: "/employee-records",
+    icon: Files,
+    label: "員工請假紀錄",
+    roles: ["admin"],
   },
   {
     href: "/review",
@@ -41,7 +43,12 @@ const ALL_NAV: NavItem[] = [
     label: "審核管理",
     roles: ["admin"],
   },
-  { href: "/employees", icon: Users, label: "員工管理", roles: ["admin"] },
+  {
+    href: "/leave-balance",
+    icon: PieChart,
+    label: "假別餘額",
+    roles: ["admin", "employee"],
+  },
   {
     href: "/apply",
     icon: CalendarPlus,
