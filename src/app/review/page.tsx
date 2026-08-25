@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Check, X } from "lucide-react";
+import { Check, ChevronRight, X } from "lucide-react";
 
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SuccessDialog, ConfirmDialog } from "@/components/ui/app-dialog";
+import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
 import { cn } from "@/lib/utils";
 import { LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS } from "@/lib/leave";
 import { getCurrentUser } from "@/lib/auth";
@@ -24,6 +25,7 @@ export default function ReviewPage() {
   const [userMap, setUserMap] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [successMsg, setSuccessMsg] = useState("");
+  const [detailRecord, setDetailRecord] = useState<ApiLeaveRecord | null>(null);
   const [approveTarget, setApproveTarget] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
 
@@ -59,6 +61,7 @@ export default function ReviewPage() {
     });
     if (result.ok) {
       setApproveTarget(null);
+      setDetailRecord(null);
       setSuccessMsg("申請已核准");
       await load();
     }
@@ -72,6 +75,7 @@ export default function ReviewPage() {
     });
     if (result.ok) {
       setRejectTarget(null);
+      setDetailRecord(null);
       await load();
     }
   }
@@ -110,8 +114,13 @@ export default function ReviewPage() {
               const q = LEAVE_QUOTAS[record.type as keyof typeof LEAVE_QUOTAS];
               const name = userMap[record.user_id] ?? `#${record.user_id}`;
               return (
-                <Card key={record.id} padding="default">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                <Card
+                  key={record.id}
+                  padding="default"
+                  className="cursor-pointer transition-colors hover:bg-accent/40"
+                  onClick={() => setDetailRecord(record)}
+                >
+                  <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 min-w-0">
                       <span
                         className={cn(
@@ -145,23 +154,7 @@ export default function ReviewPage() {
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-2 sm:ml-auto">
-                      <Button
-                        size="sm"
-                        onClick={() => setApproveTarget(record.id)}
-                      >
-                        <Check className="size-3.5" />
-                        核准
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setRejectTarget(record.id)}
-                      >
-                        <X className="size-3.5" />
-                        拒絕
-                      </Button>
-                    </div>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground/60" />
                   </div>
                 </Card>
               );
@@ -169,6 +162,31 @@ export default function ReviewPage() {
           </div>
         )}
       </div>
+
+      <LeaveDetailDialog
+        record={detailRecord}
+        isAdmin
+        userMap={userMap}
+        onClose={() => setDetailRecord(null)}
+        footerActions={
+          detailRecord && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setRejectTarget(detailRecord.id)}
+              >
+                <X className="size-3.5" />
+                拒絕
+              </Button>
+              <Button size="sm" onClick={() => setApproveTarget(detailRecord.id)}>
+                <Check className="size-3.5" />
+                核准
+              </Button>
+            </>
+          )
+        }
+      />
 
       <SuccessDialog
         open={!!successMsg}

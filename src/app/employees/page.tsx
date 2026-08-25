@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Edit, Trash2, UserPlus } from "lucide-react";
+import { Edit, Search, Trash2, UserPlus, X } from "lucide-react";
 
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -341,17 +341,26 @@ export default function EmployeesPage() {
   const [successMsg, setSuccessMsg] = useState("");
   const [alertMsg, setAlertMsg] = useState("");
 
-  useEffect(() => {
-    refresh();
-  }, []);
+  // 搜尋框即時輸入 / 實際拿去打 API 的關鍵字（debounce 1 秒再送，跟其他搜尋頁一致）
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
 
-  async function refresh() {
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 1000);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const refresh = useCallback(async () => {
     setLoading(true);
-    const result = await getUsers({ limit: 100 });
+    const result = await getUsers({ limit: 100, search });
     if (result.ok) setUsers(result.data.data);
     else setAlertMsg(result.message);
     setLoading(false);
-  }
+  }, [search]);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   async function handleAdd(form: UserCreateInput) {
     if (form.password.length < 6 || form.password.length > 12) {
@@ -421,6 +430,30 @@ export default function EmployeesPage() {
           </Button>
         </div>
 
+        {/* 搜尋（打後端 API，不是前端過濾；搜尋框固定掛著，載入中也不會失去焦點） */}
+        <div className="mb-4 flex items-center gap-2">
+          <div className="relative max-w-xs w-full">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+            <Input
+              placeholder="搜尋姓名或帳號..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-8 h-8 text-sm bg-white"
+            />
+          </div>
+          {searchInput && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 text-muted-foreground"
+              onClick={() => setSearchInput("")}
+            >
+              清除
+              <X className="size-3.5" />
+            </Button>
+          )}
+        </div>
+
         {/* 員工列表 */}
         <section className="mb-6">
           {loading ? (
@@ -436,7 +469,7 @@ export default function EmployeesPage() {
               padding="default"
               className="text-center text-sm text-muted-foreground"
             >
-              尚無員工帳號
+              {searchInput ? "查無符合搜尋條件的員工" : "尚無員工帳號"}
             </Card>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">

@@ -1,6 +1,6 @@
 export type LeaveType =
   "特休" | "病假" | "事假" | "婚假" | "喪假" | "公假" | "其他";
-export type LeaveStatus = "待審核" | "已通過" | "已拒絕";
+export type LeaveStatus = "待審核" | "已通過" | "已拒絕" | "已取消";
 
 export type LeaveRecord = {
   id: string;
@@ -20,6 +20,7 @@ export const LEAVE_STATUS_STYLE: Record<LeaveStatus, string> = {
   待審核: "bg-amber-50 text-amber-600",
   已通過: "bg-blue-50 text-blue-600",
   已拒絕: "bg-red-50 text-red-600",
+  已取消: "bg-gray-100 text-gray-500",
 };
 
 export const LEAVE_QUOTAS: Record<
