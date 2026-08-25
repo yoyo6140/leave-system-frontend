@@ -6,46 +6,34 @@ import Link from "next/link";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getCurrentUser } from "@/lib/auth";
 import { type ApiLeaveRecord, getLeaves, deleteLeave } from "@/api/useLeaves";
-import { getUsers } from "@/api/useUsers";
 import { DataTable } from "@/components/records/data-table";
 import { createColumns } from "@/components/records/columns";
 import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
 
+// 個人請假紀錄：不分角色，一律只顯示登入者自己的申請。
+// 用 mine=true 交給後端強制篩選（即使是 admin 也只回傳自己的），
+// 與 admin 專用的「員工請假紀錄」/employee-records 查詢分開。
 export default function RecordsPage() {
-  const user = getCurrentUser();
-  const isAdmin = user?.role === "admin";
-
   const [records, setRecords] = useState<ApiLeaveRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [detailRecord, setDetailRecord] = useState<ApiLeaveRecord | null>(null);
-  const [userMap, setUserMap] = useState<Record<number, string>>({});
+
+  // 搜尋框即時輸入 / 實際拿去打 API 的關鍵字（debounce 300ms 再送）
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const result = await getLeaves({ limit: 100 });
-    if (!result.ok) {
-      setLoading(false);
-      return;
-    }
-
-    let rows = result.data.data;
-
-    if (isAdmin) {
-      const usersResult = await getUsers({ limit: 200 });
-      if (usersResult.ok) {
-        const nameMap = Object.fromEntries(
-          usersResult.data.data.map((u) => [u.id, u.name]),
-        );
-        rows = rows.map((r) => ({ ...r, _username: nameMap[r.user_id] }));
-        setUserMap(nameMap);
-      }
-    }
-
-    setRecords(rows);
+    const result = await getLeaves({ limit: 100, mine: true, search });
+    if (result.ok) setRecords(result.data.data);
     setLoading(false);
-  }, [isAdmin]);
+  }, [search]);
 
   useEffect(() => {
     load();
@@ -59,16 +47,13 @@ export default function RecordsPage() {
     [load],
   );
 
-  const columns = useMemo(
-    () => createColumns(handleDelete, isAdmin),
-    [handleDelete, isAdmin],
-  );
+  const columns = useMemo(() => createColumns(handleDelete, false), [handleDelete]);
 
   return (
     <AppLayout>
       <div>
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-xl font-semibold">請假紀錄</h1>
+          <h1 className="text-xl font-semibold">個別請假紀錄</h1>
           <Button asChild size="sm" variant="outline">
             <Link href="/apply">新增申請</Link>
           </Button>
@@ -81,7 +66,7 @@ export default function RecordsPage() {
           >
             載入中…
           </Card>
-        ) : records.length === 0 ? (
+        ) : records.length === 0 && !searchInput ? (
           <Card
             variant="dashed"
             padding="none"
@@ -99,13 +84,15 @@ export default function RecordsPage() {
             columns={columns}
             data={records}
             onRowClick={setDetailRecord}
+            search={searchInput}
+            onSearchChange={setSearchInput}
+            searchPlaceholder="搜尋原因..."
           />
         )}
       </div>
       <LeaveDetailDialog
         record={detailRecord}
-        isAdmin={isAdmin}
-        userMap={userMap}
+        isAdmin={false}
         onClose={() => setDetailRecord(null)}
       />
     </AppLayout>

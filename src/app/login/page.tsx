@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
+// 測試用帳密
 const TEST_ACCOUNTS = [
   { label: "管理員", username: "admin", password: "admin1234" },
   { label: "員工（陳志明）", username: "chen_zhiming", password: "pass1234" },

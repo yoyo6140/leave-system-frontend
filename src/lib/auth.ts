@@ -4,6 +4,7 @@ export type UserRole = "admin" | "employee";
 export type Gender = "男" | "女";
 
 export interface User {
+  id: number;
   username: string;
   role: UserRole;
   name: string;
@@ -17,6 +18,7 @@ const AUTH_KEY = "leave_system_auth";
 const TOKEN_KEY = "leave_system_token";
 
 function mapApiUser(user: {
+  id: number;
   username: string;
   name: string;
   role: string;
@@ -29,6 +31,7 @@ function mapApiUser(user: {
   birthDate?: string;
 }): User {
   return {
+    id: user.id,
     username: user.username,
     name: user.name,
     role: user.role?.toLowerCase() === "admin" ? "admin" : "employee",
@@ -86,7 +89,10 @@ export function getCurrentUser(): User | null {
   const raw = localStorage.getItem(AUTH_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as User;
+    const user = JSON.parse(raw) as User;
+    // 舊版快取（登入時尚未存 id）視為無效，強制重新 restoreSession()
+    if (user.id == null) return null;
+    return user;
   } catch {
     return null;
   }
