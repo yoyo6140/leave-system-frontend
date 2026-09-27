@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Edit, Search, Trash2, UserPlus, X } from "lucide-react";
 
@@ -19,11 +19,11 @@ import {
   type ApiUser,
   type UserCreateInput,
   type UserUpdateInput,
-  getUsers,
-  createUser,
-  updateUser,
-  deleteUser,
-} from "@/api/useUsers";
+  useUsersQuery,
+  useCreateUser,
+  useUpdateUser,
+  useDeleteUser,
+} from "@/hooks/queries/use-users";
 
 // ── Shared Modal Shell ────────────────────────────────────────────────────────
 
@@ -332,8 +332,6 @@ function EditDialog({ user, onSave, onCancel, loading }: EditDialogProps) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function EmployeesPage() {
-  const [users, setUsers] = useState<ApiUser[]>([]);
-  const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editTarget, setEditTarget] = useState<ApiUser | null>(null);
@@ -350,17 +348,20 @@ export default function EmployeesPage() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    const result = await getUsers({ limit: 100, search });
-    if (result.ok) setUsers(result.data.data);
-    else setAlertMsg(result.message);
-    setLoading(false);
-  }, [search]);
+  const { data, isLoading: loading, isError, error } = useUsersQuery({
+    limit: 100,
+    search,
+  });
+  const users = data?.data ?? [];
+  const createUserMut = useCreateUser();
+  const updateUserMut = useUpdateUser();
+  const deleteUserMut = useDeleteUser();
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    if (isError) {
+      setAlertMsg(error instanceof Error ? error.message : "查詢員工列表失敗");
+    }
+  }, [isError, error]);
 
   async function handleAdd(form: UserCreateInput) {
     if (form.password.length < 6 || form.password.length > 12) {
@@ -372,48 +373,50 @@ export default function EmployeesPage() {
       return;
     }
     setActionLoading(true);
-    const result = await createUser(form);
-    setActionLoading(false);
-    if (result.ok) {
+    try {
+      const created = await createUserMut.mutateAsync(form);
       setShowAdd(false);
-      setSuccessMsg(`員工「${result.data.name}」已新增`);
-      await refresh();
-    } else {
-      setAlertMsg(result.message);
+      setSuccessMsg(`員工「${created.name}」已新增`);
+    } catch (err) {
+      setAlertMsg(err instanceof Error ? err.message : "新增員工失敗");
+    } finally {
+      setActionLoading(false);
     }
   }
 
   async function handleEditSave(updates: UserUpdateInput) {
     if (!editTarget) return;
     setActionLoading(true);
-    const result = await updateUser(editTarget.id, updates);
-    setActionLoading(false);
-    if (result.ok) {
+    try {
+      const updated = await updateUserMut.mutateAsync({
+        id: editTarget.id,
+        input: updates,
+      });
       setEditTarget(null);
-      setSuccessMsg(`員工「${result.data.name}」資料已更新`);
-      await refresh();
-    } else {
-      setAlertMsg(result.message);
+      setSuccessMsg(`員工「${updated.name}」資料已更新`);
+    } catch (err) {
+      setAlertMsg(err instanceof Error ? err.message : "更新員工失敗");
+    } finally {
+      setActionLoading(false);
     }
   }
 
   async function handleDeleteConfirm() {
     if (!deleteTarget) return;
     setActionLoading(true);
-    const result = await deleteUser(deleteTarget.id);
-    setActionLoading(false);
-    if (result.ok) {
+    try {
+      await deleteUserMut.mutateAsync(deleteTarget.id);
       setDeleteTarget(null);
       setSuccessMsg(`員工「${deleteTarget.name}」帳號已刪除`);
-      await refresh();
-    } else {
-      setAlertMsg(result.message);
+    } catch (err) {
+      setAlertMsg(err instanceof Error ? err.message : "刪除員工失敗");
+    } finally {
+      setActionLoading(false);
     }
   }
 
   const employees = users.filter((u) => u.role === "employee");
   const admins = users.filter((u) => u.role === "admin");
-
   return (
     <AppLayout allowedRoles={["admin"]}>
       <div>

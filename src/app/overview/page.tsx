@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ClipboardCheck, Users } from "lucide-react";
 
@@ -9,18 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS, LeaveType } from "@/lib/leave";
 import { cn } from "@/lib/utils";
-import { getOverview, type OverviewData } from "@/api/useOverview";
+import { useOverviewQuery } from "@/hooks/queries/use-overview";
 
 function AdminOverview() {
-  const [data, setData] = useState<OverviewData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    getOverview().then((res) => {
-      if (res.ok) setData(res.data);
-      setLoading(false);
-    });
-  }, []);
+  const { data, isLoading: loading } = useOverviewQuery();
 
   return (
     <div className="space-y-8">

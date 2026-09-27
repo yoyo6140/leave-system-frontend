@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { Check, ChevronRight, X } from "lucide-react";
 
 import AppLayout from "@/components/AppLayout";
@@ -13,70 +13,68 @@ import { LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS } from "@/lib/leave";
 import { getCurrentUser } from "@/lib/auth";
 import {
   type ApiLeaveRecord,
-  getLeaves,
-  updateLeaveStatus,
-} from "@/api/useLeaves";
-import { getUsers } from "@/api/useUsers";
+  useLeavesQuery,
+  useUpdateLeaveStatus,
+} from "@/hooks/queries/use-leaves";
+import { useUsersQuery } from "@/hooks/queries/use-users";
 
 export default function ReviewPage() {
   const currentUser = getCurrentUser();
 
-  const [records, setRecords] = useState<ApiLeaveRecord[]>([]);
-  const [userMap, setUserMap] = useState<Record<number, string>>({});
-  const [loading, setLoading] = useState(true);
   const [successMsg, setSuccessMsg] = useState("");
   const [detailRecord, setDetailRecord] = useState<ApiLeaveRecord | null>(null);
   const [approveTarget, setApproveTarget] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const [leavesResult, usersResult] = await Promise.all([
-      getLeaves({ limit: 200 }),
-      getUsers({ limit: 200 }),
-    ]);
-    if (leavesResult.ok) setRecords(leavesResult.data.data);
-    if (usersResult.ok) {
-      const map = Object.fromEntries(
-        usersResult.data.data.map((u) => [u.id, u.name]),
-      );
-      setUserMap(map);
-    }
-    setLoading(false);
-  }, []);
+  const { data: leavesData, isLoading: leavesLoading } = useLeavesQuery({
+    limit: 200,
+  });
+  const { data: usersData, isLoading: usersLoading } = useUsersQuery({
+    limit: 200,
+  });
+  const updateStatus = useUpdateLeaveStatus();
+  const loading = leavesLoading || usersLoading;
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  const records = leavesData?.data ?? [];
+  const userMap = useMemo(() => {
+    if (!usersData) return {} as Record<number, string>;
+    return Object.fromEntries(usersData.data.map((u) => [u.id, u.name]));
+  }, [usersData]);
 
   const pending = records.filter((r) => r.status === "待審核");
-  const approved = records.filter((r) => r.status === "已通過").length;
-  const rejected = records.filter((r) => r.status === "已拒絕").length;
 
   async function handleApproveConfirm() {
     if (!approveTarget) return;
-    const result = await updateLeaveStatus(approveTarget, {
-      status: "已通過",
-      reviewer: currentUser?.name ?? "admin",
-    });
-    if (result.ok) {
+    try {
+      await updateStatus.mutateAsync({
+        id: approveTarget,
+        input: {
+          status: "已通過",
+          reviewer: currentUser?.name ?? "admin",
+        },
+      });
       setApproveTarget(null);
       setDetailRecord(null);
       setSuccessMsg("申請已核准");
-      await load();
+    } catch {
+      // mutation throws; keep dialog open
     }
   }
 
   async function handleRejectConfirm() {
     if (!rejectTarget) return;
-    const result = await updateLeaveStatus(rejectTarget, {
-      status: "已拒絕",
-      reviewer: currentUser?.name ?? "admin",
-    });
-    if (result.ok) {
+    try {
+      await updateStatus.mutateAsync({
+        id: rejectTarget,
+        input: {
+          status: "已拒絕",
+          reviewer: currentUser?.name ?? "admin",
+        },
+      });
       setRejectTarget(null);
       setDetailRecord(null);
-      await load();
+    } catch {
+      // mutation throws; keep dialog open
     }
   }
 

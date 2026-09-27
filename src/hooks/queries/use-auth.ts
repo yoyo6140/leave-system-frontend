@@ -1,6 +1,6 @@
 import axios from "axios";
-import { API_ENDPOINTS } from "./constants";
-import { apiClient } from "./client";
+import { API_ENDPOINTS } from "@/hooks/constants";
+import { apiClient } from "@/hooks/client";
 
 interface LoginInput {
   username: string;

@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { Logout } from "@/api/useAuth";
-import { getLeaves } from "@/api/useLeaves";
+import { useQueryClient } from "@tanstack/react-query";
+import { Logout } from "@/hooks/queries/use-auth";
+import { useLeavesQuery } from "@/hooks/queries/use-leaves";
 import { getCurrentUser, clearCurrentUser, type UserRole } from "@/lib/auth";
 import {
   Bot,
@@ -72,18 +73,17 @@ interface SidebarProps {
 export default function Sidebar({ open = false, onClose }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const user = getCurrentUser();
   const role = user?.role ?? "employee";
+  const isAdmin = role === "admin";
 
-  const [pendingCount, setPending] = useState(0);
-
-  useEffect(() => {
-    if (role !== "admin") return;
-    getLeaves({ limit: 200 }).then((res) => {
-      if (res.ok)
-        setPending(res.data.data.filter((r) => r.status === "待審核").length);
-    });
-  }, [role, pathname]);
+  const { data: leavesData } = useLeavesQuery(
+    { limit: 200 },
+    { enabled: isAdmin },
+  );
+  const pendingCount =
+    leavesData?.data.filter((r) => r.status === "待審核").length ?? 0;
 
   // 手機導航後自動關閉抽屜
   useEffect(() => {
@@ -95,6 +95,7 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
   async function handleLogout() {
     await Logout();
     clearCurrentUser();
+    queryClient.clear();
     router.push("/login");
   }
 

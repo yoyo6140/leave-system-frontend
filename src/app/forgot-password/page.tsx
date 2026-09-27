@@ -6,7 +6,7 @@ import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { forgotPassword } from "@/api/useAuth";
+import { forgotPassword } from "@/hooks/queries/use-auth";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

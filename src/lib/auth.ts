@@ -1,4 +1,4 @@
-import { apiGetMe, Login } from "@/api/useAuth";
+import { apiGetMe, Login } from "@/hooks/queries/use-auth";
 
 export type UserRole = "admin" | "employee";
 export type Gender = "男" | "女";
