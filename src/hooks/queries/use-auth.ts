@@ -32,6 +32,7 @@ export interface ApiUserData {
   id_number: string;
   hire_date: string;
   birth_date: string;
+  is_active?: boolean;
 }
 
 export async function Login(input: LoginInput): Promise<LoginResponse> {

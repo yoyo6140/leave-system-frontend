@@ -2,7 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Edit, Search, Trash2, UserPlus, X } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Edit,
+  Search,
+  UserCheck,
+  UserPlus,
+  UserX,
+  X,
+} from "lucide-react";
 
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -14,7 +25,14 @@ import {
   AlertDialog,
   ConfirmDialog,
 } from "@/components/ui/app-dialog";
-import { type Gender } from "@/lib/auth";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { getCurrentUser, type Gender } from "@/lib/auth";
 import {
   type ApiUser,
   type UserCreateInput,
@@ -22,8 +40,10 @@ import {
   useUsersQuery,
   useCreateUser,
   useUpdateUser,
-  useDeleteUser,
+  useUpdateUserStatus,
 } from "@/hooks/queries/use-users";
+
+const PAGE_SIZE_OPTIONS = [10, 20, 30, 50] as const;
 
 // ── Shared Modal Shell ────────────────────────────────────────────────────────
 
@@ -332,36 +352,52 @@ function EditDialog({ user, onSave, onCancel, loading }: EditDialogProps) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function EmployeesPage() {
+  const currentUser = getCurrentUser();
   const [actionLoading, setActionLoading] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editTarget, setEditTarget] = useState<ApiUser | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<ApiUser | null>(null);
+  const [statusTarget, setStatusTarget] = useState<ApiUser | null>(null);
   const [successMsg, setSuccessMsg] = useState("");
   const [alertMsg, setAlertMsg] = useState("");
 
   // 搜尋框即時輸入 / 實際拿去打 API 的關鍵字（debounce 1 秒再送，跟其他搜尋頁一致）
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [includeInactive, setIncludeInactive] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setSearch(searchInput), 1000);
+    const t = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 1000);
     return () => clearTimeout(t);
   }, [searchInput]);
 
   const { data, isLoading: loading, isError, error } = useUsersQuery({
-    limit: 100,
+    page,
+    limit,
     search,
+    include_inactive: includeInactive,
   });
   const users = data?.data ?? [];
+  const total = data?.total ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / limit));
   const createUserMut = useCreateUser();
   const updateUserMut = useUpdateUser();
-  const deleteUserMut = useDeleteUser();
+  const updateStatusMut = useUpdateUserStatus();
 
   useEffect(() => {
     if (isError) {
       setAlertMsg(error instanceof Error ? error.message : "查詢員工列表失敗");
     }
   }, [isError, error]);
+
+  // 停用後若當頁沒資料，退回上一頁
+  useEffect(() => {
+    if (!loading && page > pageCount) setPage(pageCount);
+  }, [loading, page, pageCount]);
 
   async function handleAdd(form: UserCreateInput) {
     if (form.password.length < 6 || form.password.length > 12) {
@@ -401,15 +437,23 @@ export default function EmployeesPage() {
     }
   }
 
-  async function handleDeleteConfirm() {
-    if (!deleteTarget) return;
+  async function handleStatusConfirm() {
+    if (!statusTarget) return;
+    const nextActive = statusTarget.is_active === false;
     setActionLoading(true);
     try {
-      await deleteUserMut.mutateAsync(deleteTarget.id);
-      setDeleteTarget(null);
-      setSuccessMsg(`員工「${deleteTarget.name}」帳號已刪除`);
+      const updated = await updateStatusMut.mutateAsync({
+        id: statusTarget.id,
+        isActive: nextActive,
+      });
+      setStatusTarget(null);
+      setSuccessMsg(
+        nextActive
+          ? `員工「${updated.name}」已恢復啟用`
+          : `員工「${updated.name}」已停用`,
+      );
     } catch (err) {
-      setAlertMsg(err instanceof Error ? err.message : "刪除員工失敗");
+      setAlertMsg(err instanceof Error ? err.message : "更新帳號狀態失敗");
     } finally {
       setActionLoading(false);
     }
@@ -417,6 +461,8 @@ export default function EmployeesPage() {
 
   const employees = users.filter((u) => u.role === "employee");
   const admins = users.filter((u) => u.role === "admin");
+  const isSelf = (u: ApiUser) =>
+    currentUser?.id != null && u.id === currentUser.id;
   return (
     <AppLayout allowedRoles={["admin"]}>
       <div>
@@ -424,7 +470,7 @@ export default function EmployeesPage() {
           <div>
             <h1 className="text-xl font-semibold">員工管理</h1>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              共 {employees.length} 位員工
+              共 {total} 筆帳號
             </p>
           </div>
           <Button size="sm" variant="outline" onClick={() => setShowAdd(true)}>
@@ -434,27 +480,45 @@ export default function EmployeesPage() {
         </div>
 
         {/* 搜尋（打後端 API，不是前端過濾；搜尋框固定掛著，載入中也不會失去焦點） */}
-        <div className="mb-4 flex items-center gap-2">
-          <div className="relative max-w-xs w-full">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <Input
-              placeholder="搜尋姓名或帳號..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-8 h-8 text-sm bg-white"
-            />
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <div className="relative max-w-xs w-full">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+              <Input
+                placeholder="搜尋姓名或帳號..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="pl-8 h-8 text-sm bg-white"
+              />
+            </div>
+            {searchInput && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 text-muted-foreground"
+                onClick={() => {
+                  setSearchInput("");
+                  setSearch("");
+                  setPage(1);
+                }}
+              >
+                清除
+                <X className="size-3.5" />
+              </Button>
+            )}
           </div>
-          {searchInput && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 text-muted-foreground"
-              onClick={() => setSearchInput("")}
-            >
-              清除
-              <X className="size-3.5" />
-            </Button>
-          )}
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground select-none">
+            <input
+              type="checkbox"
+              checked={includeInactive}
+              onChange={(e) => {
+                setIncludeInactive(e.target.checked);
+                setPage(1);
+              }}
+              className="size-4 rounded border-input accent-primary"
+            />
+            顯示已停用帳號
+          </label>
         </div>
 
         {/* 員工列表 */}
@@ -504,7 +568,16 @@ export default function EmployeesPage() {
                             : ""
                         }
                       >
-                        <td className="px-4 py-3 font-medium">{u.name}</td>
+                        <td className="px-4 py-3 font-medium">
+                          <span className="inline-flex items-center gap-2">
+                            {u.name}
+                            {u.is_active === false && (
+                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                                已停用
+                              </span>
+                            )}
+                          </span>
+                        </td>
                         <td className="px-4 py-3">{u.gender}</td>
                         <td className="px-4 py-3 tabular-nums">
                           {u.id_number}
@@ -517,28 +590,117 @@ export default function EmployeesPage() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              className="text-muted-foreground hover:text-foreground"
-                              onClick={() => setEditTarget(u)}
-                            >
-                              <Edit className="size-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              className="text-muted-foreground hover:text-destructive"
-                              onClick={() => setDeleteTarget(u)}
-                            >
-                              <Trash2 className="size-3.5" />
-                            </Button>
+                            {u.is_active !== false && (
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                className="text-muted-foreground hover:text-foreground"
+                                onClick={() => setEditTarget(u)}
+                                title="編輯"
+                              >
+                                <Edit className="size-3.5" />
+                              </Button>
+                            )}
+                            {u.is_active === false ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                                onClick={() => setStatusTarget(u)}
+                              >
+                                <UserCheck className="size-3.5" />
+                                啟用
+                              </Button>
+                            ) : (
+                              !isSelf(u) && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 text-xs text-muted-foreground hover:text-destructive"
+                                  onClick={() => setStatusTarget(u)}
+                                >
+                                  <UserX className="size-3.5" />
+                                  停用
+                                </Button>
+                              )
+                            )}
                           </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {!loading && total > 0 && (
+            <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <span>每頁顯示</span>
+                <Select
+                  value={`${limit}`}
+                  onValueChange={(val) => {
+                    setLimit(Number(val));
+                    setPage(1);
+                  }}
+                >
+                  <SelectTrigger className="h-7 w-16 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent side="top">
+                    {PAGE_SIZE_OPTIONS.map((size) => (
+                      <SelectItem
+                        key={size}
+                        value={`${size}`}
+                        className="text-xs"
+                      >
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span>筆</span>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <span>
+                  第 {page} 頁，共 {pageCount} 頁（{total} 筆）
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setPage(1)}
+                    disabled={page <= 1}
+                  >
+                    <ChevronsLeft className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                  >
+                    <ChevronLeft className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                    disabled={page >= pageCount}
+                  >
+                    <ChevronRight className="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setPage(pageCount)}
+                    disabled={page >= pageCount}
+                  >
+                    <ChevronsRight className="size-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -557,6 +719,7 @@ export default function EmployeesPage() {
                     <tr className="border-b border-border bg-muted/30 text-xs text-muted-foreground">
                       <th className="px-4 py-3 text-left font-medium">姓名</th>
                       <th className="px-4 py-3 text-left font-medium">角色</th>
+                      <th className="px-4 py-3 text-right font-medium">操作</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -569,11 +732,47 @@ export default function EmployeesPage() {
                             : ""
                         }
                       >
-                        <td className="px-4 py-3 font-medium">{u.name}</td>
+                        <td className="px-4 py-3 font-medium">
+                          <span className="inline-flex items-center gap-2">
+                            {u.name}
+                            {u.is_active === false && (
+                              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+                                已停用
+                              </span>
+                            )}
+                          </span>
+                        </td>
                         <td className="px-4 py-3">
                           <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600">
                             主管
                           </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center justify-end gap-1">
+                            {u.is_active === false ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                                onClick={() => setStatusTarget(u)}
+                              >
+                                <UserCheck className="size-3.5" />
+                                啟用
+                              </Button>
+                            ) : (
+                              !isSelf(u) && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 text-xs text-muted-foreground hover:text-destructive"
+                                  onClick={() => setStatusTarget(u)}
+                                >
+                                  <UserX className="size-3.5" />
+                                  停用
+                                </Button>
+                              )
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -614,13 +813,19 @@ export default function EmployeesPage() {
         onClose={() => setAlertMsg("")}
       />
       <ConfirmDialog
-        open={!!deleteTarget}
-        title="確認刪除員工？"
-        message={`將刪除「${deleteTarget?.name}」（@${deleteTarget?.username}）帳號，此操作無法復原。`}
-        confirmLabel="確認刪除"
-        variant="destructive"
-        onConfirm={handleDeleteConfirm}
-        onCancel={() => setDeleteTarget(null)}
+        open={!!statusTarget}
+        title={
+          statusTarget?.is_active === false ? "確認啟用員工？" : "確認停用員工？"
+        }
+        message={
+          statusTarget?.is_active === false
+            ? `啟用後「${statusTarget?.name}」將可再次使用原本的帳號密碼登入。`
+            : `停用後「${statusTarget?.name}」將無法登入，請假紀錄會保留，之後可以重新啟用。`
+        }
+        confirmLabel={statusTarget?.is_active === false ? "確認啟用" : "確認停用"}
+        variant={statusTarget?.is_active === false ? "default" : "destructive"}
+        onConfirm={handleStatusConfirm}
+        onCancel={() => setStatusTarget(null)}
       />
     </AppLayout>
   );

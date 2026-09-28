@@ -52,6 +52,12 @@ export async function login(
 ): Promise<{ success: true; user: User } | { success: false; error: string }> {
   const body = await Login({ username, password });
   if (!body.success) {
+    if (body.error?.code === "ACCOUNT_DISABLED") {
+      return {
+        success: false,
+        error: body.error.message || "帳號已停用，請聯絡管理員",
+      };
+    }
     return { success: false, error: body.error?.message ?? "帳號或密碼錯誤" };
   }
 

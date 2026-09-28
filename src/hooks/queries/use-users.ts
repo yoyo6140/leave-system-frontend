@@ -15,6 +15,7 @@ export interface ApiUser {
   id_number: string;
   hire_date: string;
   birth_date: string;
+  is_active: boolean;
 }
 
 export interface UserListResponse {
@@ -51,6 +52,8 @@ export type UsersQueryParams = {
   search?: string;
   page?: number;
   limit?: number;
+  /** 是否包含已停用帳號（預設 false） */
+  include_inactive?: boolean;
 };
 
 async function fetchUsers(
@@ -60,6 +63,7 @@ async function fetchUsers(
   if (params.search) qs.set("search", params.search);
   if (params.page) qs.set("page", String(params.page));
   if (params.limit) qs.set("limit", String(params.limit));
+  if (params.include_inactive) qs.set("include_inactive", "true");
 
   const url = qs.size
     ? `${API_ENDPOINTS.users.list}?${qs}`
@@ -90,12 +94,16 @@ async function fetchUpdateUser(
   throw new Error(res.error?.message ?? "更新員工失敗");
 }
 
-async function fetchDeleteUser(id: number): Promise<null> {
-  const res = await apiFetch(API_ENDPOINTS.users.delete(id), {
-    method: "DELETE",
+async function fetchUpdateUserStatus(
+  id: number,
+  isActive: boolean,
+): Promise<ApiUser> {
+  const res = await apiFetch<ApiUser>(API_ENDPOINTS.users.updateStatus(id), {
+    method: "PATCH",
+    body: JSON.stringify({ is_active: isActive }),
   });
-  if (res.success) return null;
-  throw new Error(res.error?.message ?? "刪除員工失敗");
+  if (res.success && res.data) return res.data;
+  throw new Error(res.error?.message ?? "更新帳號狀態失敗");
 }
 
 export function useUsersQuery(
@@ -131,10 +139,11 @@ export function useUpdateUser() {
   });
 }
 
-export function useDeleteUser() {
+export function useUpdateUserStatus() {
   const invalidate = useInvalidateUsers();
   return useMutation({
-    mutationFn: fetchDeleteUser,
+    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
+      fetchUpdateUserStatus(id, isActive),
     onSuccess: () => invalidate(),
   });
 }
