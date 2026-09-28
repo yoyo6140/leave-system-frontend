@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { login, getCurrentUser, getHomePath, restoreSession } from "@/lib/auth";
+import { login, getHomePath, restoreSession } from "@/lib/auth";
 import { CalendarDays, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,11 +27,6 @@ export default function LoginPage() {
     let cancelled = false;
 
     async function checkExistingSession() {
-      const cached = getCurrentUser();
-      if (cached) {
-        router.replace(getHomePath(cached.role));
-        return;
-      }
       const user = await restoreSession();
       if (!cancelled && user) router.replace(getHomePath(user.role));
     }

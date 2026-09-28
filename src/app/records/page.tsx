@@ -6,7 +6,11 @@ import Link from "next/link";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { type ApiLeaveRecord, getLeaves, deleteLeave } from "@/api/useLeaves";
+import {
+  type ApiLeaveRecord,
+  useLeavesQuery,
+  useDeleteLeave,
+} from "@/hooks/queries/use-leaves";
 import { DataTable } from "@/components/records/data-table";
 import { createColumns } from "@/components/records/columns";
 import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
@@ -16,8 +20,6 @@ import { EditLeaveDialog } from "@/components/records/edit-leave-dialog";
 // 用 mine=true 交給後端強制篩選（即使是 admin 也只回傳自己的），
 // 與 admin 專用的「員工請假紀錄」/employee-records 查詢分開。
 export default function RecordsPage() {
-  const [records, setRecords] = useState<ApiLeaveRecord[]>([]);
-  const [loading, setLoading] = useState(true);
   const [detailRecord, setDetailRecord] = useState<ApiLeaveRecord | null>(null);
   const [editRecord, setEditRecord] = useState<ApiLeaveRecord | null>(null);
 
@@ -30,23 +32,19 @@ export default function RecordsPage() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const result = await getLeaves({ limit: 100, mine: true, search });
-    if (result.ok) setRecords(result.data.data);
-    setLoading(false);
-  }, [search]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const { data, isLoading: loading, refetch } = useLeavesQuery({
+    limit: 100,
+    mine: true,
+    search,
+  });
+  const records = data?.data ?? [];
+  const deleteLeave = useDeleteLeave();
 
   const handleDelete = useCallback(
     async (id: string) => {
-      await deleteLeave(id);
-      await load();
+      await deleteLeave.mutateAsync(id);
     },
-    [load],
+    [deleteLeave],
   );
 
   const columns = useMemo(
@@ -97,7 +95,9 @@ export default function RecordsPage() {
       <EditLeaveDialog
         record={editRecord}
         onClose={() => setEditRecord(null)}
-        onSaved={load}
+        onSaved={() => {
+          void refetch();
+        }}
       />
     </AppLayout>
   );

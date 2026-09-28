@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { CalendarPlus } from "lucide-react";
 
@@ -15,7 +15,10 @@ import {
   LeaveType,
 } from "@/lib/leave";
 import { cn } from "@/lib/utils";
-import { getMyQuota, type QuotaItem } from "@/api/useQuota";
+import {
+  useMyQuotaQuery,
+  type QuotaItem,
+} from "@/hooks/queries/use-quota";
 
 interface DisplayQuota {
   type: LeaveType;
@@ -44,33 +47,15 @@ function buildDisplay(apiItems: QuotaItem[]): DisplayQuota[] {
 
 export default function LeaveBalancePage() {
   const user = getCurrentUser();
+  const { data, isLoading: loading } = useMyQuotaQuery();
 
-  const [quotas, setQuotas] = useState<DisplayQuota[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [seniority, setSeniority] = useState("");
-  const [yearStart, setYearStart] = useState("");
-  const [yearEnd, setYearEnd] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setLoading(true);
-      const data = await getMyQuota();
-      if (cancelled) return;
-      if (data) {
-        const annual = data.quotas.find((q) => q.type === "特休");
-        if (annual?.note) setSeniority(annual.note);
-        setYearStart(data.year_start);
-        setYearEnd(data.year_end);
-        setQuotas(buildDisplay(data.quotas));
-      }
-      setLoading(false);
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const quotas = useMemo(
+    () => (data ? buildDisplay(data.quotas) : []),
+    [data],
+  );
+  const seniority = data?.quotas.find((q) => q.type === "特休")?.note ?? "";
+  const yearStart = data?.year_start ?? "";
+  const yearEnd = data?.year_end ?? "";
 
   return (
     <AppLayout>

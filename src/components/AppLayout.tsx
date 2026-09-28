@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
-  getCurrentUser,
   getHomePath,
   restoreSession,
   UserRole,
@@ -25,10 +24,7 @@ export default function AppLayout({ children, allowedRoles }: AppLayoutProps) {
     let cancelled = false;
 
     async function checkAuth() {
-      let user = getCurrentUser();
-      if (!user) {
-        user = await restoreSession();
-      }
+      const user = await restoreSession();
       if (cancelled) return;
 
       if (!user) {

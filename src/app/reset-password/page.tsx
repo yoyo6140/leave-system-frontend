@@ -7,7 +7,7 @@ import { CalendarDays, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { resetPassword } from "@/api/useAuth";
+import { resetPassword } from "@/hooks/queries/use-auth";
 
 function ResetPasswordForm() {
   const router = useRouter();

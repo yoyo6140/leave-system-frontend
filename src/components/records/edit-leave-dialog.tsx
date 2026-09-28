@@ -11,7 +11,10 @@ import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { LEAVE_TYPES, LeaveType } from "@/lib/leave";
-import { type ApiLeaveRecord, updateLeave } from "@/api/useLeaves";
+import {
+  type ApiLeaveRecord,
+  useUpdateLeave,
+} from "@/hooks/queries/use-leaves";
 
 interface EditLeaveDialogProps {
   record: ApiLeaveRecord | null;
@@ -24,6 +27,7 @@ export function EditLeaveDialog({
   onClose,
   onSaved,
 }: EditLeaveDialogProps) {
+  const updateLeave = useUpdateLeave();
   const [mounted, setMounted] = useState(false);
   const [type, setType] = useState<LeaveType>("特休");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -69,21 +73,24 @@ export function EditLeaveDialog({
     }
 
     setSaving(true);
-    const result = await updateLeave(record.id, {
-      type,
-      start_date: startDate,
-      end_date: endDate || startDate,
-      hours: Number(hours),
-      reason,
-    });
-    setSaving(false);
-
-    if (!result.ok) {
-      setError(result.message);
-      return;
+    try {
+      await updateLeave.mutateAsync({
+        id: record.id,
+        input: {
+          type,
+          start_date: startDate,
+          end_date: endDate || startDate,
+          hours: Number(hours),
+          reason,
+        },
+      });
+      onSaved();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "修改假單失敗");
+    } finally {
+      setSaving(false);
     }
-    onSaved();
-    onClose();
   }
 
   return createPortal(

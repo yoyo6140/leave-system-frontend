@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -17,15 +17,11 @@ import { SuccessDialog, AlertDialog } from "@/components/ui/app-dialog";
 import { getCurrentUser } from "@/lib/auth";
 import {
   hoursToApproxDays,
-  LEAVE_BADGE_ROUNDED,
-  LEAVE_QUOTAS,
-  LEAVE_STATUS_STYLE,
   LEAVE_TYPES,
   LeaveType,
 } from "@/lib/leave";
-import { cn } from "@/lib/utils";
-import { getMyQuota } from "@/api/useQuota";
-import { type ApiLeaveRecord, createLeave, getLeaves } from "@/api/useLeaves";
+import { useMyQuotaQuery } from "@/hooks/queries/use-quota";
+import { useCreateLeave } from "@/hooks/queries/use-leaves";
 
 export default function ApplyPage() {
   const router = useRouter();
@@ -35,49 +31,24 @@ export default function ApplyPage() {
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [hours, setHours] = useState<number | "">("");
   const [reason, setReason] = useState("");
-  const [remaining, setRemaining] = useState<Record<LeaveType, number | null>>(
-    () =>
-      Object.fromEntries(LEAVE_TYPES.map((t) => [t, 0])) as Record<
-        LeaveType,
-        number | null
-      >,
-  );
-  const [quotaLoading, setQuotaLoading] = useState(true);
   const [successOpen, setSuccessOpen] = useState(false);
   const [alertMsg, setAlertMsg] = useState("");
-  const [recent, setRecent] = useState<ApiLeaveRecord[]>([]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      setQuotaLoading(true);
+  const { data: quota, isLoading: quotaLoading } = useMyQuotaQuery();
+  const createLeave = useCreateLeave();
 
-      const [quota, leavesResult] = await Promise.all([
-        getMyQuota(),
-        getLeaves({ limit: 5 }),
-      ]);
-      if (cancelled) return;
-
-      const totals = Object.fromEntries(
-        LEAVE_TYPES.map((t) => {
-          const item = quota?.quotas.find((q) => q.type === t);
-          // null = 無上限
-          return [
-            t,
-            item?.remaining_hours ?? (item?.total_hours === null ? null : 0),
-          ];
-        }),
-      ) as Record<LeaveType, number | null>;
-      setRemaining(totals);
-
-      if (leavesResult.ok) setRecent(leavesResult.data.data);
-      setQuotaLoading(false);
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const remaining = useMemo(() => {
+    return Object.fromEntries(
+      LEAVE_TYPES.map((t) => {
+        const item = quota?.quotas.find((q) => q.type === t);
+        // null = 無上限
+        return [
+          t,
+          item?.remaining_hours ?? (item?.total_hours === null ? null : 0),
+        ];
+      }),
+    ) as Record<LeaveType, number | null>;
+  }, [quota]);
 
   const startDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "";
   const endDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : "";
@@ -100,19 +71,18 @@ export default function ApplyPage() {
       return;
     }
 
-    const result = await createLeave({
-      type,
-      start_date: startDate,
-      end_date: endDate || startDate,
-      hours: Number(hours),
-      reason,
-    });
-
-    if (!result.ok) {
-      setAlertMsg(result.message);
-      return;
+    try {
+      await createLeave.mutateAsync({
+        type,
+        start_date: startDate,
+        end_date: endDate || startDate,
+        hours: Number(hours),
+        reason,
+      });
+      setSuccessOpen(true);
+    } catch (err) {
+      setAlertMsg(err instanceof Error ? err.message : "新增假單失敗");
     }
-    setSuccessOpen(true);
   }
 
   function handleSuccessClose() {
