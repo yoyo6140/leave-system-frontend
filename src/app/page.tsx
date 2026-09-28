@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser, getHomePath, restoreSession } from "@/lib/auth";
+import { getHomePath, restoreSession } from "@/lib/auth";
 
 export default function HomePage() {
   const router = useRouter();
@@ -11,8 +11,7 @@ export default function HomePage() {
     let cancelled = false;
 
     async function redirect() {
-      let user = getCurrentUser();
-      if (!user) user = await restoreSession();
+      const user = await restoreSession();
       if (cancelled) return;
       router.replace(user ? getHomePath(user.role) : "/login");
     }

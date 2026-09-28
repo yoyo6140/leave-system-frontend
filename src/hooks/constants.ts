@@ -19,7 +19,7 @@ export const API_ENDPOINTS = {
     create: "/user",
     get: (id: number) => `/user/${id}`,
     update: (id: number) => `/user/${id}`,
-    delete: (id: number) => `/user/${id}`,
+    updateStatus: (id: number) => `/user/${id}/status`,
   },
   overview: "/overview",
   chat: "/chat",

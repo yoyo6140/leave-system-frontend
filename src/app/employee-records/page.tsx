@@ -1,23 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import AppLayout from "@/components/AppLayout";
 import { Card } from "@/components/ui/card";
-import { type ApiLeaveRecord, getLeaves } from "@/api/useLeaves";
-import { getUsers } from "@/api/useUsers";
+import {
+  type ApiLeaveRecord,
+  useLeavesQuery,
+} from "@/hooks/queries/use-leaves";
+import { useUsersQuery } from "@/hooks/queries/use-users";
 import { DataTable } from "@/components/records/data-table";
 import { createColumns } from "@/components/records/columns";
 import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
 
 // 員工請假紀錄：admin 專用，檢視全公司所有員工的請假申請
 export default function EmployeeRecordsPage() {
-  const [records, setRecords] = useState<ApiLeaveRecord[]>([]);
-  const [userMap, setUserMap] = useState<Record<number, string>>({});
-  const [loading, setLoading] = useState(true);
   const [detailRecord, setDetailRecord] = useState<ApiLeaveRecord | null>(null);
 
-  // 搜尋框即時輸入 / 實際拿去打 API 的關鍵字（debounce 300ms 再送）
+  // 搜尋框即時輸入 / 實際拿去打 API 的關鍵字（debounce 1 秒再送）
   // admin 查全公司時，後端 search 會一併比對申請人姓名／帳號
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
@@ -27,34 +27,24 @@ export default function EmployeeRecordsPage() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    const [leavesResult, usersResult] = await Promise.all([
-      getLeaves({ limit: 200, search }),
-      getUsers({ limit: 200 }),
-    ]);
+  const { data: leavesData, isLoading: leavesLoading } = useLeavesQuery({
+    limit: 200,
+    search,
+  });
+  const { data: usersData, isLoading: usersLoading } = useUsersQuery({
+    limit: 200,
+  });
+  const loading = leavesLoading || usersLoading;
 
-    if (!leavesResult.ok) {
-      setLoading(false);
-      return;
-    }
+  const userMap = useMemo(() => {
+    if (!usersData) return {} as Record<number, string>;
+    return Object.fromEntries(usersData.data.map((u) => [u.id, u.name]));
+  }, [usersData]);
 
-    let rows = leavesResult.data.data;
-    if (usersResult.ok) {
-      const nameMap = Object.fromEntries(
-        usersResult.data.data.map((u) => [u.id, u.name]),
-      );
-      rows = rows.map((r) => ({ ...r, _username: nameMap[r.user_id] }));
-      setUserMap(nameMap);
-    }
-
-    setRecords(rows);
-    setLoading(false);
-  }, [search]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
+  const records = useMemo(() => {
+    const rows = leavesData?.data ?? [];
+    return rows.map((r) => ({ ...r, _username: userMap[r.user_id] }));
+  }, [leavesData, userMap]);
 
   // 唯讀列表，不提供取消／刪除操作（別人的紀錄不在此頁動）
   const columns = useMemo(() => createColumns(undefined, true), []);

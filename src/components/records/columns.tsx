@@ -10,7 +10,7 @@ import {
   LEAVE_STATUS_STYLE,
   type LeaveStatus,
 } from "@/lib/leave";
-import { type ApiLeaveRecord } from "@/api/useLeaves";
+import { type ApiLeaveRecord } from "@/hooks/queries/use-leaves";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 

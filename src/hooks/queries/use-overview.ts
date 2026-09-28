@@ -1,5 +1,9 @@
-import { API_ENDPOINTS } from "./constants";
-import { apiFetch } from "./client";
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/hooks/constants";
+import { apiFetch } from "@/hooks/client";
+import { queryKeys } from "./keys";
 
 export interface PendingLeaveItem {
   id: string;
@@ -26,10 +30,15 @@ export interface OverviewData {
   top_leave_hours: TopLeaveHoursItem[];
 }
 
-type Result<T> = { ok: true; data: T } | { ok: false; message: string };
-
-export async function getOverview(): Promise<Result<OverviewData>> {
+async function fetchOverview(): Promise<OverviewData> {
   const res = await apiFetch<OverviewData>(API_ENDPOINTS.overview);
-  if (res.success && res.data) return { ok: true, data: res.data };
-  return { ok: false, message: res.error?.message ?? "載入總覽失敗" };
+  if (res.success && res.data) return res.data;
+  throw new Error(res.error?.message ?? "載入總覽失敗");
+}
+
+export function useOverviewQuery() {
+  return useQuery({
+    queryKey: queryKeys.overview,
+    queryFn: fetchOverview,
+  });
 }

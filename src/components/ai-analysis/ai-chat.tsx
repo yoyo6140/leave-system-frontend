@@ -6,7 +6,10 @@ import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { sendChatMessage, type ChatMessage } from "@/api/useChat";
+import {
+  useSendChatMessage,
+  type ChatMessage,
+} from "@/hooks/queries/use-chat";
 
 type Message = {
   id: number;
@@ -60,6 +63,7 @@ function TypingDots() {
 }
 
 export default function AiChat() {
+  const sendChat = useSendChatMessage();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -95,7 +99,7 @@ export default function AiChat() {
         role: m.role,
         content: m.content,
       }));
-      const reply = await sendChatMessage(history);
+      const reply = await sendChat.mutateAsync(history);
       setMessages((prev) => [
         ...prev,
         { id: Date.now() + 1, role: "model", content: reply },

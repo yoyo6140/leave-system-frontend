@@ -1,6 +1,6 @@
 import axios from "axios";
-import { API_ENDPOINTS } from "./constants";
-import { apiClient } from "./client";
+import { API_ENDPOINTS } from "@/hooks/constants";
+import { apiClient } from "@/hooks/client";
 
 interface LoginInput {
   username: string;
@@ -32,6 +32,7 @@ export interface ApiUserData {
   id_number: string;
   hire_date: string;
   birth_date: string;
+  is_active?: boolean;
 }
 
 export async function Login(input: LoginInput): Promise<LoginResponse> {

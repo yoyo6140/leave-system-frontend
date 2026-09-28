@@ -1,14 +1,15 @@
-import { API_ENDPOINTS } from "./constants";
-import { apiClient } from "./client";
+"use client";
+
+import { useMutation } from "@tanstack/react-query";
+import { API_ENDPOINTS } from "@/hooks/constants";
+import { apiClient } from "@/hooks/client";
 
 export interface ChatMessage {
   role: "user" | "model";
   content: string;
 }
 
-export async function sendChatMessage(
-  messages: ChatMessage[],
-): Promise<string> {
+async function sendChatMessage(messages: ChatMessage[]): Promise<string> {
   // Gemini history must start with "user"; strip any leading model messages (e.g. UI greeting)
   const firstUserIdx = messages.findIndex((m) => m.role === "user");
   const payload = firstUserIdx > 0 ? messages.slice(firstUserIdx) : messages;
@@ -17,4 +18,10 @@ export async function sendChatMessage(
     messages: payload,
   });
   return res.data.reply;
+}
+
+export function useSendChatMessage() {
+  return useMutation({
+    mutationFn: sendChatMessage,
+  });
 }
