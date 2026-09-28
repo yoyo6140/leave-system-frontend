@@ -9,9 +9,7 @@ import {
   ChevronsRight,
   Edit,
   Search,
-  UserCheck,
   UserPlus,
-  UserX,
   X,
 } from "lucide-react";
 
@@ -33,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { getCurrentUser, type Gender } from "@/lib/auth";
+import { cn } from "@/lib/utils";
 import {
   type ApiUser,
   type UserCreateInput,
@@ -44,6 +43,42 @@ import {
 } from "@/hooks/queries/use-users";
 
 const PAGE_SIZE_OPTIONS = [10, 20, 30, 50] as const;
+
+/** 左右切換開關；點擊不會立刻改狀態，由外層彈確認後再送 API */
+function StatusToggle({
+  checked,
+  disabled,
+  onRequestToggle,
+}: {
+  checked: boolean;
+  disabled?: boolean;
+  onRequestToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={checked ? "帳號啟用中" : "帳號已停用"}
+      disabled={disabled}
+      onClick={onRequestToggle}
+      className={cn(
+        "relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors",
+        checked ? "bg-primary" : "bg-muted-foreground/30",
+        disabled
+          ? "cursor-not-allowed opacity-50"
+          : "cursor-pointer hover:opacity-90",
+      )}
+    >
+      <span
+        className={cn(
+          "pointer-events-none block size-5 rounded-full bg-white shadow transition-transform",
+          checked ? "translate-x-5" : "translate-x-0",
+        )}
+      />
+    </button>
+  );
+}
 
 // ── Shared Modal Shell ────────────────────────────────────────────────────────
 
@@ -589,41 +624,26 @@ export default function EmployeesPage() {
                           {u.hire_date}
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center justify-end gap-1">
+                          <div className="flex items-center justify-end gap-2">
                             {u.is_active !== false && (
                               <Button
                                 variant="ghost"
-                                size="icon-sm"
+                                size="icon"
                                 className="text-muted-foreground hover:text-foreground"
                                 onClick={() => setEditTarget(u)}
                                 title="編輯"
                               >
-                                <Edit className="size-3.5" />
+                                <Edit className="size-5" />
                               </Button>
                             )}
-                            {u.is_active === false ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                                onClick={() => setStatusTarget(u)}
-                              >
-                                <UserCheck className="size-3.5" />
-                                啟用
-                              </Button>
-                            ) : (
-                              !isSelf(u) && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 text-xs text-muted-foreground hover:text-destructive"
-                                  onClick={() => setStatusTarget(u)}
-                                >
-                                  <UserX className="size-3.5" />
-                                  停用
-                                </Button>
-                              )
-                            )}
+                            <StatusToggle
+                              checked={u.is_active !== false}
+                              disabled={isSelf(u)}
+                              onRequestToggle={() => {
+                                if (isSelf(u)) return;
+                                setStatusTarget(u);
+                              }}
+                            />
                           </div>
                         </td>
                       </tr>
@@ -748,30 +768,15 @@ export default function EmployeesPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center justify-end gap-1">
-                            {u.is_active === false ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                                onClick={() => setStatusTarget(u)}
-                              >
-                                <UserCheck className="size-3.5" />
-                                啟用
-                              </Button>
-                            ) : (
-                              !isSelf(u) && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 text-xs text-muted-foreground hover:text-destructive"
-                                  onClick={() => setStatusTarget(u)}
-                                >
-                                  <UserX className="size-3.5" />
-                                  停用
-                                </Button>
-                              )
-                            )}
+                          <div className="flex items-center justify-end">
+                            <StatusToggle
+                              checked={u.is_active !== false}
+                              disabled={isSelf(u)}
+                              onRequestToggle={() => {
+                                if (isSelf(u)) return;
+                                setStatusTarget(u);
+                              }}
+                            />
                           </div>
                         </td>
                       </tr>
