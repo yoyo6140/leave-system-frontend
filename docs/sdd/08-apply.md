@@ -1,4 +1,4 @@
-# 07 — 申請請假（Apply）
+# 08 — 申請請假（Apply）
 
 路由：`/apply`
 權限：`admin` + `employee`
@@ -55,6 +55,6 @@
 
 ## 7. 與其他頁面的關聯
 
-- 送出成功後導向 `/records`（`08-records.md`），可立即看到剛建立、狀態為「待審核」的紀錄。
+- 送出成功後導向 `/records`（`09-records.md`），可立即看到剛建立、狀態為「待審核」的紀錄。
 - 送出成功會 invalidate `leaveKeys.all`、`quotaKeys.all`、`overviewKeys.all`：`/leave-balance` 額度、`/overview` 統計、`/review`／`/employee-records` 清單都會反映新紀錄。
-- 「查看假別餘額」連回 `/leave-balance`（`06-leave-balance.md`）。
+- 「查看假別餘額」連回 `/leave-balance`（`07-leave-balance.md`）。

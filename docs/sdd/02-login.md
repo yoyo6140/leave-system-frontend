@@ -1,4 +1,4 @@
-# 01 — 登入（登入 / 忘記密碼 / 重設密碼）
+# 02 — 登入（登入 / 忘記密碼 / 重設密碼）
 
 路由：`/login`、`/forgot-password`、`/reset-password`
 權限：僅限**未登入**使用者的流程（已登入會被導走，見下方「進入規則」）。
@@ -60,7 +60,7 @@
 1. 呼叫 `/auth/login`；若 `success=false`：
    - `error.code === "ACCOUNT_DISABLED"` → 顯示該帳號已停用的訊息（見 `docs/employee-deactivate.md`，帳號密碼正確但帳號被停用時回 403）。
    - 其他失敗 → 顯示 `error.message`，預設文案「帳號或密碼錯誤」。
-2. 成功則將 `data.token` 存入 `localStorage: leave_system_token`（供 axios interceptor 加上 `Authorization: Bearer`；後端同時也用 httpOnly cookie，兩者併行）。
+2. 成功則將 `data.token` 存入 `localStorage: leave_system_token`，之後每個請求由 axios interceptor 加上 `Authorization: Bearer`。原本登入是用 httpOnly cookie，但前後端部署在不同網域，iOS Safari 會擋掉這種跨站 cookie，實測登入後續請求根本帶不到 cookie，所以改成純 JWT，不依賴 cookie（詳見 `01-summary.md` §6）。
 3. 呼叫 `/auth/me` 取得完整使用者資料並正規化（`mapApiUser`）、寫入 `localStorage: leave_system_auth`。
 4. 若 `/auth/me` 失敗（回 `null`），即使登入 API 成功也視為登入失敗，顯示「登入成功但無法取得使用者資訊，請稍後再試」。
 5. 頁面拿到 `success:true` 後 `router.push(getHomePath(result.user.role))`。
@@ -80,6 +80,6 @@
 
 ## 7. 與其他頁面的關聯
 
-- 登入成功導向：`admin → /overview`、`employee → /leave-balance`（`getHomePath()`，見 `00-summary.md` §3）。
-- 任何受保護頁面偵測到未登入（`AppLayout` 檢查失敗，或 axios 401 interceptor）都會導回 `/login`。
+- 登入成功導向：`admin → /overview`、`employee → /leave-balance`（`getHomePath()`，見 `01-summary.md` §3）。
+- 任何受保護頁面偵測到未登入（`(protected)/layout.tsx` 的檢查失敗，或 axios 401 interceptor）都會導回 `/login`。
 - 登出（`Sidebar`）導回 `/login`。
