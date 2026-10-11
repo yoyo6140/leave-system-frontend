@@ -13,7 +13,7 @@ import {
   type LeaveStatus,
   type LeaveType,
 } from "@/lib/leave";
-import { type ApiLeaveRecord } from "@/hooks/queries/use-leaves";
+import { type ApiLeaveRecord } from "@/features/leaves/hooks";
 import { Button } from "../ui/button";
 
 interface LeaveDetailDialogProps {

@@ -7,7 +7,8 @@ import { CalendarDays, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { resetPassword } from "@/hooks/queries/use-auth";
+import { resetPassword } from "@/features/auth/api";
+import { resetPasswordSchema } from "@/features/auth/schema";
 
 function ResetPasswordForm() {
   const router = useRouter();
@@ -29,17 +30,17 @@ function ResetPasswordForm() {
     e.preventDefault();
     setError("");
 
-    if (newPassword.length < 6 || newPassword.length > 12) {
-      setError("密碼須為 6～12 個字元");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setError("兩次輸入的密碼不相符");
+    const parsed = resetPasswordSchema.safeParse({
+      newPassword,
+      confirmPassword,
+    });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "輸入資料有誤");
       return;
     }
 
     setLoading(true);
-    const result = await resetPassword(token, newPassword);
+    const result = await resetPassword(token, parsed.data.newPassword);
     setLoading(false);
 
     if (result.ok) {

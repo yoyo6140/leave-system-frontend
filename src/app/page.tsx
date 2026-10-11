@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { getHomePath, restoreSession } from "@/lib/auth";
 
 export default function HomePage() {
@@ -22,5 +23,9 @@ export default function HomePage() {
     };
   }, [router]);
 
-  return null;
+  return (
+    <div className="flex h-screen items-center justify-center bg-[#f3f4f6]">
+      <Loader2 className="size-6 animate-spin text-primary" />
+    </div>
+  );
 }

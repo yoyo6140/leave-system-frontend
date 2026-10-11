@@ -14,7 +14,8 @@ import { LEAVE_TYPES, LeaveType } from "@/lib/leave";
 import {
   type ApiLeaveRecord,
   useUpdateLeave,
-} from "@/hooks/queries/use-leaves";
+} from "@/features/leaves/hooks";
+import { leaveFormSchema } from "@/features/leaves/schema";
 
 interface EditLeaveDialogProps {
   record: ApiLeaveRecord | null;
@@ -63,12 +64,15 @@ export function EditLeaveDialog({
     if (!record) return;
     setError("");
 
-    if (!startDate) {
-      setError("請選擇請假日期");
-      return;
-    }
-    if (!hours || Number(hours) <= 0) {
-      setError("請填寫請假時數");
+    const parsed = leaveFormSchema.safeParse({
+      type,
+      startDate,
+      endDate,
+      hours,
+      reason,
+    });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "輸入資料有誤");
       return;
     }
 
@@ -77,11 +81,11 @@ export function EditLeaveDialog({
       await updateLeave.mutateAsync({
         id: record.id,
         input: {
-          type,
-          start_date: startDate,
-          end_date: endDate || startDate,
-          hours: Number(hours),
-          reason,
+          type: parsed.data.type,
+          start_date: parsed.data.startDate,
+          end_date: parsed.data.endDate || parsed.data.startDate,
+          hours: parsed.data.hours,
+          reason: parsed.data.reason,
         },
       });
       onSaved();
