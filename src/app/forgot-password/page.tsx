@@ -6,7 +6,8 @@ import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { forgotPassword } from "@/hooks/queries/use-auth";
+import { forgotPassword } from "@/features/auth/api";
+import { forgotPasswordSchema } from "@/features/auth/schema";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -17,8 +18,15 @@ export default function ForgotPasswordPage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+
+    const parsed = forgotPasswordSchema.safeParse({ email });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "請輸入有效的電子郵件");
+      return;
+    }
+
     setLoading(true);
-    const result = await forgotPassword(email);
+    const result = await forgotPassword(parsed.data.email);
     setLoading(false);
     if (result.ok) {
       setSent(true);
