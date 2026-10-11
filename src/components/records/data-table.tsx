@@ -23,6 +23,8 @@ import {
 import { DataTableToolbar } from "./data-table-toolbar";
 import { DataTablePagination } from "./data-table-pagination";
 
+const DEFAULT_PAGE_SIZE = 12;
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -33,6 +35,17 @@ interface DataTableProps<TData, TValue> {
   searchPlaceholder?: string;
   /** 資料重新載入中；只換表格內容，搜尋框繼續掛著、不會被卸載掉焦點 */
   loading?: boolean;
+  /** 每頁筆數，預設 12 */
+  pageSize?: number;
+  /**
+   * 伺服器分頁：data 已是當頁資料。
+   * page 為 1-based；未傳則使用前端表格分頁。
+   */
+  serverPagination?: {
+    page: number;
+    total: number;
+    onPageChange: (page: number) => void;
+  };
 }
 
 export function DataTable<TData, TValue>({
@@ -43,6 +56,8 @@ export function DataTable<TData, TValue>({
   onSearchChange,
   searchPlaceholder,
   loading = false,
+  pageSize = DEFAULT_PAGE_SIZE,
+  serverPagination,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "created_at", desc: true },
@@ -50,18 +65,53 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [pageIndex, setPageIndex] = React.useState(0);
+
+  const isServer = !!serverPagination;
+  const serverPageIndex = serverPagination
+    ? Math.max(serverPagination.page - 1, 0)
+    : pageIndex;
+  const serverPageCount = serverPagination
+    ? Math.max(1, Math.ceil(serverPagination.total / pageSize))
+    : undefined;
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, columnVisibility, rowSelection },
+    state: {
+      sorting,
+      columnVisibility,
+      rowSelection,
+      pagination: {
+        pageIndex: isServer ? serverPageIndex : pageIndex,
+        pageSize,
+      },
+    },
     onSortingChange: setSorting,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onPaginationChange: (updater) => {
+      const prev = {
+        pageIndex: isServer ? serverPageIndex : pageIndex,
+        pageSize,
+      };
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      if (isServer) {
+        serverPagination.onPageChange(next.pageIndex + 1);
+      } else {
+        setPageIndex(next.pageIndex);
+      }
+    },
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 10 } },
+    ...(isServer
+      ? {
+          manualPagination: true,
+          pageCount: serverPageCount,
+        }
+      : {
+          getPaginationRowModel: getPaginationRowModel(),
+        }),
   });
 
   return (
@@ -142,7 +192,10 @@ export function DataTable<TData, TValue>({
         </div>
       </div>
 
-      <DataTablePagination table={table} />
+      <DataTablePagination
+        table={table}
+        totalRows={serverPagination?.total}
+      />
     </div>
   );
 }

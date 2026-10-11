@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { login, getHomePath, restoreSession } from "@/lib/auth";
+import { loginSchema } from "@/features/auth/schema";
 import { CalendarDays, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,14 +42,15 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    if (password.length < 6 || password.length > 12) {
-      setError("密碼須為 6～12 個字元");
+    const parsed = loginSchema.safeParse({ username, password });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "輸入資料有誤");
       return;
     }
 
     setLoading(true);
     try {
-      const result = await login(username, password);
+      const result = await login(parsed.data.username, parsed.data.password);
       if (result.success) {
         router.push(getHomePath(result.user.role));
       } else {

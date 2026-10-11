@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import {
   useSendChatMessage,
   type ChatMessage,
-} from "@/hooks/queries/use-chat";
+} from "@/features/chat/hooks";
 
 type Message = {
   id: number;

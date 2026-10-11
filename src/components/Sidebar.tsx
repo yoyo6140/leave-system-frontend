@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { Logout } from "@/hooks/queries/use-auth";
-import { useLeavesQuery } from "@/hooks/queries/use-leaves";
+import { Logout } from "@/features/auth/api";
+import { useLeavesQuery } from "@/features/leaves/hooks";
 import { getCurrentUser, clearCurrentUser, type UserRole } from "@/lib/auth";
 import {
   Bot,

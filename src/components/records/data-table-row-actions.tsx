@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/ui/app-dialog";
-import { type ApiLeaveRecord } from "@/hooks/queries/use-leaves";
+import { type ApiLeaveRecord } from "@/features/leaves/hooks";
 
 interface DataTableRowActionsProps {
   row: Row<ApiLeaveRecord>;
