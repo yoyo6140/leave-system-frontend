@@ -48,6 +48,7 @@ interface DataTableProps<TData, TValue> {
   };
 }
 
+// 通用資料表格：整合搜尋列、排序、欄位顯示與分頁（支援前端分頁或伺服器端分頁兩種模式）
 export function DataTable<TData, TValue>({
   columns,
   data,

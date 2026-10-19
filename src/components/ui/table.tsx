@@ -4,6 +4,7 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// 表格元件組：以下為 <table> 各部位的樣式包裝，外層自動加上可橫向捲動的容器
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
@@ -19,6 +20,7 @@ function Table({ className, ...props }: React.ComponentProps<"table">) {
   );
 }
 
+// 表格標題列容器
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return (
     <thead
@@ -29,6 +31,7 @@ function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   );
 }
 
+// 表格內容列容器
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   return (
     <tbody
@@ -39,6 +42,7 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   );
 }
 
+// 表格頁尾（例如合計列）容器
 function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
     <tfoot
@@ -52,6 +56,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   );
 }
 
+// 表格的一列，hover/選取時會變色
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
@@ -65,6 +70,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   );
 }
 
+// 表格欄位標題儲存格
 function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
@@ -78,6 +84,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   );
 }
 
+// 一般內容儲存格
 function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
@@ -91,6 +98,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   );
 }
 
+// 表格下方的說明文字
 function TableCaption({
   className,
   ...props

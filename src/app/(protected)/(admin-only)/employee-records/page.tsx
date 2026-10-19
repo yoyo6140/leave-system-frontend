@@ -15,6 +15,7 @@ import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
 const PAGE_SIZE = 12;
 
 // 員工請假紀錄：admin 專用，檢視全公司所有員工的請假申請
+// 管理者檢視全公司請假紀錄頁，唯讀（不提供編輯/取消）
 export default function EmployeeRecordsPage() {
   const [detailRecord, setDetailRecord] = useState<ApiLeaveRecord | null>(null);
 

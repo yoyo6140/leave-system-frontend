@@ -25,6 +25,7 @@ interface LeaveDetailDialogProps {
   footerActions?: React.ReactNode;
 }
 
+// 詳情對話框裡「標籤 + 內容」的單行顯示元件
 function Row({
   label,
   children,
@@ -42,6 +43,7 @@ function Row({
   );
 }
 
+// 顯示單筆請假紀錄完整詳情的彈出對話框（唯讀），可傳入額外頁尾按鈕做審核操作
 export function LeaveDetailDialog({
   record,
   isAdmin,

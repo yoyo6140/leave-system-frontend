@@ -12,6 +12,7 @@ interface DataTableToolbarProps {
   searchPlaceholder?: string;
 }
 
+// 表格上方的搜尋欄（送到後端 API 的 search 參數，非前端過濾），有輸入值時顯示清除按鈕
 export function DataTableToolbar({
   search,
   onSearchChange,

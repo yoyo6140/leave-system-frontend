@@ -12,6 +12,7 @@ export type {
   UsersQueryParams,
 } from "./types";
 
+// 查詢員工列表的 React Query hook
 export function useUsersQuery(
   params: UsersQueryParams = {},
   options?: { enabled?: boolean },
@@ -34,6 +35,7 @@ function useInvalidateUsersAndOverview() {
     ]);
 }
 
+// 新增員工的 mutation hook，成功後刷新員工列表與總覽
 export function useCreateUser() {
   const invalidate = useInvalidateUsersAndOverview();
   return useMutation({
@@ -42,6 +44,7 @@ export function useCreateUser() {
   });
 }
 
+// 編輯員工資料的 mutation hook，成功後刷新員工列表與總覽
 export function useUpdateUser() {
   const invalidate = useInvalidateUsersAndOverview();
   return useMutation({
@@ -51,6 +54,7 @@ export function useUpdateUser() {
   });
 }
 
+// 啟用/停用員工帳號的 mutation hook，成功後刷新員工列表與總覽
 export function useUpdateUserStatus() {
   const invalidate = useInvalidateUsersAndOverview();
   return useMutation({

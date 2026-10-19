@@ -39,6 +39,7 @@ export default function RecordsPage() {
   const records = data?.data ?? [];
   const deleteLeave = useDeleteLeave();
 
+  // 取消請假申請（實際為刪除）
   const handleDelete = useCallback(
     async (id: string) => {
       await deleteLeave.mutateAsync(id);

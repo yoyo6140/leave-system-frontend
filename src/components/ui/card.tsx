@@ -26,6 +26,7 @@ const cardVariants = cva("border border-border bg-white rounded-2xl", {
   },
 });
 
+// 卡片容器元件，依 variant（陰影樣式）與 padding 控制外觀
 function Card({
   className,
   variant,

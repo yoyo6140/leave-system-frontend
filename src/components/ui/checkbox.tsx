@@ -6,6 +6,7 @@ import { Checkbox as CheckboxPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 import { CheckIcon } from "lucide-react";
 
+// 核取方塊元件（基於 Radix UI）
 function Checkbox({
   className,
   ...props

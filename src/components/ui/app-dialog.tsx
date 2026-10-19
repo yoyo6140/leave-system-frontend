@@ -47,6 +47,7 @@ export interface SuccessDialogProps {
   onClose: () => void;
 }
 
+// 操作成功後顯示的提示對話框（綠色勾選圖示）
 export function SuccessDialog({
   open,
   title = "Success",
@@ -84,6 +85,7 @@ export interface AlertDialogProps {
   onClose: () => void;
 }
 
+// 錯誤/警告提示對話框（紅色警告圖示），只有一個「確認」按鈕
 export function AlertDialog({
   open,
   title = "Alert",
@@ -125,6 +127,7 @@ export interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
+// 需要使用者二次確認的對話框（例如刪除、取消申請前跳出）
 export function ConfirmDialog({
   open,
   title = "確認",

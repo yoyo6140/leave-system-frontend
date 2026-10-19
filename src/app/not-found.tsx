@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 
+// 404 找不到頁面時顯示的提示畫面，附回首頁連結
 export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted/40">

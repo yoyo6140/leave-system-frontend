@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { forgotPassword } from "@/features/auth/api";
 import { forgotPasswordSchema } from "@/features/auth/schema";
 
+// 忘記密碼頁：輸入信箱送出重設連結請求，成功後顯示提示訊息（不洩漏信箱是否存在）
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);

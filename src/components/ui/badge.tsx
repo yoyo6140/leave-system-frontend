@@ -27,6 +27,7 @@ const badgeVariants = cva(
   },
 );
 
+// 小型標籤元件，用於顯示狀態/分類等簡短文字（依 variant 切換配色）
 function Badge({
   className,
   variant = "default",
