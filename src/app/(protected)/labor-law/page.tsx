@@ -71,6 +71,7 @@ const LEAVE_RULES = [
   },
 ];
 
+// 勞基法參考頁：依 LEAVE_RULES 靜態資料展示各假別的法規天數與規則（純展示、無 API）
 export default function LaborLawPage() {
   return (
     <div>

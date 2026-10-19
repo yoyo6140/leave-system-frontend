@@ -9,6 +9,7 @@ import type {
 } from "./types";
 
 export const userApi = {
+  // 查詢員工列表，支援關鍵字搜尋、分頁，並可選擇是否包含已停用帳號
   getList: async (params: UsersQueryParams = {}): Promise<UserListResponse> => {
     const qs = new URLSearchParams();
     if (params.search) qs.set("search", params.search);
@@ -24,6 +25,7 @@ export const userApi = {
     throw new Error(res.error?.message ?? "查詢員工列表失敗");
   },
 
+  // 新增一名員工帳號
   create: async (input: UserCreateInput): Promise<ApiUser> => {
     const res = await apiFetch<ApiUser>(API_ENDPOINTS.users.create, {
       method: "POST",
@@ -33,6 +35,7 @@ export const userApi = {
     throw new Error(res.error?.message ?? "新增員工失敗");
   },
 
+  // 修改員工基本資料
   update: async (id: number, input: UserUpdateInput): Promise<ApiUser> => {
     const res = await apiFetch<ApiUser>(API_ENDPOINTS.users.update(id), {
       method: "PUT",
@@ -42,6 +45,7 @@ export const userApi = {
     throw new Error(res.error?.message ?? "更新員工失敗");
   },
 
+  // 啟用或停用員工帳號（停用後該員工無法登入）
   updateStatus: async (id: number, isActive: boolean): Promise<ApiUser> => {
     const res = await apiFetch<ApiUser>(API_ENDPOINTS.users.updateStatus(id), {
       method: "PATCH",

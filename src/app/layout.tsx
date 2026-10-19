@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   description: "員工請假管理系統",
 };
 
+// 整個 App 的根版型：載入全域字型/樣式並包上 React Query Provider
 export default function RootLayout({
   children,
 }: Readonly<{

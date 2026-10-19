@@ -70,6 +70,7 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
+// 左側導覽選單：依角色顯示可用頁面連結、待審核假單數量角標，並提供登出功能（手機版為可收合抽屜）
 export default function Sidebar({ open = false, onClose }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -92,6 +93,7 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
 
   const navLinks = ALL_NAV.filter((link) => link.roles.includes(role));
 
+  // 登出：通知後端、清除本機登入資料與快取，導回登入頁
   async function handleLogout() {
     await Logout();
     clearCurrentUser();

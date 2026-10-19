@@ -9,6 +9,7 @@ import { LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS, LeaveType } from "@/lib/leave";
 import { cn } from "@/lib/utils";
 import { useOverviewQuery } from "@/features/overview/hooks";
 
+// 管理者總覽主要內容：待審核數/本月核准數/員工數統計卡、待審核列表與員工請假時數排行
 function AdminOverview() {
   const { data, isLoading: loading } = useOverviewQuery();
 
@@ -157,6 +158,7 @@ function AdminOverview() {
   );
 }
 
+// 管理者總覽頁（/overview）
 export default function OverviewPage() {
   return (
     <div>

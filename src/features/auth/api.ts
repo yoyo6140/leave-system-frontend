@@ -10,6 +10,7 @@ import type {
 
 export type { ApiUserData, AuthBody, LoginInput, LoginResponse };
 
+// 呼叫後端登入 API，成功會回傳 token；失敗回傳錯誤訊息
 export async function Login(input: LoginInput): Promise<LoginResponse> {
   try {
     const res = await apiClient.post<LoginResponse>(
@@ -28,6 +29,7 @@ export async function Login(input: LoginInput): Promise<LoginResponse> {
   }
 }
 
+// 通知後端登出使 cookie/token 失效；失敗也忽略，前端仍會清除本機登入狀態
 export async function Logout() {
   try {
     await apiClient.post(API_ENDPOINTS.auth.logout);
@@ -36,6 +38,7 @@ export async function Logout() {
   }
 }
 
+// 用目前的 token 向後端查詢「我是誰」，取不到就回傳 null（視為未登入）
 export async function apiGetMe(): Promise<ApiUserData | null> {
   try {
     const res = await apiClient.get<
@@ -48,6 +51,7 @@ export async function apiGetMe(): Promise<ApiUserData | null> {
   }
 }
 
+// 送出忘記密碼請求，後端會寄送 30 分鐘內有效的重設連結到該信箱
 export async function forgotPassword(
   email: string,
 ): Promise<{ ok: boolean; message: string }> {
@@ -69,6 +73,7 @@ export async function forgotPassword(
   }
 }
 
+// 使用信件中的 token 設定新密碼
 export async function resetPassword(
   token: string,
   newPassword: string,

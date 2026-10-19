@@ -1,4 +1,4 @@
-# 06 — 假別餘額（Leave Balance）
+# 07 — 假別餘額（Leave Balance）
 
 路由：`/leave-balance`
 權限：`admin` + `employee`（員工登入後首頁，`getHomePath("employee")`）
@@ -62,5 +62,5 @@ interface LeaveQuotaData {
 
 ## 6. 與其他頁面的關聯
 
-- 「申請請假」按鈕 → `/apply`（`07-apply.md`），該頁同樣使用 `useMyQuotaQuery()` 算剩餘額度上限。
+- 「申請請假」按鈕 → `/apply`（`08-apply.md`），該頁同樣使用 `useMyQuotaQuery()` 算剩餘額度上限。
 - 任何請假 CRUD（送出申請、取消申請、審核核准/拒絕）都會 invalidate `quotaKeys.all`，本頁資料會在這些動作後自動重新整理（前提是元件仍 mounted 或重新進入頁面觸發 refetch）。

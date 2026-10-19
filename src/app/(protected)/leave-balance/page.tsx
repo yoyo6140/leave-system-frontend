@@ -29,6 +29,7 @@ interface DisplayQuota {
   note: string | null;
 }
 
+// 將後端回傳的額度資料轉換成畫面顯示用的格式（補上每個假別對應的顏色樣式）
 function buildDisplay(apiItems: QuotaItem[]): DisplayQuota[] {
   return apiItems.map((item) => {
     const style = LEAVE_QUOTAS[item.type as LeaveType];
@@ -44,6 +45,7 @@ function buildDisplay(apiItems: QuotaItem[]): DisplayQuota[] {
   });
 }
 
+// 假別餘額頁：顯示登入者各假別的總額度、已用時數與剩餘時數
 export default function LeaveBalancePage() {
   const user = getCurrentUser();
   const { data, isLoading: loading } = useMyQuotaQuery();

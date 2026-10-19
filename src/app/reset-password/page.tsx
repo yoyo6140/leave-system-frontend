@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { resetPassword } from "@/features/auth/api";
 import { resetPasswordSchema } from "@/features/auth/schema";
 
+// 重設密碼表單：從網址帶的 token 驗證並送出新密碼，成功後 3 秒自動跳轉登入頁
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -135,6 +136,7 @@ function ResetPasswordForm() {
   );
 }
 
+// 重設密碼頁外殼：提供卡片版面，實際表單邏輯在 ResetPasswordForm（需 Suspense 包裹以讀取 URL 參數）
 export default function ResetPasswordPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40">

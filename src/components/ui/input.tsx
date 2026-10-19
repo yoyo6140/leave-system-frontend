@@ -5,6 +5,7 @@ interface InputProps extends React.ComponentProps<"input"> {
   error?: boolean;
 }
 
+// 共用文字輸入框，傳入 error 可切換成錯誤樣式（紅框）
 function Input({ className, type, error, ...props }: InputProps) {
   return (
     <input

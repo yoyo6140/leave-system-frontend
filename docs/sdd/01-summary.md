@@ -1,7 +1,7 @@
-# 00 — 大綱（Summary）
+# 01 — 大綱（Summary）
 
 > 本文件為請假系統前端的總綱，說明系統目標、角色模型、架構慣例與跨頁共用規則。
-> 各頁面的詳細規格見同目錄下 `01-login.md`、`02-overview.md`…依頁面編號遞增。
+> 各頁面的詳細規格見同目錄下 `02-login.md`、`03-overview.md`…依頁面編號遞增。
 
 ---
 
@@ -31,29 +31,32 @@
 | `admin`    | 管理者。可管理員工帳號、審核請假、查看全公司紀錄與總覽 | `/overview`       |
 | `employee` | 員工。只能申請請假、查看自己的額度與紀錄           | `/leave-balance`  |
 
-角色判斷與路由保護集中在 `AppLayout`（`src/components/AppLayout.tsx`）：
+角色判斷與路由保護集中在兩層 Next.js 共用 layout（取代舊版每頁各自包一層 `AppLayout` 元件的寫法）：
 
-- 進入任何受保護頁面前，先呼叫 `restoreSession()` 取得目前使用者；沒有使用者則導回 `/login`。
-- 頁面可傳入 `allowedRoles`；目前使用者角色不在清單中則導回該角色的首頁（`getHomePath(role)`）。
-- `Sidebar`（`src/components/Sidebar.tsx`）依角色過濾顯示的導覽項目，員工不會看到 admin 專屬選單，即使手動輸入網址也會被 `AppLayout` 擋掉並導回。
+- `src/app/(protected)/layout.tsx`：只管「有沒有登入」。進入任何受保護頁面前，先呼叫 `restoreSession()` 取得目前使用者；沒有使用者則導回 `/login`。
+- `src/app/(protected)/(admin-only)/layout.tsx`：疊在上面，只管「角色是不是 admin」；不是則導回 `getHomePath(role)`。
+- 這兩個 route group（括號資料夾）不會出現在網址上，但讓 Sidebar/Navbar 在同一受保護區塊內切頁時維持掛載，不會每次換頁都重新驗證、重新渲染導致側邊欄閃一下消失。細節見 `12-validation-and-data-layer.md`。
+- `Sidebar`（`src/components/Sidebar.tsx`）依角色過濾顯示的導覽項目，員工不會看到 admin 專屬選單，即使手動輸入網址也會被上述 layout 擋掉並導回。
 
 ## 4. 路由總覽
 
 | # 編號 | 路由               | 角色               | 說明                             | 規格文件 |
 | ------ | ------------------ | ------------------ | -------------------------------- | -------- |
-| 01     | `/login`           | 未登入              | 登入（含忘記密碼、重設密碼）     | `01-login.md` |
-| 01     | `/forgot-password`  | 未登入              | 申請密碼重設信                   | `01-login.md` |
-| 01     | `/reset-password`   | 未登入              | 使用信件連結設定新密碼            | `01-login.md` |
-| 02     | `/overview`         | admin               | 總覽：待審核統計、員工年請假時數 | `02-overview.md` |
-| 03     | `/employees`        | admin               | 員工帳號管理（新增/編輯/啟停用） | `03-employees.md` |
-| 04     | `/employee-records` | admin               | 全公司請假紀錄（唯讀）            | `04-employee-records.md` |
-| 05     | `/review`           | admin               | 審核待審核的請假申請              | `05-review.md` |
-| 06     | `/leave-balance`    | admin + employee    | 假別餘額（員工登入後首頁）        | `06-leave-balance.md` |
-| 07     | `/apply`            | admin + employee    | 申請請假                         | `07-apply.md` |
-| 08     | `/records`          | admin + employee    | 個人請假紀錄（只看自己）          | `08-records.md` |
-| 09     | `/ai-analysis`      | admin               | AI 聊天助理（Gemini）             | `09-ai-analysis.md` |
-| 10     | `/labor-law`        | admin + employee（無側邊欄入口） | 勞基法假別規則參考        | `10-labor-law.md` |
+| 02     | `/login`           | 未登入              | 登入（含忘記密碼、重設密碼）     | `02-login.md` |
+| 02     | `/forgot-password`  | 未登入              | 申請密碼重設信                   | `02-login.md` |
+| 02     | `/reset-password`   | 未登入              | 使用信件連結設定新密碼            | `02-login.md` |
+| 03     | `/overview`         | admin               | 總覽：待審核統計、員工年請假時數 | `03-overview.md` |
+| 04     | `/employees`        | admin               | 員工帳號管理（新增/編輯/啟停用） | `04-employees.md` |
+| 05     | `/employee-records` | admin               | 全公司請假紀錄（唯讀）            | `05-employee-records.md` |
+| 06     | `/review`           | admin               | 審核待審核的請假申請              | `06-review.md` |
+| 07     | `/leave-balance`    | admin + employee    | 假別餘額（員工登入後首頁）        | `07-leave-balance.md` |
+| 08     | `/apply`            | admin + employee    | 申請請假                         | `08-apply.md` |
+| 09     | `/records`          | admin + employee    | 個人請假紀錄（只看自己）          | `09-records.md` |
+| 10     | `/ai-analysis`      | admin               | AI 聊天助理（Gemini）             | `10-ai-analysis.md` |
+| 11     | `/labor-law`        | admin + employee（無側邊欄入口） | 勞基法假別規則參考        | `11-labor-law.md` |
 | —      | `/`                 | 任何已登入           | 依角色導向對應首頁                | 見本文件 §6 |
+
+> `00-informal-notes.md` 是口語化的產品筆記（為什麼這樣設計、取捨考量），不對應特定路由，排在最前面當作背景脈絡。
 
 > Sidebar 實際導覽順序（`src/components/Sidebar.tsx` 的 `ALL_NAV`）：總覽 → 員工管理 → 員工請假紀錄 → 審核管理 → 假別餘額 → 申請請假 → 個別請假紀錄 → AI 分析。本系列規格文件依此順序編號（`/labor-law` 不在選單中，排在最後）。
 
@@ -73,8 +76,8 @@
 
 ## 6. 認證與 Session
 
-- 登入成功後，後端同時：寫入 httpOnly cookie（`withCredentials: true`）、回傳 `data.token`（前端存入 `localStorage: leave_system_token`，供 `Authorization: Bearer` header 使用）。
-- 前端另外用 `localStorage: leave_system_auth` 快取使用者基本資料（`User`），避免每次切頁都要重新打 `/auth/me`；但仍會在每次進入 `AppLayout` 時以 `restoreSession()` 重新驗證並覆寫快取。
+- 認證機制是**純 JWT（`Authorization: Bearer`）**，不是 httpOnly cookie。原本設計是 httpOnly cookie，但前後端部署在不同網域，iOS Safari 會把這種跨站請求的 cookie 擋下（ITP / 第三方 cookie 限制），實測在 iOS 上登入後續的請求全部帶不到 cookie，所以改成登入成功後把 `data.token` 存進 `localStorage: leave_system_token`，之後每個請求由 axios interceptor 手動加上 `Authorization: Bearer <token>`。
+- 前端另外用 `localStorage: leave_system_auth` 快取使用者基本資料（`User`），避免每次切頁都要重新打 `/auth/me`；但仍會在每次進入 `(protected)` layout 時以 `restoreSession()` 重新驗證並覆寫快取。
 - `apiClient`（`src/lib/api-client.ts`）的 response interceptor：收到 401 且該次請求不是 `/auth/login`，清除 `leave_system_auth` 並整頁導向 `/login`。
 - 根路徑 `/`（`src/app/page.tsx`）與 `/login` 都會呼叫 `restoreSession()`，若已登入直接導向 `getHomePath(role)`，避免已登入使用者停留在登入頁。
 - 登出（Sidebar 的「登出」按鈕）：呼叫 `POST /auth/logout` → 清除本地快取（`clearCurrentUser()`）→ `queryClient.clear()`（避免下一位使用者看到前一位的快取資料）→ 導向 `/login`。
@@ -139,7 +142,7 @@
 
 | 元件 | 位置 | 用途 |
 | --- | --- | --- |
-| `AppLayout` | `src/components/AppLayout.tsx` | 登入檢查、角色守門、Sidebar+Navbar 外框 |
+| `(protected)/layout.tsx` + `(protected)/(admin-only)/layout.tsx` | `src/app/(protected)/` | 登入檢查、角色守門、Sidebar+Navbar 外框 |
 | `Sidebar` / `Navbar` | `src/components/*.tsx` | 導覽、登出、目前使用者資訊 |
 | `DataTable` / `createColumns` | `src/components/records/*` | 請假紀錄表格（`/records`、`/employee-records` 共用） |
 | `LeaveDetailDialog` | `src/components/records/leave-detail-dialog.tsx` | 請假單詳情彈窗（`/review`、`/records`、`/employee-records` 共用） |

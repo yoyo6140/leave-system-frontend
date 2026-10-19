@@ -1,4 +1,4 @@
-# 08 — 個別請假紀錄（Records）
+# 09 — 個別請假紀錄（Records）
 
 路由：`/records`
 權限：`admin` + `employee`（**不分角色，一律只看自己**）
@@ -55,6 +55,6 @@
 
 ## 7. 與其他頁面的關聯
 
-- 「新增申請」→ `/apply`（`07-apply.md`）。
+- 「新增申請」→ `/apply`（`08-apply.md`）。
 - 編輯/取消成功都會 invalidate `leaveKeys.all`、`quotaKeys.all`、`overviewKeys.all`：`/leave-balance` 額度、`/overview` 統計會同步更新。
-- 與 `/employee-records`（`04-employee-records.md`）共用 `DataTable`／`createColumns`／`LeaveDetailDialog`，但查詢範圍（僅自己 vs 全公司）與是否可編輯/取消完全不同，是兩個獨立頁面，不要混用查詢邏輯。
+- 與 `/employee-records`（`05-employee-records.md`）共用 `DataTable`／`createColumns`／`LeaveDetailDialog`，但查詢範圍（僅自己 vs 全公司）與是否可編輯/取消完全不同，是兩個獨立頁面，不要混用查詢邏輯。

@@ -10,6 +10,7 @@ import type {
 } from "./types";
 
 export const leaveApi = {
+  // 查詢假單列表，支援狀態/關鍵字篩選、分頁，以及只看自己（mine）
   getList: async (params: LeavesQueryParams = {}): Promise<LeaveListData> => {
     const qs = new URLSearchParams();
     if (params.status) qs.set("status", params.status);
@@ -25,6 +26,7 @@ export const leaveApi = {
     throw new Error(res.error?.message ?? "查詢假單失敗");
   },
 
+  // 送出一筆新的請假申請
   create: async (input: LeaveCreateInput): Promise<ApiLeaveRecord> => {
     const res = await apiFetch<ApiLeaveRecord>(API_ENDPOINTS.leaves.create, {
       method: "POST",
@@ -34,6 +36,7 @@ export const leaveApi = {
     throw new Error(res.error?.message ?? "新增假單失敗");
   },
 
+  // 修改既有假單內容（假別、日期、時數、事由）
   update: async (
     id: string,
     input: LeaveUpdateInput,
@@ -49,6 +52,7 @@ export const leaveApi = {
     throw new Error(res.error?.message ?? "修改假單失敗");
   },
 
+  // 審核假單：更新狀態（通過/拒絕）並記錄審核者
   updateStatus: async (
     id: string,
     input: LeaveStatusUpdateInput,

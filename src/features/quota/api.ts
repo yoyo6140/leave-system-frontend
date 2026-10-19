@@ -3,6 +3,7 @@ import { apiFetch } from "@/lib/api-client";
 import type { LeaveQuotaData } from "./types";
 
 export const quotaApi = {
+  // 查詢自己各假別的額度與剩餘時數，可用 asOf 指定計算基準日
   getMine: async (asOf?: string): Promise<LeaveQuotaData> => {
     const url = asOf
       ? `${API_ENDPOINTS.quota.me}?as_of=${asOf}`

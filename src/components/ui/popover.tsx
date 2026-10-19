@@ -5,18 +5,23 @@ import { Popover as PopoverPrimitive } from "radix-ui";
 
 import { cn } from "@/lib/utils";
 
+// 彈出浮層元件組（基於 Radix UI），以下為各部位的樣式包裝
+
+// 浮層根容器，管理開關狀態
 function Popover({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
 }
 
+// 點擊後開啟浮層的觸發元件
 function PopoverTrigger({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Trigger>) {
   return <PopoverPrimitive.Trigger data-slot="popover-trigger" {...props} />;
 }
 
+// 浮層展開後的內容容器（定位、動畫）
 function PopoverContent({
   className,
   align = "center",
@@ -39,12 +44,14 @@ function PopoverContent({
   );
 }
 
+// 自訂浮層定位的錨點（不一定等於觸發元件本身）
 function PopoverAnchor({
   ...props
 }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />;
 }
 
+// 浮層內容的標題區塊容器
 function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -55,6 +62,7 @@ function PopoverHeader({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+// 浮層標題文字
 function PopoverTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return (
     <div
@@ -65,6 +73,7 @@ function PopoverTitle({ className, ...props }: React.ComponentProps<"h2">) {
   );
 }
 
+// 浮層內的輔助說明文字
 function PopoverDescription({
   className,
   ...props

@@ -14,6 +14,7 @@ import { type ApiLeaveRecord } from "@/features/leaves/hooks";
 import { DataTableColumnHeader } from "./data-table-column-header";
 import { DataTableRowActions } from "./data-table-row-actions";
 
+// 建立請假紀錄表格的欄位定義（假別、日期、時數、狀態等），依是否為管理者/是否可編輯動態加入欄位
 export function createColumns(
   /** 不帶 onDelete（例如員工請假紀錄頁）就不顯示「操作」欄位 */
   onDelete?: (id: string) => void,

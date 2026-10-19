@@ -6,12 +6,16 @@ import { Select as SelectPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react";
 
+// 下拉選取元件組（基於 Radix UI），以下為各部位的樣式包裝
+
+// 選取元件根容器，管理選中值與開關狀態
 function Select({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Root>) {
   return <SelectPrimitive.Root data-slot="select" {...props} />;
 }
 
+// 將多個選項分組
 function SelectGroup({
   className,
   ...props
@@ -25,12 +29,14 @@ function SelectGroup({
   );
 }
 
+// 顯示目前選中值（或 placeholder）
 function SelectValue({
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Value>) {
   return <SelectPrimitive.Value data-slot="select-value" {...props} />;
 }
 
+// 點擊後展開選項清單的觸發按鈕
 function SelectTrigger({
   className,
   size = "default",
@@ -57,6 +63,7 @@ function SelectTrigger({
   );
 }
 
+// 展開後的選項清單容器（含捲動按鈕）
 function SelectContent({
   className,
   children,
@@ -95,6 +102,7 @@ function SelectContent({
   );
 }
 
+// 選項清單中的分組標題
 function SelectLabel({
   className,
   ...props
@@ -108,6 +116,7 @@ function SelectLabel({
   );
 }
 
+// 單一選項，選中時左側顯示勾選圖示
 function SelectItem({
   className,
   children,
@@ -132,6 +141,7 @@ function SelectItem({
   );
 }
 
+// 選項之間的分隔線
 function SelectSeparator({
   className,
   ...props
@@ -145,6 +155,7 @@ function SelectSeparator({
   );
 }
 
+// 選項過多時，清單頂部的向上捲動按鈕
 function SelectScrollUpButton({
   className,
   ...props
@@ -163,6 +174,7 @@ function SelectScrollUpButton({
   );
 }
 
+// 選項過多時，清單底部的向下捲動按鈕
 function SelectScrollDownButton({
   className,
   ...props

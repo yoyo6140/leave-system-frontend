@@ -16,6 +16,7 @@ const TEST_ACCOUNTS = [
   { label: "員工（陳志明）", username: "chen_zhiming", password: "pass1234" },
 ];
 
+// 登入頁：若已有有效登入狀態直接導向首頁；否則提供帳密表單登入（含測試帳號快速填入）
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -27,6 +28,7 @@ export default function LoginPage() {
   useEffect(() => {
     let cancelled = false;
 
+    // 頁面載入時先檢查是否已登入，是的話就不留在登入頁
     async function checkExistingSession() {
       const user = await restoreSession();
       if (!cancelled && user) router.replace(getHomePath(user.role));
@@ -38,6 +40,7 @@ export default function LoginPage() {
     };
   }, [router]);
 
+  // 驗證表單後呼叫登入 API，成功導向對應首頁、失敗顯示錯誤訊息
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");

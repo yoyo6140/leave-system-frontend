@@ -23,6 +23,7 @@ interface EditLeaveDialogProps {
   onSaved: () => void;
 }
 
+// 編輯請假申請的彈出對話框：載入該筆紀錄資料、表單驗證後呼叫更新 API
 export function EditLeaveDialog({
   record,
   onClose,
@@ -59,6 +60,7 @@ export function EditLeaveDialog({
   const startDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "";
   const endDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : "";
 
+  // 驗證表單內容，通過才呼叫更新假單 API
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!record) return;

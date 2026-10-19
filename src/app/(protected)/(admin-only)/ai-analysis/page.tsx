@@ -2,6 +2,7 @@
 
 import AiChat from "@/components/ai-analysis/ai-chat";
 
+// AI 分析頁：放置 AI 聊天元件，讓管理者用自然語言查詢請假相關問題
 export default function AiAnalysisPage() {
   return (
     <div>

@@ -1,4 +1,4 @@
-# 05 — 審核管理（Review）
+# 06 — 審核管理（Review）
 
 路由：`/review`
 權限：僅 `admin`
@@ -10,7 +10,7 @@
 
 ## 1. 頁面目的
 
-集中列出所有員工送出、尚未處理的請假申請，讓管理者逐筆查看詳情並決定核准或拒絕。Sidebar 上「審核管理」項目會顯示待審核筆數的紅色徽章（計算方式見 `00-summary.md` 的 Sidebar 說明：`leavesData.filter(status === "待審核").length`，`limit=200`）。
+集中列出所有員工送出、尚未處理的請假申請，讓管理者逐筆查看詳情並決定核准或拒絕。Sidebar 上「審核管理」項目會顯示待審核筆數的紅色徽章（計算方式見 `01-summary.md` 的 Sidebar 說明：`leavesData.filter(status === "待審核").length`，`limit=200`）。
 
 ## 2. UI 結構
 
@@ -33,7 +33,7 @@
 | `useUsersQuery({ limit: 200 })` | `userApi.getList` | `GET /users` | 建立 `userMap: id → name` |
 | `useUpdateLeaveStatus()` | `leaveApi.updateStatus` | `PATCH /leaves/{id}/status` | body `{ status, reviewer }` |
 
-- `pending = records.filter(r => r.status === "待審核")`：目前前端一次抓 200 筆回來篩選，**非後端分頁查詢**，公司請假量很大時需注意 `limit` 是否足夠（已知限制，與 `04-employee-records.md` 相同）。
+- `pending = records.filter(r => r.status === "待審核")`：目前前端一次抓 200 筆回來篩選，**非後端分頁查詢**，公司請假量很大時需注意 `limit` 是否足夠（已知限制，與 `05-employee-records.md` 相同）。
 - `reviewer` 帶入目前登入 admin 的姓名（`currentUser?.name`，查不到則 fallback `"admin"`）。
 
 ## 4. 互動行為
