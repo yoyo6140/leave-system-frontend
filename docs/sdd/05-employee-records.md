@@ -1,4 +1,4 @@
-# 04 — 員工請假紀錄（Employee Records）
+# 05 — 員工請假紀錄（Employee Records）
 
 路由：`/employee-records`
 權限：僅 `admin`
@@ -50,6 +50,6 @@
 
 ## 6. 與其他頁面的關聯
 
-- 與 `/records`（`08-records.md`）共用 `DataTable`、`createColumns`、`LeaveDetailDialog` 元件，但查詢參數不同（本頁不帶 `mine`，為全公司；`/records` 一律帶 `mine=true`）。
-- 本頁不提供核准/拒絕，相關操作請見 `/review`（`05-review.md`）。
+- 與 `/records`（`09-records.md`）共用 `DataTable`、`createColumns`、`LeaveDetailDialog` 元件，但查詢參數不同（本頁不帶 `mine`，為全公司；`/records` 一律帶 `mine=true`）。
+- 本頁不提供核准/拒絕，相關操作請見 `/review`（`06-review.md`）。
 - 本頁不提供編輯/取消申請（那是申請人在 `/records` 的操作，且僅限自己的「待審核」紀錄）。

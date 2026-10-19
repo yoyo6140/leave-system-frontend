@@ -21,6 +21,7 @@ interface DataTableRowActionsProps {
   onEdit?: (record: ApiLeaveRecord) => void;
 }
 
+// 每一列的操作選單（編輯／取消申請），僅「待審核」狀態可操作，取消前會跳確認對話框
 export function DataTableRowActions({
   row,
   onDelete,

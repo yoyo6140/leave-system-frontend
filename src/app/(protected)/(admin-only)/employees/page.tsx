@@ -45,6 +45,7 @@ import { userCreateSchema, userUpdateSchema } from "@/features/users/schema";
 const PAGE_SIZE = 12;
 
 /** 左右切換開關；點擊不會立刻改狀態，由外層彈確認後再送 API */
+// 啟用/停用帳號的切換開關；點擊只是「請求切換」，實際變更要等外層的確認對話框按下確認才送出
 function StatusToggle({
   checked,
   disabled,
@@ -82,6 +83,7 @@ function StatusToggle({
 
 // ── Shared Modal Shell ────────────────────────────────────────────────────────
 
+// 新增/編輯員工彈出視窗共用的外層容器（標題 + 內容）
 function ModalShell({
   title,
   onClose,
@@ -108,6 +110,7 @@ function ModalShell({
 
 // ── Gender Select ─────────────────────────────────────────────────────────────
 
+// 性別選擇下拉選單（男/女）
 function GenderSelect({
   value,
   onChange,
@@ -147,6 +150,7 @@ interface AddDialogProps {
   loading: boolean;
 }
 
+// 新增員工帳號的表單彈窗
 function AddDialog({ onAdd, onCancel, loading }: AddDialogProps) {
   const [form, setForm] = useState(EMPTY_FORM);
   const set = (key: keyof UserCreateInput, val: string) =>
@@ -283,6 +287,7 @@ interface EditDialogProps {
   loading: boolean;
 }
 
+// 編輯員工資料的表單彈窗（帳號不可修改）
 function EditDialog({ user, onSave, onCancel, loading }: EditDialogProps) {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
@@ -291,6 +296,7 @@ function EditDialog({ user, onSave, onCancel, loading }: EditDialogProps) {
   const [birthDate, setBirthDate] = useState(user.birth_date);
   const [hireDate, setHireDate] = useState(user.hire_date);
 
+  // 組裝編輯後的欄位並呼叫父層的儲存回呼
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
     onSave({
@@ -386,6 +392,7 @@ function EditDialog({ user, onSave, onCancel, loading }: EditDialogProps) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
+// 員工管理頁：列表（員工/主管分開顯示）＋新增、編輯、啟用停用帳號
 export default function EmployeesPage() {
   const currentUser = getCurrentUser();
   const [actionLoading, setActionLoading] = useState(false);
@@ -433,6 +440,7 @@ export default function EmployeesPage() {
     if (!loading && page > pageCount) setPage(pageCount);
   }, [loading, page, pageCount]);
 
+  // 驗證表單後新增員工帳號
   async function handleAdd(form: UserCreateInput) {
     const parsed = userCreateSchema.safeParse(form);
     if (!parsed.success) {
@@ -451,6 +459,7 @@ export default function EmployeesPage() {
     }
   }
 
+  // 驗證表單後儲存編輯中的員工資料
   async function handleEditSave(updates: UserUpdateInput) {
     if (!editTarget) return;
     const parsed = userUpdateSchema.safeParse(updates);
@@ -473,6 +482,7 @@ export default function EmployeesPage() {
     }
   }
 
+  // 使用者在確認對話框按下確認後，才真正切換帳號啟用/停用狀態
   async function handleStatusConfirm() {
     if (!statusTarget) return;
     const nextActive = statusTarget.is_active === false;

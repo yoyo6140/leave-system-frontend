@@ -33,11 +33,13 @@ export function DateRangePicker({
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<DateRange | undefined>(value);
 
+  // 開啟時用目前已套用的值重置暫存草稿，確保每次重新打開都不會殘留上次沒確認的選取
   function handleOpenChange(next: boolean) {
     setOpen(next);
     if (next) setDraft(value); // 每次打開都用目前已套用的值重置暫存
   }
 
+  // 按下「確認」才真正把暫存的日期範圍套用到表單
   function handleConfirm() {
     onChange(draft);
     setOpen(false);

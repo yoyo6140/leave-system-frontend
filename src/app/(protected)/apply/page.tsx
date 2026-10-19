@@ -23,6 +23,7 @@ import { useMyQuotaQuery } from "@/features/quota/hooks";
 import { useCreateLeave } from "@/features/leaves/hooks";
 import { createLeaveFormSchema } from "@/features/leaves/schema";
 
+// 申請請假頁：依剩餘額度即時顯示可選時數上限，表單驗證通過後呼叫新增假單 API
 export default function ApplyPage() {
   const router = useRouter();
   const user = getCurrentUser();
@@ -53,6 +54,7 @@ export default function ApplyPage() {
   const startDate = dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "";
   const endDate = dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : "";
 
+  // 驗證表單（含剩餘額度檢查）後送出請假申請
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
@@ -82,11 +84,13 @@ export default function ApplyPage() {
     }
   }
 
+  // 關閉成功提示後導向個人請假紀錄頁，方便確認剛送出的申請
   function handleSuccessClose() {
     setSuccessOpen(false);
     router.push("/records");
   }
 
+  // 將某假別的剩餘時數轉成下拉選單顯示用的文字
   const remainingDisplay = (t: LeaveType) => {
     const r = remaining[t];
     if (r === null) return "無上限";

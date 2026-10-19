@@ -17,6 +17,7 @@ export interface User {
 const AUTH_KEY = "leave_system_auth";
 const TOKEN_KEY = "leave_system_token";
 
+// 將後端回傳的 snake_case 使用者資料轉換成前端慣用的 camelCase User 物件
 function mapApiUser(user: {
   id: number;
   username: string;
@@ -42,10 +43,12 @@ function mapApiUser(user: {
   };
 }
 
+// 將登入後的使用者資料寫入 localStorage，供重新整理後讀取
 function persistUser(user: User): void {
   localStorage.setItem(AUTH_KEY, JSON.stringify(user));
 }
 
+// 登入流程：呼叫登入 API、儲存 token，再取得並快取使用者資料
 export async function login(
   username: string,
   password: string,
@@ -78,6 +81,7 @@ export async function login(
   return { success: true, user };
 }
 
+// 頁面載入時用既有 token 向後端驗證並還原登入狀態，失敗則清除快取
 export async function restoreSession(): Promise<User | null> {
   const me = await apiGetMe();
   if (!me) {
@@ -90,6 +94,7 @@ export async function restoreSession(): Promise<User | null> {
   return user;
 }
 
+// 同步讀取 localStorage 中快取的使用者資料（不打 API），用於畫面初始渲染
 export function getCurrentUser(): User | null {
   if (typeof window === "undefined") return null;
   const raw = localStorage.getItem(AUTH_KEY);
@@ -104,12 +109,14 @@ export function getCurrentUser(): User | null {
   }
 }
 
+// 登出時清除本機儲存的使用者資料與 token
 export function clearCurrentUser(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem(TOKEN_KEY);
 }
 
+// 依角色決定登入後導向的首頁路徑（管理者看總覽，員工看自己的假別餘額）
 export function getHomePath(role: UserRole): string {
   return role === "admin" ? "/overview" : "/leave-balance";
 }

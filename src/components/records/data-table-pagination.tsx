@@ -16,6 +16,7 @@ interface DataTablePaginationProps<TData> {
   totalRows?: number;
 }
 
+// 表格底部的分頁控制元件（上一頁/下一頁/跳首尾頁）與頁數顯示
 export function DataTablePagination<TData>({
   table,
   totalRows,

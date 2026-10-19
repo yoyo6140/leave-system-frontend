@@ -17,6 +17,7 @@ import {
 } from "@/features/leaves/hooks";
 import { useUsersQuery } from "@/features/users/hooks";
 
+// 審核管理頁：列出所有待審核的請假申請，點擊可開詳情並核准/拒絕
 export default function ReviewPage() {
   const currentUser = getCurrentUser();
 
@@ -42,6 +43,7 @@ export default function ReviewPage() {
 
   const pending = records.filter((r) => r.status === "待審核");
 
+  // 確認核准：更新假單狀態為「已通過」並記錄審核者
   async function handleApproveConfirm() {
     if (!approveTarget) return;
     try {
@@ -60,6 +62,7 @@ export default function ReviewPage() {
     }
   }
 
+  // 確認拒絕：更新假單狀態為「已拒絕」並記錄審核者
   async function handleRejectConfirm() {
     if (!rejectTarget) return;
     try {

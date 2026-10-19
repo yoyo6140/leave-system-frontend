@@ -1,7 +1,7 @@
-# 02 — 總覽（Overview）
+# 03 — 總覽（Overview）
 
 路由：`/overview`
-權限：僅 `admin`（`allowedRoles={["admin"]}`，員工訪問會被 `AppLayout` 導回 `/leave-balance`）
+權限：僅 `admin`（頁面放在 `(protected)/(admin-only)/` 路由群組下，員工訪問會被該 layout 導回 `/leave-balance`）
 原始碼：`src/app/overview/page.tsx`、`src/features/overview/*`
 
 管理者登入後的首頁（`getHomePath("admin") === "/overview"`），用於快速掌握目前待辦事項與團隊概況。
@@ -79,6 +79,6 @@ interface OverviewData {
 
 ## 6. 與其他頁面的關聯
 
-- 「前往審核」→ `/review`（`05-review.md`）。
-- 「員工管理」→ `/employees`（`03-employees.md`）。
+- 「前往審核」→ `/review`（`06-review.md`）。
+- 「員工管理」→ `/employees`（`04-employees.md`）。
 - 本頁資料會在任何審核動作（`/review` 核准/拒絕）、請假 CRUD（`/apply`、`/records` 取消、`/employee-records`）發生後失效重抓——因為 `features/leaves/hooks.ts` 的 mutation 成功時會一併 `invalidateQueries(overviewKeys.all)`。

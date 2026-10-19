@@ -12,6 +12,7 @@ export interface ApiResponse<T = unknown> {
   error?: ApiError;
 }
 
+// 未授權（401）時清除登入快取並導回登入頁
 function handleUnauthorized() {
   localStorage.removeItem("leave_system_auth");
   if (
@@ -22,11 +23,13 @@ function handleUnauthorized() {
   }
 }
 
+// 共用的 axios 實例，所有 API 請求都透過它送出
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
 });
 
+// 請求攔截器：自動在每個請求夾帶 localStorage 中的 token
 apiClient.interceptors.request.use((config) => {
   const token =
     typeof window !== "undefined"
@@ -36,6 +39,7 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+// 回應攔截器：收到 401 時（登入請求本身除外）觸發登出流程
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
@@ -47,6 +51,7 @@ apiClient.interceptors.response.use(
   },
 );
 
+// 統一的 API 請求包裝：呼叫後端並回傳一致格式的 ApiResponse，錯誤會被攔截轉換而不是丟出例外
 export async function apiFetch<T>(
   path: string,
   init: { method?: string; body?: string } = {},

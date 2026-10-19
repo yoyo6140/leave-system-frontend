@@ -6,12 +6,16 @@ import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 import { CheckIcon, ChevronRightIcon } from "lucide-react";
 
+// 下拉選單元件組（基於 Radix UI），以下各函式是對應各部位（容器、觸發器、選項、子選單等）的樣式包裝
+
+// 下拉選單根容器，管理開關狀態
 function DropdownMenu({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
   return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
 }
 
+// 將選單內容渲染到 document.body，避免被父層 overflow/z-index 裁切
 function DropdownMenuPortal({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Portal>) {
@@ -20,6 +24,7 @@ function DropdownMenuPortal({
   );
 }
 
+// 點擊後開啟選單的觸發元件
 function DropdownMenuTrigger({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Trigger>) {
@@ -31,6 +36,7 @@ function DropdownMenuTrigger({
   );
 }
 
+// 選單展開後的內容容器（定位、動畫、捲動）
 function DropdownMenuContent({
   className,
   align = "start",
@@ -53,6 +59,7 @@ function DropdownMenuContent({
   );
 }
 
+// 將多個選項分組（語意用途，不自帶樣式）
 function DropdownMenuGroup({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Group>) {
@@ -61,6 +68,7 @@ function DropdownMenuGroup({
   );
 }
 
+// 一般可點擊選項，variant="destructive" 會顯示為警示紅色（用於刪除等操作）
 function DropdownMenuItem({
   className,
   inset,
@@ -84,6 +92,7 @@ function DropdownMenuItem({
   );
 }
 
+// 可勾選的選項，右側顯示勾選圖示
 function DropdownMenuCheckboxItem({
   className,
   children,
@@ -117,6 +126,7 @@ function DropdownMenuCheckboxItem({
   );
 }
 
+// 單選群組容器（搭配 DropdownMenuRadioItem 使用）
 function DropdownMenuRadioGroup({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.RadioGroup>) {
@@ -128,6 +138,7 @@ function DropdownMenuRadioGroup({
   );
 }
 
+// 單選選項，選中時右側顯示勾選圖示
 function DropdownMenuRadioItem({
   className,
   children,
@@ -159,6 +170,7 @@ function DropdownMenuRadioItem({
   );
 }
 
+// 選單內的分組標題文字（不可點擊）
 function DropdownMenuLabel({
   className,
   inset,
@@ -179,6 +191,7 @@ function DropdownMenuLabel({
   );
 }
 
+// 選項之間的分隔線
 function DropdownMenuSeparator({
   className,
   ...props
@@ -192,6 +205,7 @@ function DropdownMenuSeparator({
   );
 }
 
+// 顯示在選項右側的快捷鍵提示文字
 function DropdownMenuShortcut({
   className,
   ...props
@@ -208,12 +222,14 @@ function DropdownMenuShortcut({
   );
 }
 
+// 巢狀子選單的根容器
 function DropdownMenuSub({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Sub>) {
   return <DropdownMenuPrimitive.Sub data-slot="dropdown-menu-sub" {...props} />;
 }
 
+// 開啟子選單的觸發項目（hover 時展開，右側顯示箭頭）
 function DropdownMenuSubTrigger({
   className,
   inset,
@@ -238,6 +254,7 @@ function DropdownMenuSubTrigger({
   );
 }
 
+// 子選單展開後的內容容器
 function DropdownMenuSubContent({
   className,
   ...props

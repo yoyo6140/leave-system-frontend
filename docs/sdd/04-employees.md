@@ -1,4 +1,4 @@
-# 03 — 員工管理（Employees）
+# 04 — 員工管理（Employees）
 
 路由：`/employees`
 權限：僅 `admin`
@@ -102,5 +102,5 @@ interface UserUpdateInput {
 ## 7. 與其他頁面的關聯
 
 - 員工姓名顯示於 `/overview`（年請假時數排行）、`/review`、`/employee-records`（透過 `useUsersQuery` 建立 `userMap: id → name`）。
-- 停用帳號後：該使用者既有登入 token 立即失效，之後任何需登入的 API 回 401，前端統一導回 `/login`（見 `00-summary.md` §6）。
-- 總覽頁 `employee_count` 只計入啟用中的員工，與本頁「顯示已停用帳號」勾選與否無關（那只是前端查詢參數，不影響總覽統計）；新增帳號、切換啟用/停用都會一併失效 `overviewKeys.all`，`/overview` 的人數會同步更新（見 `11-validation-and-data-layer.md` §3.4）。
+- 停用帳號後：該使用者既有登入 token 立即失效，之後任何需登入的 API 回 401，前端統一導回 `/login`（見 `01-summary.md` §6）。
+- 總覽頁 `employee_count` 只計入啟用中的員工，與本頁「顯示已停用帳號」勾選與否無關（那只是前端查詢參數，不影響總覽統計）；新增帳號、切換啟用/停用都會一併失效 `overviewKeys.all`，`/overview` 的人數會同步更新（見 `12-validation-and-data-layer.md` §3.4）。

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { getHomePath, restoreSession } from "@/lib/auth";
 
+// 根路徑「/」：嘗試還原登入狀態，依角色導向對應首頁，否則導向登入頁；本身只顯示載入中動畫
 export default function HomePage() {
   const router = useRouter();
 

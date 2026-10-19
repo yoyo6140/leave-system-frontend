@@ -16,6 +16,7 @@ import {
   ChevronDownIcon,
 } from "lucide-react";
 
+// 日曆選取元件（基於 react-day-picker），套用本專案的樣式主題
 function Calendar({
   className,
   classNames,
@@ -187,6 +188,7 @@ function Calendar({
   );
 }
 
+// 日曆中單一日期的按鈕，處理選取/範圍選取時的樣式與聚焦行為
 function CalendarDayButton({
   className,
   day,

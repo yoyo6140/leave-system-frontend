@@ -7,6 +7,7 @@ interface NavbarProps {
   onMenuToggle?: () => void;
 }
 
+// 頁面頂部導覽列：顯示歡迎詞、今天日期，並在手機/平板提供開啟側邊選單的按鈕
 export default function Navbar({ onMenuToggle }: NavbarProps) {
   const user = getCurrentUser();
 

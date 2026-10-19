@@ -44,6 +44,7 @@ const buttonVariants = cva(
   },
 );
 
+// 共用按鈕元件，依 variant（外觀）與 size（大小）組合樣式
 function Button({
   className,
   variant = "default",

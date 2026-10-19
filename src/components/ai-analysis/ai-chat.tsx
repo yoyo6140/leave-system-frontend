@@ -18,6 +18,7 @@ type Message = {
   isError?: boolean;
 };
 
+// 聊天訊息旁顯示的機器人頭像圖示
 function BotAvatar() {
   return (
     <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -48,6 +49,7 @@ function BotAvatar() {
   );
 }
 
+// AI 回覆中顯示的「正在輸入」動畫點點
 function TypingDots() {
   return (
     <div className="flex items-center gap-1 py-1">
@@ -62,6 +64,7 @@ function TypingDots() {
   );
 }
 
+// AI 客服聊天視窗：維護對話紀錄、送出使用者訊息並顯示 AI 回覆
 export default function AiChat() {
   const sendChat = useSendChatMessage();
   const [messages, setMessages] = useState<Message[]>([
@@ -84,6 +87,7 @@ export default function AiChat() {
     if (!loading) inputRef.current?.focus();
   }, [loading]);
 
+  // 將使用者輸入加入對話並呼叫 API 取得 AI 回覆，失敗則顯示錯誤訊息氣泡
   async function sendMessage() {
     const text = input.trim();
     if (!text || loading) return;
@@ -119,6 +123,7 @@ export default function AiChat() {
     }
   }
 
+  // 按下 Enter 鍵送出訊息
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       e.preventDefault();

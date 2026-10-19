@@ -1,4 +1,4 @@
-# 10 — 勞基法參考（Labor Law）
+# 11 — 勞基法參考（Labor Law）
 
 路由：`/labor-law`
 權限：`admin` + `employee`（`AppLayout` 未限制 `allowedRoles`，但**不在 Sidebar 導覽選單中**，需直接輸入網址進入）
