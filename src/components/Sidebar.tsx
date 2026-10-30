@@ -30,19 +30,29 @@ type NavItem = {
 };
 
 const ALL_NAV: NavItem[] = [
-  { href: "/overview", icon: LayoutDashboard, label: "總覽", roles: ["admin"] },
-  { href: "/employees", icon: Users, label: "員工管理", roles: ["admin"] },
+  {
+    href: "/overview",
+    icon: LayoutDashboard,
+    label: "總覽",
+    roles: ["admin", "sup_admin"],
+  },
+  {
+    href: "/employees",
+    icon: Users,
+    label: "員工管理",
+    roles: ["admin", "sup_admin"],
+  },
   {
     href: "/employee-records",
     icon: Files,
     label: "員工請假紀錄",
-    roles: ["admin"],
+    roles: ["admin", "sup_admin"],
   },
   {
     href: "/review",
     icon: ClipboardCheck,
     label: "審核管理",
-    roles: ["admin"],
+    roles: ["admin", "sup_admin"],
   },
   {
     href: "/leave-balance",
@@ -62,7 +72,12 @@ const ALL_NAV: NavItem[] = [
     label: "個別請假紀錄",
     roles: ["admin", "employee"],
   },
-  { href: "/ai-analysis", icon: Bot, label: "AI 分析", roles: ["admin"] },
+  {
+    href: "/ai-analysis",
+    icon: Bot,
+    label: "AI 分析",
+    roles: ["admin", "sup_admin"],
+  },
 ];
 
 interface SidebarProps {
@@ -77,7 +92,7 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
   const queryClient = useQueryClient();
   const user = getCurrentUser();
   const role = user?.role ?? "employee";
-  const isAdmin = role === "admin";
+  const isAdmin = role === "admin" || role === "sup_admin";
 
   const { data: leavesData } = useLeavesQuery(
     { limit: 200 },
