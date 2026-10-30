@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { getHomePath, restoreSession } from "@/lib/auth";
 
 /**
- * 疊在 (protected)/layout.tsx 之上，只多做一件事：role 必須是 admin。
+ * 疊在 (protected)/layout.tsx 之上，只多做一件事：role 必須是 admin 或 sup_admin。
  * 是否已登入交給外層處理，這裡只管「登入了，但角色不對」要導去哪。
  * 同樣固定從 false 開始（理由見 (protected)/layout.tsx 的註解：
  * 用 localStorage 當初始值會在 SSR/client 算出不同結果，造成 hydration
@@ -28,7 +28,7 @@ export default function AdminOnlyLayout({
       const user = await restoreSession();
       if (cancelled || !user) return; // 未登入由外層 (protected) layout 導回 /login
 
-      if (user.role !== "admin") {
+      if (user.role !== "admin" && user.role !== "sup_admin") {
         router.replace(getHomePath(user.role));
         return;
       }

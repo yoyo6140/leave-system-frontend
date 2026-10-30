@@ -506,7 +506,9 @@ export default function EmployeesPage() {
   }
 
   const employees = users.filter((u) => u.role === "employee");
-  const admins = users.filter((u) => u.role === "admin");
+  const admins = users.filter(
+    (u) => u.role === "admin" || u.role === "sup_admin",
+  );
   const isSelf = (u: ApiUser): boolean =>
     currentUser?.id != null && u.id === currentUser.id;
   return (
