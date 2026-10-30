@@ -84,7 +84,7 @@
 
 ## 7. API 慣例
 
-- Base URL：`NEXT_PUBLIC_API_URL`（預設 `https://leave-system-backend-ozw0.onrender.com`）。
+- Base URL：`NEXT_PUBLIC_API_URL`（預設 `https://leaves-api.yoyodev.win`）。
 - 統一回應格式（除 `/chat` 例外）：
 
   ```json

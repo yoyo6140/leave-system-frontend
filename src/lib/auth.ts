@@ -1,6 +1,6 @@
 import { apiGetMe, Login } from "@/features/auth/api";
 
-export type UserRole = "admin" | "employee";
+export type UserRole = "sup_admin" | "admin" | "employee";
 export type Gender = "男" | "女";
 
 export interface User {
@@ -35,7 +35,12 @@ function mapApiUser(user: {
     id: user.id,
     username: user.username,
     name: user.name,
-    role: user.role?.toLowerCase() === "admin" ? "admin" : "employee",
+    role:
+      user.role?.toLowerCase() === "sup_admin"
+        ? "sup_admin"
+        : user.role?.toLowerCase() === "admin"
+          ? "admin"
+          : "employee",
     gender: user.gender as Gender | undefined,
     idNumber: user.id_number ?? user.idNumber,
     hireDate: user.hire_date ?? user.hireDate,
@@ -118,5 +123,7 @@ export function clearCurrentUser(): void {
 
 // 依角色決定登入後導向的首頁路徑（管理者看總覽，員工看自己的假別餘額）
 export function getHomePath(role: UserRole): string {
-  return role === "admin" ? "/overview" : "/leave-balance";
+  return role === "admin" || role === "sup_admin"
+    ? "/overview"
+    : "/leave-balance";
 }
