@@ -19,7 +19,7 @@ Oct 29, 2026 · @yoyo（v3：已與部署中的前後端逐項比對並決議）
  
 - 使用範圍：全公司只有一個部門
 - 技術棧：Next.js（App Router）+ TypeScript + shadcn/ui + TanStack Query；FastAPI + SQLAlchemy + PostgreSQL
-- 部署：前端 repo `yoyo6140/leave-system-frontend`；後端部署於 Render（`leave-system-backend-ozw0.onrender.com`）
+- 部署：前端 repo `yoyo6140/leave-system-frontend`；後端部署於 Render（自訂網域 `leaves-api.yoyodev.win`）
 - 認證：JWT，以 `Authorization: Bearer` 傳送（不使用 httpOnly cookie，因前後端跨網域時 iOS Safari 會擋）
 - 回應格式：`{ success, data }`／`{ success: false, error: { code, message } }`；分頁為 `{ total, page, limit, data }`（`/chat` 例外）
 - 請假單位：小時（正整數），不綁定行事曆

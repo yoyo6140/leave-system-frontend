@@ -1,6 +1,6 @@
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ??
-  "https://leave-system-backend-ozw0.onrender.com";
+  "https://leaves-api.yoyodev.win";
 
 export const API_ENDPOINTS = {
   auth: {
