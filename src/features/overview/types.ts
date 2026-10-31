@@ -9,16 +9,19 @@ export interface PendingLeaveItem {
   created_at: string;
 }
 
-export interface TopLeaveHoursItem {
-  user_id: number;
-  name: string;
-  hours: number;
-}
-
 export interface OverviewData {
   pending_count: number;
   approved_this_month: number;
   employee_count: number;
   pending_list: PendingLeaveItem[];
-  top_leave_hours: TopLeaveHoursItem[];
+}
+
+export interface MonthlyLeaveStat {
+  month: number;
+  count: number;
+}
+
+export interface MonthlyLeaveStatsData {
+  year: number;
+  months: MonthlyLeaveStat[];
 }

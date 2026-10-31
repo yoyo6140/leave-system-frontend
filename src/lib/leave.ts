@@ -79,6 +79,8 @@ export const LEAVE_QUOTAS: Record<
 
 export const LEAVE_TYPES = Object.keys(LEAVE_QUOTAS) as LeaveType[];
 
+export const LEAVE_STATUSES = Object.keys(LEAVE_STATUS_STYLE) as LeaveStatus[];
+
 // 將請假時數換算成約略天數（以 8 小時為一天），四捨五入到小數點後一位
 export function hoursToApproxDays(hours: number): number {
   return Math.round((hours / 8) * 10) / 10;

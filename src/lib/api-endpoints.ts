@@ -23,6 +23,7 @@ export const API_ENDPOINTS = {
     updateStatus: (id: number) => `/user/${id}/status`,
   },
   overview: "/overview",
+  overviewMonthly: (year: number) => `/overview/leave-count-monthly?year=${year}`,
   chat: "/chat",
   leaves: {
     list: "/leaves",

@@ -205,6 +205,7 @@ export default function ReviewPage() {
         title="確認核准？"
         message="核准後員工假期將生效，此操作無法復原。"
         confirmLabel="確認核准"
+        loading={updateStatus.isPending}
         onConfirm={handleApproveConfirm}
         onCancel={() => setApproveTarget(null)}
       />
@@ -215,6 +216,7 @@ export default function ReviewPage() {
         confirmLabel="確認拒絕"
         variant="destructive"
         confirmDisabled={!rejectNote.trim()}
+        loading={updateStatus.isPending}
         onConfirm={handleRejectConfirm}
         onCancel={() => {
           setRejectTarget(null);

@@ -134,7 +134,7 @@ function GenderSelect({
 // ── Role Select ───────────────────────────────────────────────────────────────
 
 const ROLE_LABEL: Record<string, string> = {
-  sup_admin: "社長",
+  sup_admin: "總管理員",
   admin: "主管",
   employee: "員工",
 };
@@ -155,7 +155,7 @@ function RoleSelect({
       <SelectContent>
         <SelectItem value="employee">員工</SelectItem>
         <SelectItem value="admin">主管</SelectItem>
-        <SelectItem value="sup_admin">社長</SelectItem>
+        <SelectItem value="sup_admin">總管理員</SelectItem>
       </SelectContent>
     </Select>
   );
