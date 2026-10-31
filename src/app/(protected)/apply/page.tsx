@@ -16,6 +16,7 @@ import { SuccessDialog, AlertDialog } from "@/components/ui/app-dialog";
 import { getCurrentUser } from "@/lib/auth";
 import {
   hoursToApproxDays,
+  LEAVE_TYPE_LABEL,
   LEAVE_TYPES,
   LeaveType,
 } from "@/lib/leave";
@@ -28,7 +29,7 @@ export default function ApplyPage() {
   const router = useRouter();
   const user = getCurrentUser();
 
-  const [type, setType] = useState<LeaveType>("特休");
+  const [type, setType] = useState<LeaveType>("annual");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [hours, setHours] = useState<number | "">("");
   const [reason, setReason] = useState("");
@@ -144,8 +145,8 @@ export default function ApplyPage() {
                 {LEAVE_TYPES.map((t) => (
                   <option key={t} value={t}>
                     {quotaLoading
-                      ? t
-                      : `${t}（${remainingDisplay(t)}${remaining[t] !== null ? ` / 約 ${hoursToApproxDays(remaining[t]!)} 天` : ""}）`}
+                      ? LEAVE_TYPE_LABEL[t]
+                      : `${LEAVE_TYPE_LABEL[t]}（${remainingDisplay(t)}${remaining[t] !== null ? ` / 約 ${hoursToApproxDays(remaining[t]!)} 天` : ""}）`}
                   </option>
                 ))}
               </select>
@@ -164,11 +165,14 @@ export default function ApplyPage() {
                   <Input
                     type="number"
                     min={1}
+                    step={1}
                     max={remaining[type] ?? undefined}
                     value={hours}
                     onChange={(e) =>
                       setHours(
-                        e.target.value === "" ? "" : Number(e.target.value),
+                        e.target.value === ""
+                          ? ""
+                          : Math.round(Number(e.target.value)),
                       )
                     }
                     placeholder="輸入時數"
@@ -189,16 +193,14 @@ export default function ApplyPage() {
             {/* 原因 */}
             <Field>
               <FieldLabel>
-                請假原因
-                <span className="ml-1 text-xs font-normal text-muted-foreground">
-                  （選填）
-                </span>
+                請假原因 <span className="text-destructive">*</span>
               </FieldLabel>
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="請輸入請假原因"
                 rows={3}
+                required
                 className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20"
               />
             </Field>
@@ -209,11 +211,16 @@ export default function ApplyPage() {
                 variant="outline"
                 className="w-full sm:w-auto"
                 onClick={() => router.back()}
+                disabled={createLeave.isPending}
               >
                 取消
               </Button>
-              <Button type="submit" className="w-full sm:w-auto">
-                送出
+              <Button
+                type="submit"
+                className="w-full sm:w-auto"
+                disabled={createLeave.isPending}
+              >
+                {createLeave.isPending ? "送出中..." : "送出"}
               </Button>
             </div>
           </form>

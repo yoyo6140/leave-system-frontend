@@ -22,3 +22,15 @@ export const resetPasswordSchema = z
     path: ["confirmPassword"],
   });
 export type ResetPasswordFormInput = z.infer<typeof resetPasswordSchema>;
+
+export const changePasswordSchema = z
+  .object({
+    oldPassword: z.string().min(1, "請輸入舊密碼"),
+    newPassword: passwordSchema,
+    confirmPassword: passwordSchema,
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "兩次輸入的密碼不相符",
+    path: ["confirmPassword"],
+  });
+export type ChangePasswordFormInput = z.infer<typeof changePasswordSchema>;

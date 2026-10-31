@@ -8,6 +8,8 @@ export interface ApiLeaveRecord {
   reason: string;
   status: string;
   reviewer: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
   created_at: string;
   updated_at: string | null;
   /** 由呼叫端從使用者列表填入，方便顯示 */
@@ -39,7 +41,7 @@ export interface LeaveUpdateInput {
 
 export interface LeaveStatusUpdateInput {
   status: string;
-  reviewer?: string | null;
+  review_note?: string | null;
 }
 
 export type LeavesQueryParams = {
@@ -49,3 +51,14 @@ export type LeavesQueryParams = {
   limit?: number;
   mine?: boolean;
 };
+
+export interface LeaveStatusLog {
+  id: string;
+  from_status: string | null;
+  to_status: string;
+  action: string | null;
+  note: string | null;
+  changes: Record<string, [unknown, unknown]> | null;
+  changed_by: number;
+  changed_at: string;
+}

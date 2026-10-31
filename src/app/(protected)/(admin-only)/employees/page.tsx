@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { getCurrentUser, type Gender } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { maskIdNumber } from "@/lib/validation";
 import {
   type ApiUser,
   type UserCreateInput,
@@ -133,7 +134,7 @@ function GenderSelect({
 // ── Role Select ───────────────────────────────────────────────────────────────
 
 const ROLE_LABEL: Record<string, string> = {
-  sup_admin: "社長",
+  sup_admin: "總管理員",
   admin: "主管",
   employee: "員工",
 };
@@ -154,7 +155,7 @@ function RoleSelect({
       <SelectContent>
         <SelectItem value="employee">員工</SelectItem>
         <SelectItem value="admin">主管</SelectItem>
-        <SelectItem value="sup_admin">社長</SelectItem>
+        <SelectItem value="sup_admin">總管理員</SelectItem>
       </SelectContent>
     </Select>
   );
@@ -668,7 +669,7 @@ export default function EmployeesPage() {
                         </td>
                         <td className="px-4 py-3">{u.gender}</td>
                         <td className="px-4 py-3 tabular-nums">
-                          {u.id_number}
+                          {maskIdNumber(u.id_number)}
                         </td>
                         <td className="px-4 py-3 tabular-nums">
                           {u.birth_date}

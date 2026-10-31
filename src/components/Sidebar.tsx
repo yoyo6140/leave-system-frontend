@@ -14,6 +14,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   Files,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   PieChart,
@@ -77,6 +78,12 @@ const ALL_NAV: NavItem[] = [
     icon: Bot,
     label: "AI 分析",
     roles: ["admin", "sup_admin"],
+  },
+  {
+    href: "/change-password",
+    icon: KeyRound,
+    label: "修改密碼",
+    roles: ["admin", "sup_admin", "employee"],
   },
 ];
 

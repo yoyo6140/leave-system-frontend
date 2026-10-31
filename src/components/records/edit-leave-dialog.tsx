@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { LEAVE_TYPES, LeaveType } from "@/lib/leave";
+import { LEAVE_TYPE_LABEL, LEAVE_TYPES, LeaveType } from "@/lib/leave";
 import {
   type ApiLeaveRecord,
   useUpdateLeave,
@@ -31,7 +31,7 @@ export function EditLeaveDialog({
 }: EditLeaveDialogProps) {
   const updateLeave = useUpdateLeave();
   const [mounted, setMounted] = useState(false);
-  const [type, setType] = useState<LeaveType>("特休");
+  const [type, setType] = useState<LeaveType>("annual");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [hours, setHours] = useState<number | "">("");
   const [reason, setReason] = useState("");
@@ -107,7 +107,9 @@ export function EditLeaveDialog({
       />
       <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border">
-          <h2 className="font-semibold">編輯請假申請</h2>
+          <h2 className="font-semibold">
+            {record.status === "已拒絕" ? "重新送出請假申請" : "編輯請假申請"}
+          </h2>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
@@ -117,6 +119,12 @@ export function EditLeaveDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-6 py-5">
+          {record.status === "已拒絕" && record.review_note && (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+              拒絕理由：{record.review_note}
+            </p>
+          )}
+
           <Field>
             <FieldLabel>假別</FieldLabel>
             <select
@@ -126,7 +134,7 @@ export function EditLeaveDialog({
             >
               {LEAVE_TYPES.map((t) => (
                 <option key={t} value={t}>
-                  {t}
+                  {LEAVE_TYPE_LABEL[t]}
                 </option>
               ))}
             </select>
@@ -143,9 +151,14 @@ export function EditLeaveDialog({
               <Input
                 type="number"
                 min={1}
+                step={1}
                 value={hours}
                 onChange={(e) =>
-                  setHours(e.target.value === "" ? "" : Number(e.target.value))
+                  setHours(
+                    e.target.value === ""
+                      ? ""
+                      : Math.round(Number(e.target.value)),
+                  )
                 }
                 placeholder="輸入時數"
                 required
@@ -156,16 +169,14 @@ export function EditLeaveDialog({
 
           <Field>
             <FieldLabel>
-              請假原因
-              <span className="ml-1 text-xs font-normal text-muted-foreground">
-                （選填）
-              </span>
+              請假原因 <span className="text-destructive">*</span>
             </FieldLabel>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="請輸入請假原因"
               rows={3}
+              required
               className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20"
             />
           </Field>
@@ -186,7 +197,11 @@ export function EditLeaveDialog({
               取消
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "儲存中..." : "儲存變更"}
+              {saving
+                ? "送出中..."
+                : record.status === "已拒絕"
+                  ? "重新送出"
+                  : "儲存變更"}
             </Button>
           </div>
         </form>

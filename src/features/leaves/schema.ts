@@ -1,12 +1,16 @@
 import { z } from "zod";
+import { LEAVE_TYPE_LABEL, type LeaveType } from "@/lib/leave";
 
 // 基本表單規則：日期必選、時數必須 > 0（申請、編輯請假共用）
 export const leaveFormSchema = z.object({
   type: z.string().min(1, "請選擇假別"),
   startDate: z.string().min(1, "請選擇請假日期"),
   endDate: z.string().optional(),
-  hours: z.coerce.number().positive("請填寫請假時數"),
-  reason: z.string().optional(),
+  hours: z.coerce
+    .number()
+    .int("時數必須為正整數")
+    .positive("時數必須為正整數"),
+  reason: z.string().min(1, "請填寫請假理由"),
 });
 export type LeaveFormInput = z.infer<typeof leaveFormSchema>;
 
@@ -20,7 +24,7 @@ export function createLeaveFormSchema(maxHours: number | null) {
     if (maxHours !== null && data.hours > maxHours) {
       ctx.addIssue({
         code: "custom",
-        message: `${data.type} 剩餘時數不足（剩餘 ${maxHours} 小時，申請 ${data.hours} 小時）`,
+        message: `${LEAVE_TYPE_LABEL[data.type as LeaveType] ?? data.type} 剩餘時數不足（剩餘 ${maxHours} 小時，申請 ${data.hours} 小時）`,
         path: ["hours"],
       });
     }

@@ -8,21 +8,27 @@ export const passwordSchema = z
 
 export const emailSchema = z.string().email("請輸入有效的電子郵件");
 
-const ID_NUMBER_PATTERN = /^[A-Z][12]\d{8}$/;
+// 身分證字號只檢查長度為 10，不檢查格式（不限台灣身分證格式）、不檢查重複（後端會擋重複）
+const ID_NUMBER_LENGTH = 10;
 
 // 必填版本：新增員工時使用
 export const idNumberSchema = z
   .string()
-  .min(1, "請輸入身分證字號")
   .transform((v) => v.toUpperCase())
-  .refine((v) => ID_NUMBER_PATTERN.test(v), {
-    message: "身分證字號格式不正確（例：A123456789）",
+  .refine((v) => v.length === ID_NUMBER_LENGTH, {
+    message: `身分證字號須為 ${ID_NUMBER_LENGTH} 個字元`,
   });
 
-// 選填版本：編輯員工時使用（允許留空，但有填就要符合格式）
+// 選填版本：編輯員工時使用（允許留空，但有填就要符合長度）
 export const idNumberOptionalSchema = z
   .string()
   .transform((v) => v.toUpperCase())
-  .refine((v) => v === "" || ID_NUMBER_PATTERN.test(v), {
-    message: "身分證字號格式不正確（例：A123456789）",
+  .refine((v) => v === "" || v.length === ID_NUMBER_LENGTH, {
+    message: `身分證字號須為 ${ID_NUMBER_LENGTH} 個字元`,
   });
+
+// 畫面顯示用：遮罩中間字元（例：A123456789 -> A12****789）
+export function maskIdNumber(idNumber: string): string {
+  if (idNumber.length !== ID_NUMBER_LENGTH) return idNumber;
+  return `${idNumber.slice(0, 3)}****${idNumber.slice(-3)}`;
+}

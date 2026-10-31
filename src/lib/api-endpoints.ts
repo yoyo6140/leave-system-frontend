@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
     me: "/auth/me",
     forgotPassword: "/auth/forgot-password",
     resetPassword: "/auth/reset-password",
+    changePassword: "/auth/change-password",
   },
   quota: {
     me: "/leave-quota/me",
@@ -22,6 +23,7 @@ export const API_ENDPOINTS = {
     updateStatus: (id: number) => `/user/${id}/status`,
   },
   overview: "/overview",
+  overviewMonthly: (year: number) => `/overview/leave-count-monthly?year=${year}`,
   chat: "/chat",
   leaves: {
     list: "/leaves",

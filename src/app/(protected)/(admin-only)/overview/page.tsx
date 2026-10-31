@@ -1,17 +1,32 @@
 "use client";
 
-import Link from "next/link";
-import { ClipboardCheck, Users } from "lucide-react";
+import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS, LeaveType } from "@/lib/leave";
 import { cn } from "@/lib/utils";
-import { useOverviewQuery } from "@/features/overview/hooks";
+import {
+  type MonthlyLeaveStat,
+  useOverviewMonthlyQuery,
+  useOverviewQuery,
+} from "@/features/overview/hooks";
 
-// 管理者總覽主要內容：待審核數/本月核准數/員工數統計卡、待審核列表與員工請假時數排行
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - i);
+const MAX_BAR_HEIGHT = 160; // px
+
+// 管理者總覽主要內容：待審核數/本月核准數/員工數統計卡與每月請假次數長條圖
 function AdminOverview() {
   const { data, isLoading: loading } = useOverviewQuery();
+  const [year, setYear] = useState(CURRENT_YEAR);
+  const { data: monthlyData, isLoading: monthlyLoading } =
+    useOverviewMonthlyQuery(year);
+
+  const peakMonth = (monthlyData?.months ?? []).reduce<MonthlyLeaveStat | null>(
+    (max, m) => (!max || m.count > max.count ? m : max),
+    null,
+  );
+  const hasPeak = !!peakMonth && peakMonth.count > 0;
+  const maxCount = Math.max(0, ...(monthlyData?.months ?? []).map((m) => m.count));
 
   return (
     <div className="space-y-8">
@@ -42,118 +57,77 @@ function AdminOverview() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* 待審核列表 */}
-        <section>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold">待審核申請</h2>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/review">前往審核</Link>
-            </Button>
-          </div>
-          {loading ? (
-            <Card
-              padding="default"
-              className="animate-pulse text-center text-sm text-muted-foreground"
-            >
-              載入中…
-            </Card>
-          ) : !data || data.pending_list.length === 0 ? (
-            <Card
-              variant="dashed"
-              padding="default"
-              className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
-            >
-              <ClipboardCheck className="size-4" />
-              目前沒有待審核的申請
-            </Card>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {data.pending_list.slice(0, 5).map((r) => {
-                const q = LEAVE_QUOTAS[r.type as LeaveType];
+      {/* 每月請假統計：可切換年度，看出哪個月是請假尖峰 */}
+      <section>
+        <div className="mb-4 flex items-center justify-between gap-4">
+          <h2 className="font-semibold">每月請假統計</h2>
+          <select
+            value={year}
+            onChange={(e) => setYear(Number(e.target.value))}
+            className="h-9 rounded-lg border border-input bg-background px-3 text-sm outline-none transition-colors focus:border-ring focus:ring-3 focus:ring-ring/50"
+          >
+            {YEAR_OPTIONS.map((y) => (
+              <option key={y} value={y}>
+                {y} 年
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {hasPeak && peakMonth && (
+          <p className="mb-3 text-sm text-muted-foreground">
+            請假尖峰月份：
+            <span className="font-medium text-foreground">
+              {peakMonth.month} 月
+            </span>
+            （{peakMonth.count} 次請假）
+          </p>
+        )}
+
+        {monthlyLoading ? (
+          <Card
+            padding="default"
+            className="animate-pulse text-center text-sm text-muted-foreground"
+          >
+            載入中…
+          </Card>
+        ) : (
+          <Card padding="default" className="overflow-x-auto">
+            <div className="flex min-w-[480px] items-end gap-2">
+              {(monthlyData?.months ?? []).map((m) => {
+                const isPeak = hasPeak && m.month === peakMonth?.month;
+                const barHeight =
+                  maxCount > 0
+                    ? Math.max(
+                        Math.round((m.count / maxCount) * MAX_BAR_HEIGHT),
+                        6,
+                      )
+                    : 2;
                 return (
-                  <Card
-                    key={r.id}
-                    padding="sm"
-                    className="flex items-center justify-between gap-4"
+                  <div
+                    key={m.month}
+                    className="flex flex-1 flex-col items-center gap-1.5"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-sm font-medium shrink-0">
-                        {r.user_name}
-                      </span>
-                      <span
-                        className={cn(
-                          "shrink-0 px-2.5 py-0.5 text-xs font-medium",
-                          LEAVE_BADGE_ROUNDED,
-                          q?.bgColor,
-                          q?.textColor,
-                        )}
-                      >
-                        {r.type}
-                      </span>
-                      <span className="truncate text-sm text-muted-foreground">
-                        {r.hours} 小時
-                      </span>
-                    </div>
-                  </Card>
+                    <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                      {m.count}
+                    </span>
+                    <div
+                      className={cn(
+                        "w-full max-w-10 rounded-t-md transition-all",
+                        isPeak ? "bg-blue-600" : "bg-blue-200",
+                      )}
+                      style={{ height: `${barHeight}px` }}
+                    />
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {m.month} 月
+                    </span>
+                  </div>
                 );
               })}
-              {data.pending_count > 5 && (
-                <p className="text-center text-xs text-muted-foreground">
-                  還有 {data.pending_count - 5} 筆，
-                  <Link href="/review" className="underline">
-                    前往查看
-                  </Link>
-                </p>
-              )}
             </div>
-          )}
-        </section>
-
-        {/* 員工年請假總時數 */}
-        <section>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-semibold">員工年請假總時數</h2>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/employees">員工管理</Link>
-            </Button>
-          </div>
-          {loading ? (
-            <Card
-              padding="default"
-              className="animate-pulse text-center text-sm text-muted-foreground"
-            >
-              載入中…
-            </Card>
-          ) : !data || data.top_leave_hours.length === 0 ? (
-            <Card
-              variant="dashed"
-              padding="default"
-              className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
-            >
-              <Users className="size-4" />
-              尚無員工年請假資料
-            </Card>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {data.top_leave_hours.map((emp) => (
-                <Card
-                  key={emp.user_id}
-                  padding="sm"
-                  className="flex items-center justify-between gap-4"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{emp.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      年請假總時數：{emp.hours} 小時
-                    </p>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </section>
-      </div>
+          </Card>
+        )}
+      </section>
     </div>
   );
 }

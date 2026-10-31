@@ -8,8 +8,12 @@ import { Card } from "@/components/ui/card";
 import { SuccessDialog, ConfirmDialog } from "@/components/ui/app-dialog";
 import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
 import { cn } from "@/lib/utils";
-import { LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS } from "@/lib/leave";
-import { getCurrentUser } from "@/lib/auth";
+import {
+  LEAVE_BADGE_ROUNDED,
+  LEAVE_QUOTAS,
+  LEAVE_TYPE_LABEL,
+  type LeaveType,
+} from "@/lib/leave";
 import {
   type ApiLeaveRecord,
   useLeavesQuery,
@@ -19,12 +23,11 @@ import { useUsersQuery } from "@/features/users/hooks";
 
 // 審核管理頁：列出所有待審核的請假申請，點擊可開詳情並核准/拒絕
 export default function ReviewPage() {
-  const currentUser = getCurrentUser();
-
   const [successMsg, setSuccessMsg] = useState("");
   const [detailRecord, setDetailRecord] = useState<ApiLeaveRecord | null>(null);
   const [approveTarget, setApproveTarget] = useState<string | null>(null);
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
+  const [rejectNote, setRejectNote] = useState("");
 
   const { data: leavesData, isLoading: leavesLoading } = useLeavesQuery({
     limit: 200,
@@ -43,7 +46,7 @@ export default function ReviewPage() {
 
   const pending = records.filter((r) => r.status === "待審核");
 
-  // 確認核准：更新假單狀態為「已通過」並記錄審核者
+  // 確認核准：更新假單狀態為「已通過」（審核人由後端從登入者帶入）
   async function handleApproveConfirm() {
     if (!approveTarget) return;
     try {
@@ -51,7 +54,6 @@ export default function ReviewPage() {
         id: approveTarget,
         input: {
           status: "已通過",
-          reviewer: currentUser?.name ?? "admin",
         },
       });
       setApproveTarget(null);
@@ -62,18 +64,19 @@ export default function ReviewPage() {
     }
   }
 
-  // 確認拒絕：更新假單狀態為「已拒絕」並記錄審核者
+  // 確認拒絕：更新假單狀態為「已拒絕」，退回理由為必填
   async function handleRejectConfirm() {
-    if (!rejectTarget) return;
+    if (!rejectTarget || !rejectNote.trim()) return;
     try {
       await updateStatus.mutateAsync({
         id: rejectTarget,
         input: {
           status: "已拒絕",
-          reviewer: currentUser?.name ?? "admin",
+          review_note: rejectNote.trim(),
         },
       });
       setRejectTarget(null);
+      setRejectNote("");
       setDetailRecord(null);
     } catch {
       // mutation throws; keep dialog open
@@ -130,7 +133,7 @@ export default function ReviewPage() {
                           q?.textColor,
                         )}
                       >
-                        {record.type}
+                        {LEAVE_TYPE_LABEL[record.type as LeaveType]}
                       </span>
                       <div className="min-w-0">
                         <p className="text-sm font-medium">
@@ -174,7 +177,10 @@ export default function ReviewPage() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => setRejectTarget(detailRecord.id)}
+                onClick={() => {
+                  setRejectNote("");
+                  setRejectTarget(detailRecord.id);
+                }}
               >
                 <X className="size-3.5" />
                 拒絕
@@ -199,18 +205,32 @@ export default function ReviewPage() {
         title="確認核准？"
         message="核准後員工假期將生效，此操作無法復原。"
         confirmLabel="確認核准"
+        loading={updateStatus.isPending}
         onConfirm={handleApproveConfirm}
         onCancel={() => setApproveTarget(null)}
       />
       <ConfirmDialog
         open={!!rejectTarget}
         title="確認拒絕？"
-        message="拒絕後將通知員工，此操作無法復原。"
+        message="拒絕後將通知員工，此操作無法復原。請填寫拒絕理由："
         confirmLabel="確認拒絕"
         variant="destructive"
+        confirmDisabled={!rejectNote.trim()}
+        loading={updateStatus.isPending}
         onConfirm={handleRejectConfirm}
-        onCancel={() => setRejectTarget(null)}
-      />
+        onCancel={() => {
+          setRejectTarget(null);
+          setRejectNote("");
+        }}
+      >
+        <textarea
+          value={rejectNote}
+          onChange={(e) => setRejectNote(e.target.value)}
+          placeholder="請輸入拒絕理由"
+          rows={3}
+          className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20"
+        />
+      </ConfirmDialog>
     </>
   );
 }

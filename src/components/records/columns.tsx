@@ -8,7 +8,9 @@ import {
   LEAVE_BADGE_ROUNDED,
   LEAVE_QUOTAS,
   LEAVE_STATUS_STYLE,
+  LEAVE_TYPE_LABEL,
   type LeaveStatus,
+  type LeaveType,
 } from "@/lib/leave";
 import { type ApiLeaveRecord } from "@/features/leaves/hooks";
 import { DataTableColumnHeader } from "./data-table-column-header";
@@ -40,7 +42,7 @@ export function createColumns(
               q?.textColor,
             )}
           >
-            {type}
+            {LEAVE_TYPE_LABEL[type as LeaveType]}
           </span>
         );
       },

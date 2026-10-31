@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle, Check } from "lucide-react";
+import { AlertTriangle, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // ── Portal helper ─────────────────────────────────────────────────────────────
@@ -123,6 +123,10 @@ export interface ConfirmDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: "default" | "destructive";
+  confirmDisabled?: boolean;
+  /** 送出中：按鈕顯示 loading 圖示並鎖住，避免使用者不確定有沒有按到、或連點送出兩次 */
+  loading?: boolean;
+  children?: React.ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -135,23 +139,38 @@ export function ConfirmDialog({
   confirmLabel = "確認",
   cancelLabel = "取消",
   variant = "default",
+  confirmDisabled = false,
+  loading = false,
+  children,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
   if (!open) return null;
   return (
     <Portal>
-      <Shell onBackdropClick={onCancel}>
+      <Shell onBackdropClick={loading ? undefined : onCancel}>
         <h2 className="mb-2 text-lg font-semibold">{title}</h2>
         {message && (
           <p className="mb-6 text-sm text-muted-foreground">{message}</p>
         )}
-        {!message && <div className="mb-6" />}
+        {!message && !children && <div className="mb-6" />}
+        {children && <div className="mb-6 text-left">{children}</div>}
         <div className="flex gap-3">
-          <Button variant="outline" className="flex-1" onClick={onCancel}>
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={onCancel}
+            disabled={loading}
+          >
             {cancelLabel}
           </Button>
-          <Button variant={variant} className="flex-1" onClick={onConfirm}>
+          <Button
+            variant={variant}
+            className="flex-1"
+            onClick={onConfirm}
+            disabled={confirmDisabled || loading}
+          >
+            {loading && <Loader2 className="size-3.5 animate-spin" />}
             {confirmLabel}
           </Button>
         </div>
