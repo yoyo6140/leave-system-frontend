@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
     me: "/auth/me",
     forgotPassword: "/auth/forgot-password",
     resetPassword: "/auth/reset-password",
+    changePassword: "/auth/change-password",
   },
   quota: {
     me: "/leave-quota/me",

@@ -6,8 +6,11 @@ export const leaveFormSchema = z.object({
   type: z.string().min(1, "請選擇假別"),
   startDate: z.string().min(1, "請選擇請假日期"),
   endDate: z.string().optional(),
-  hours: z.coerce.number().positive("請填寫請假時數"),
-  reason: z.string().optional(),
+  hours: z.coerce
+    .number()
+    .int("時數必須為正整數")
+    .positive("時數必須為正整數"),
+  reason: z.string().min(1, "請填寫請假理由"),
 });
 export type LeaveFormInput = z.infer<typeof leaveFormSchema>;
 

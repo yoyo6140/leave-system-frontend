@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { getCurrentUser, type Gender } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { maskIdNumber } from "@/lib/validation";
 import {
   type ApiUser,
   type UserCreateInput,
@@ -668,7 +669,7 @@ export default function EmployeesPage() {
                         </td>
                         <td className="px-4 py-3">{u.gender}</td>
                         <td className="px-4 py-3 tabular-nums">
-                          {u.id_number}
+                          {maskIdNumber(u.id_number)}
                         </td>
                         <td className="px-4 py-3 tabular-nums">
                           {u.birth_date}
