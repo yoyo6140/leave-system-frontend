@@ -143,12 +143,14 @@ const ROLE_LABEL: Record<string, string> = {
 function RoleSelect({
   value,
   onChange,
+  disabled,
 }: {
   value: string;
   onChange: (v: string) => void;
+  disabled?: boolean;
 }) {
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="w-full">
         <SelectValue />
       </SelectTrigger>
@@ -302,8 +304,10 @@ interface EditDialogProps {
   onSave: (updates: UserUpdateInput) => void;
   onCancel: () => void;
   loading: boolean;
-  /** 角色、受雇日期僅 sup_admin 可改，admin 編輯時這兩欄要鎖住、照原值送出 */
+  /** 角色、受雇日期僅 sup_admin 可改，且不能改自己的；鎖住時這兩欄照原值送出 */
   canEditRoleAndHireDate: boolean;
+  /** 鎖住時的原因：是不是因為在編輯自己（文案用，跟「非 sup_admin」分開講） */
+  isEditingSelf: boolean;
 }
 
 // 編輯員工資料的表單彈窗（帳號不可修改）
@@ -313,6 +317,7 @@ function EditDialog({
   onCancel,
   loading,
   canEditRoleAndHireDate,
+  isEditingSelf,
 }: EditDialogProps) {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
@@ -389,7 +394,8 @@ function EditDialog({
           <Field>
             <FieldLabel>
               任職日期
-              {!canEditRoleAndHireDate && "（僅 sup_admin 可修改）"}
+              {!canEditRoleAndHireDate &&
+                (isEditingSelf ? "（不可修改自己）" : "（僅 sup_admin 可修改）")}
             </FieldLabel>
             <Input
               type="date"
@@ -399,12 +405,18 @@ function EditDialog({
               className={!canEditRoleAndHireDate ? "opacity-50" : undefined}
             />
           </Field>
-          {canEditRoleAndHireDate && (
-            <Field>
-              <FieldLabel>角色</FieldLabel>
-              <RoleSelect value={role} onChange={setRole} />
-            </Field>
-          )}
+          <Field>
+            <FieldLabel>
+              角色
+              {!canEditRoleAndHireDate &&
+                (isEditingSelf ? "（不可修改自己）" : "（僅 sup_admin 可修改）")}
+            </FieldLabel>
+            <RoleSelect
+              value={role}
+              onChange={setRole}
+              disabled={!canEditRoleAndHireDate}
+            />
+          </Field>
         </div>
         <div className="grid grid-cols-2 gap-3 pt-1">
           <Button
@@ -808,14 +820,13 @@ export default function EmployeesPage() {
                                 <Edit className="size-5" />
                               </Button>
                             )}
-                            <StatusToggle
-                              checked={u.is_active !== false}
-                              disabled={isSelf(u) || !isSupAdmin}
-                              onRequestToggle={() => {
-                                if (isSelf(u) || !isSupAdmin) return;
-                                setStatusTarget(u);
-                              }}
-                            />
+                            {/* 啟用/停用僅限 sup_admin 操作，且任何人都不能改自己的狀態，所以自己的帳號不顯示開關 */}
+                            {isSupAdmin && !isSelf(u) && (
+                              <StatusToggle
+                                checked={u.is_active !== false}
+                                onRequestToggle={() => setStatusTarget(u)}
+                              />
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -842,7 +853,8 @@ export default function EmployeesPage() {
           onSave={handleEditSave}
           loading={actionLoading}
           onCancel={() => setEditTarget(null)}
-          canEditRoleAndHireDate={isSupAdmin}
+          canEditRoleAndHireDate={isSupAdmin && !isSelf(editTarget)}
+          isEditingSelf={isSelf(editTarget)}
         />
       )}
 

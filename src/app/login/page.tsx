@@ -12,8 +12,8 @@ import { Card } from "@/components/ui/card";
 
 // 測試用帳密
 const TEST_ACCOUNTS = [
-  { label: "管理員", username: "admin", password: "admin1234" },
-  { label: "員工（陳志明）", username: "chen_zhiming", password: "pass1234" },
+  { label: "管理員", username: "A0006", password: "88888888" },
+  { label: "員工（陳志明）", username: "A0001", password: "6666666" },
 ];
 
 // 登入頁：若已有有效登入狀態直接導向首頁；否則提供帳密表單登入（含測試帳號快速填入）
