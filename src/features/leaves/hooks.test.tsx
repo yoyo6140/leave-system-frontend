@@ -22,13 +22,15 @@ const mockedApiFetch = vi.mocked(apiFetch);
 const sampleLeave: ApiLeaveRecord = {
   id: "leave-1",
   user_id: 1,
-  type: "特休",
+  type: "annual",
   start_date: "2026-03-01",
   end_date: "2026-03-01",
   hours: 8,
   reason: "家庭事務",
   status: "待審核",
   reviewer: null,
+  reviewed_at: null,
+  review_note: null,
   created_at: "2026-02-01T00:00:00.000Z",
   updated_at: null,
 };
@@ -66,7 +68,7 @@ describe("useLeavesQuery / useCreateLeave", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
     expect(result.current.data?.data).toHaveLength(1);
-    expect(result.current.data?.data[0]?.type).toBe("特休");
+    expect(result.current.data?.data[0]?.type).toBe("annual");
     expect(mockedApiFetch).toHaveBeenCalledWith(
       "/leaves?limit=100&mine=true",
     );
@@ -85,7 +87,7 @@ describe("useLeavesQuery / useCreateLeave", () => {
     let created: ApiLeaveRecord | undefined;
     await act(async () => {
       created = await result.current.mutateAsync({
-        type: "特休",
+        type: "annual",
         start_date: "2026-03-01",
         end_date: "2026-03-01",
         hours: 8,
@@ -97,7 +99,7 @@ describe("useLeavesQuery / useCreateLeave", () => {
     expect(mockedApiFetch).toHaveBeenCalledWith("/leaves", {
       method: "POST",
       body: JSON.stringify({
-        type: "特休",
+        type: "annual",
         start_date: "2026-03-01",
         end_date: "2026-03-01",
         hours: 8,

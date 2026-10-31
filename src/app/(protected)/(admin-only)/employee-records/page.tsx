@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { RotateCcw } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ConfirmDialog, SuccessDialog } from "@/components/ui/app-dialog";
 import {
   type ApiLeaveRecord,
   useLeavesQuery,
+  useUpdateLeaveStatus,
 } from "@/features/leaves/hooks";
 import { useUsersQuery } from "@/features/users/hooks";
 import { DataTable } from "@/components/records/data-table";
@@ -15,9 +19,13 @@ import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
 const PAGE_SIZE = 12;
 
 // 員工請假紀錄：admin 專用，檢視全公司所有員工的請假申請
-// 管理者檢視全公司請假紀錄頁，唯讀（不提供編輯/取消）
+// 管理者檢視全公司請假紀錄頁，唯讀（不提供編輯/取消），但「已通過」的假單可銷假
 export default function EmployeeRecordsPage() {
   const [detailRecord, setDetailRecord] = useState<ApiLeaveRecord | null>(null);
+  const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
+  const [revokeNote, setRevokeNote] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const updateStatus = useUpdateLeaveStatus();
 
   // 搜尋框即時輸入 / 實際拿去打 API 的關鍵字（debounce 1 秒再送）
   // admin 查全公司時，後端 search 會一併比對申請人姓名／帳號
@@ -63,6 +71,26 @@ export default function EmployeeRecordsPage() {
   // 唯讀列表，不提供取消／刪除操作（別人的紀錄不在此頁動）
   const columns = useMemo(() => createColumns(undefined, true), []);
 
+  // 確認銷假：將「已通過」的假單改為「已銷假」，銷假理由為必填
+  async function handleRevokeConfirm() {
+    if (!revokeTarget || !revokeNote.trim()) return;
+    try {
+      await updateStatus.mutateAsync({
+        id: revokeTarget,
+        input: {
+          status: "已銷假",
+          review_note: revokeNote.trim(),
+        },
+      });
+      setRevokeTarget(null);
+      setRevokeNote("");
+      setDetailRecord(null);
+      setSuccessMsg("已完成銷假");
+    } catch {
+      // mutation throws; keep dialog open
+    }
+  }
+
   return (
     <>
       <div>
@@ -106,7 +134,50 @@ export default function EmployeeRecordsPage() {
         isAdmin
         userMap={userMap}
         onClose={() => setDetailRecord(null)}
+        footerActions={
+          detailRecord?.status === "已通過" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setRevokeNote("");
+                setRevokeTarget(detailRecord.id);
+              }}
+            >
+              <RotateCcw className="size-3.5" />
+              銷假
+            </Button>
+          )
+        }
       />
+
+      <SuccessDialog
+        open={!!successMsg}
+        title="成功"
+        message={successMsg}
+        onClose={() => setSuccessMsg("")}
+      />
+      <ConfirmDialog
+        open={!!revokeTarget}
+        title="確認銷假？"
+        message="銷假後假期將取消生效，此操作無法復原。請填寫銷假理由："
+        confirmLabel="確認銷假"
+        variant="destructive"
+        confirmDisabled={!revokeNote.trim()}
+        onConfirm={handleRevokeConfirm}
+        onCancel={() => {
+          setRevokeTarget(null);
+          setRevokeNote("");
+        }}
+      >
+        <textarea
+          value={revokeNote}
+          onChange={(e) => setRevokeNote(e.target.value)}
+          placeholder="請輸入銷假理由"
+          rows={3}
+          className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20"
+        />
+      </ConfirmDialog>
     </>
   );
 }

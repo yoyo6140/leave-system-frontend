@@ -5,7 +5,12 @@ import { ClipboardCheck, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { LEAVE_BADGE_ROUNDED, LEAVE_QUOTAS, LeaveType } from "@/lib/leave";
+import {
+  LEAVE_BADGE_ROUNDED,
+  LEAVE_QUOTAS,
+  LEAVE_TYPE_LABEL,
+  LeaveType,
+} from "@/lib/leave";
 import { cn } from "@/lib/utils";
 import { useOverviewQuery } from "@/features/overview/hooks";
 
@@ -89,7 +94,7 @@ function AdminOverview() {
                           q?.textColor,
                         )}
                       >
-                        {r.type}
+                        {LEAVE_TYPE_LABEL[r.type as LeaveType]}
                       </span>
                       <span className="truncate text-sm text-muted-foreground">
                         {r.hours} 小時

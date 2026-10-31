@@ -123,6 +123,8 @@ export interface ConfirmDialogProps {
   confirmLabel?: string;
   cancelLabel?: string;
   variant?: "default" | "destructive";
+  confirmDisabled?: boolean;
+  children?: React.ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -135,6 +137,8 @@ export function ConfirmDialog({
   confirmLabel = "確認",
   cancelLabel = "取消",
   variant = "default",
+  confirmDisabled = false,
+  children,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -146,12 +150,18 @@ export function ConfirmDialog({
         {message && (
           <p className="mb-6 text-sm text-muted-foreground">{message}</p>
         )}
-        {!message && <div className="mb-6" />}
+        {!message && !children && <div className="mb-6" />}
+        {children && <div className="mb-6 text-left">{children}</div>}
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1" onClick={onCancel}>
             {cancelLabel}
           </Button>
-          <Button variant={variant} className="flex-1" onClick={onConfirm}>
+          <Button
+            variant={variant}
+            className="flex-1"
+            onClick={onConfirm}
+            disabled={confirmDisabled}
+          >
             {confirmLabel}
           </Button>
         </div>
