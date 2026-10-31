@@ -19,8 +19,6 @@ export interface UserListResponse {
 }
 
 export interface UserCreateInput {
-  username: string;
-  password: string;
   name: string;
   role: string;
   email: string;
@@ -31,7 +29,6 @@ export interface UserCreateInput {
 }
 
 export interface UserUpdateInput {
-  username: string;
   name: string;
   role: string;
   email: string;

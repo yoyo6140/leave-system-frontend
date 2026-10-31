@@ -130,12 +130,40 @@ function GenderSelect({
   );
 }
 
+// ── Role Select ───────────────────────────────────────────────────────────────
+
+const ROLE_LABEL: Record<string, string> = {
+  sup_admin: "社長",
+  admin: "主管",
+  employee: "員工",
+};
+
+// 角色選擇下拉選單；只有 sup_admin 能指派 admin／sup_admin，所以只在 sup_admin 的表單裡出現
+function RoleSelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger className="w-full">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="employee">員工</SelectItem>
+        <SelectItem value="admin">主管</SelectItem>
+        <SelectItem value="sup_admin">社長</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
+
 // ── Add Dialog ────────────────────────────────────────────────────────────────
 
 const EMPTY_FORM: UserCreateInput = {
-  username: "",
   name: "",
-  password: "",
   email: "",
   role: "employee",
   gender: "男",
@@ -148,10 +176,12 @@ interface AddDialogProps {
   onAdd: (form: UserCreateInput) => void;
   onCancel: () => void;
   loading: boolean;
+  /** 只有 sup_admin 能指派角色；admin 建立的一律是 employee */
+  canAssignRole: boolean;
 }
 
-// 新增員工帳號的表單彈窗
-function AddDialog({ onAdd, onCancel, loading }: AddDialogProps) {
+// 新增員工帳號的表單彈窗（帳號、密碼由後端自動產生，不在這裡輸入）
+function AddDialog({ onAdd, onCancel, loading, canAssignRole }: AddDialogProps) {
   const [form, setForm] = useState(EMPTY_FORM);
   const set = (key: keyof UserCreateInput, val: string) =>
     setForm((prev) => ({ ...prev, [key]: val }));
@@ -166,31 +196,17 @@ function AddDialog({ onAdd, onCancel, loading }: AddDialogProps) {
         className="flex flex-col gap-4"
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field>
-            <FieldLabel>
-              帳號 <span className="text-destructive">*</span>
-            </FieldLabel>
-            <Input
-              value={form.username}
-              onChange={(e) => set("username", e.target.value)}
-              placeholder="登入帳號"
-              required
-            />
-          </Field>
-          <Field>
-            <FieldLabel>
-              密碼 <span className="text-destructive">*</span>
-            </FieldLabel>
-            <Input
-              type="password"
-              value={form.password}
-              onChange={(e) => set("password", e.target.value)}
-              placeholder="初始密碼（6～12 字元）"
-              minLength={6}
-              maxLength={12}
-              required
-            />
-          </Field>
+          {canAssignRole && (
+            <Field>
+              <FieldLabel>
+                角色 <span className="text-destructive">*</span>
+              </FieldLabel>
+              <RoleSelect
+                value={form.role}
+                onChange={(v) => set("role", v)}
+              />
+            </Field>
+          )}
           <Field>
             <FieldLabel>
               姓名 <span className="text-destructive">*</span>
@@ -285,28 +301,36 @@ interface EditDialogProps {
   onSave: (updates: UserUpdateInput) => void;
   onCancel: () => void;
   loading: boolean;
+  /** 角色、受雇日期僅 sup_admin 可改，admin 編輯時這兩欄要鎖住、照原值送出 */
+  canEditRoleAndHireDate: boolean;
 }
 
 // 編輯員工資料的表單彈窗（帳號不可修改）
-function EditDialog({ user, onSave, onCancel, loading }: EditDialogProps) {
+function EditDialog({
+  user,
+  onSave,
+  onCancel,
+  loading,
+  canEditRoleAndHireDate,
+}: EditDialogProps) {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const [gender, setGender] = useState<Gender>(user.gender as Gender);
   const [idNumber, setIdNumber] = useState(user.id_number);
   const [birthDate, setBirthDate] = useState(user.birth_date);
   const [hireDate, setHireDate] = useState(user.hire_date);
+  const [role, setRole] = useState(user.role);
 
   // 組裝編輯後的欄位並呼叫父層的儲存回呼
   function handleSave(e: React.FormEvent) {
     e.preventDefault();
     onSave({
-      username: user.username,
       name: name.trim(),
-      role: user.role,
+      role: canEditRoleAndHireDate ? role : user.role,
       email: email.trim(),
       gender,
       id_number: idNumber.toUpperCase(),
-      hire_date: hireDate,
+      hire_date: canEditRoleAndHireDate ? hireDate : user.hire_date,
       birth_date: birthDate,
     });
   }
@@ -362,13 +386,24 @@ function EditDialog({ user, onSave, onCancel, loading }: EditDialogProps) {
             />
           </Field>
           <Field>
-            <FieldLabel>任職日期</FieldLabel>
+            <FieldLabel>
+              任職日期
+              {!canEditRoleAndHireDate && "（僅 sup_admin 可修改）"}
+            </FieldLabel>
             <Input
               type="date"
               value={hireDate}
               onChange={(e) => setHireDate(e.target.value)}
+              disabled={!canEditRoleAndHireDate}
+              className={!canEditRoleAndHireDate ? "opacity-50" : undefined}
             />
           </Field>
+          {canEditRoleAndHireDate && (
+            <Field>
+              <FieldLabel>角色</FieldLabel>
+              <RoleSelect value={role} onChange={setRole} />
+            </Field>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-3 pt-1">
           <Button
@@ -395,6 +430,7 @@ function EditDialog({ user, onSave, onCancel, loading }: EditDialogProps) {
 // 員工管理頁：列表（員工/主管分開顯示）＋新增、編輯、啟用停用帳號
 export default function EmployeesPage() {
   const currentUser = getCurrentUser();
+  const isSupAdmin = currentUser?.role === "sup_admin";
   const [actionLoading, setActionLoading] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
   const [editTarget, setEditTarget] = useState<ApiUser | null>(null);
@@ -451,7 +487,8 @@ export default function EmployeesPage() {
     try {
       const created = await createUserMut.mutateAsync(parsed.data);
       setShowAdd(false);
-      setSuccessMsg(`員工「${created.name}」已新增`);
+      // 帳號是後端自動產生的，操作者要知道這組編號才能告知新同事
+      setSuccessMsg(`員工「${created.name}」已新增，帳號：${created.username}`);
     } catch (err) {
       setAlertMsg(err instanceof Error ? err.message : "新增員工失敗");
     } finally {
@@ -506,8 +543,11 @@ export default function EmployeesPage() {
   }
 
   const employees = users.filter((u) => u.role === "employee");
-  const admins = users.filter(
-    (u) => u.role === "admin" || u.role === "sup_admin",
+  // 主管（admin）看不到 sup_admin 帳號，只有 sup_admin 能看到全部管理層帳號
+  const admins = users.filter((u) =>
+    isSupAdmin
+      ? u.role === "admin" || u.role === "sup_admin"
+      : u.role === "admin",
   );
   const isSelf = (u: ApiUser): boolean =>
     currentUser?.id != null && u.id === currentUser.id;
@@ -716,7 +756,7 @@ export default function EmployeesPage() {
         {admins.length > 0 && (
           <section>
             <h2 className="mb-3 text-sm font-medium text-muted-foreground">
-              其他主管（{admins.length}）
+管理層帳號（{admins.length}）
             </h2>
             <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
               <div className="overflow-x-auto">
@@ -750,16 +790,28 @@ export default function EmployeesPage() {
                         </td>
                         <td className="px-4 py-3">
                           <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-600">
-                            主管
+                            {ROLE_LABEL[u.role] ?? u.role}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center justify-end">
+                          <div className="flex items-center justify-end gap-2">
+                            {/* 管理其他管理員帳號僅限 sup_admin */}
+                            {isSupAdmin && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-muted-foreground hover:text-foreground"
+                                onClick={() => setEditTarget(u)}
+                                title="編輯"
+                              >
+                                <Edit className="size-5" />
+                              </Button>
+                            )}
                             <StatusToggle
                               checked={u.is_active !== false}
-                              disabled={isSelf(u)}
+                              disabled={isSelf(u) || !isSupAdmin}
                               onRequestToggle={() => {
-                                if (isSelf(u)) return;
+                                if (isSelf(u) || !isSupAdmin) return;
                                 setStatusTarget(u);
                               }}
                             />
@@ -780,6 +832,7 @@ export default function EmployeesPage() {
           onAdd={handleAdd}
           onCancel={() => setShowAdd(false)}
           loading={actionLoading}
+          canAssignRole={isSupAdmin}
         />
       )}
       {editTarget && (
@@ -788,6 +841,7 @@ export default function EmployeesPage() {
           onSave={handleEditSave}
           loading={actionLoading}
           onCancel={() => setEditTarget(null)}
+          canEditRoleAndHireDate={isSupAdmin}
         />
       )}
 
