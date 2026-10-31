@@ -9,6 +9,7 @@ export type {
   ApiLeaveRecord,
   LeaveCreateInput,
   LeaveListData,
+  LeaveStatusLog,
   LeaveStatusUpdateInput,
   LeaveUpdateInput,
   LeavesQueryParams,
@@ -23,6 +24,15 @@ export function useLeavesQuery(
     queryKey: leaveKeys.list(params),
     queryFn: () => leaveApi.getList(params),
     enabled: options?.enabled,
+  });
+}
+
+// 查詢單筆假單的狀態變更歷史，沒有 id（詳情對話框關閉時）就不查
+export function useLeaveStatusLogsQuery(id: string | undefined) {
+  return useQuery({
+    queryKey: leaveKeys.statusLogs(id ?? ""),
+    queryFn: () => leaveApi.getStatusLogs(id as string),
+    enabled: !!id,
   });
 }
 

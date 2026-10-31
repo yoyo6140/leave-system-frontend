@@ -4,6 +4,7 @@ import type {
   ApiLeaveRecord,
   LeaveCreateInput,
   LeaveListData,
+  LeaveStatusLog,
   LeaveStatusUpdateInput,
   LeaveUpdateInput,
   LeavesQueryParams,
@@ -78,5 +79,14 @@ export const leaveApi = {
     );
     if (res.success && res.data) return res.data;
     throw new Error(res.error?.message ?? "取消申請失敗");
+  },
+
+  // 查詢單筆假單的狀態變更歷史（建立、編輯、審核、取消、銷假）
+  getStatusLogs: async (id: string): Promise<LeaveStatusLog[]> => {
+    const res = await apiFetch<LeaveStatusLog[]>(
+      API_ENDPOINTS.leaves.statusLogs(id),
+    );
+    if (res.success && res.data) return res.data;
+    throw new Error(res.error?.message ?? "查詢假單紀錄失敗");
   },
 };
