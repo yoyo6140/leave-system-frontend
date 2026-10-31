@@ -41,7 +41,7 @@ describe("useMyQuotaQuery", () => {
         year_end: "2025-12-31",
         quotas: [
           {
-            type: "特休",
+            type: "annual",
             total_days: 10,
             total_hours: 80,
             used_hours: 8,

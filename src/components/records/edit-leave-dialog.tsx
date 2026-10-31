@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { LEAVE_TYPES, LeaveType } from "@/lib/leave";
+import { LEAVE_TYPE_LABEL, LEAVE_TYPES, LeaveType } from "@/lib/leave";
 import {
   type ApiLeaveRecord,
   useUpdateLeave,
@@ -31,7 +31,7 @@ export function EditLeaveDialog({
 }: EditLeaveDialogProps) {
   const updateLeave = useUpdateLeave();
   const [mounted, setMounted] = useState(false);
-  const [type, setType] = useState<LeaveType>("特休");
+  const [type, setType] = useState<LeaveType>("annual");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [hours, setHours] = useState<number | "">("");
   const [reason, setReason] = useState("");
@@ -126,7 +126,7 @@ export function EditLeaveDialog({
             >
               {LEAVE_TYPES.map((t) => (
                 <option key={t} value={t}>
-                  {t}
+                  {LEAVE_TYPE_LABEL[t]}
                 </option>
               ))}
             </select>

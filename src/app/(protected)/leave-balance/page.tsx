@@ -11,6 +11,7 @@ import {
   hoursToApproxDays,
   LEAVE_BADGE_ROUNDED,
   LEAVE_QUOTAS,
+  LEAVE_TYPE_LABEL,
   LeaveType,
 } from "@/lib/leave";
 import { cn } from "@/lib/utils";
@@ -54,7 +55,7 @@ export default function LeaveBalancePage() {
     () => (data ? buildDisplay(data.quotas) : []),
     [data],
   );
-  const seniority = data?.quotas.find((q) => q.type === "特休")?.note ?? "";
+  const seniority = data?.quotas.find((q) => q.type === "annual")?.note ?? "";
   const yearStart = data?.year_start ?? "";
   const yearEnd = data?.year_end ?? "";
 
@@ -120,7 +121,7 @@ export default function LeaveBalancePage() {
                         textColor,
                       )}
                     >
-                      {type}
+                      {LEAVE_TYPE_LABEL[type]}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {total !== null ? `共 ${total} 小時` : "無上限"}

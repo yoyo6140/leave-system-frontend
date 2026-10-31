@@ -10,6 +10,7 @@ import {
   LEAVE_BADGE_ROUNDED,
   LEAVE_QUOTAS,
   LEAVE_STATUS_STYLE,
+  LEAVE_TYPE_LABEL,
   type LeaveStatus,
   type LeaveType,
 } from "@/lib/leave";
@@ -90,7 +91,7 @@ export function LeaveDetailDialog({
                 q?.textColor,
               )}
             >
-              {record.type}
+              {LEAVE_TYPE_LABEL[record.type as LeaveType]}
             </span>
           </Row>
 
@@ -142,6 +143,8 @@ export function LeaveDetailDialog({
               <span className="text-muted-foreground">尚未審核</span>
             )}
           </Row>
+
+          {record.review_note && <Row label="審核備註">{record.review_note}</Row>}
 
           <Row label="申請時間">
             <span className="tabular-nums">
