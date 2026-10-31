@@ -21,15 +21,16 @@ interface DataTableRowActionsProps {
   onEdit?: (record: ApiLeaveRecord) => void;
 }
 
-// 每一列的操作選單（編輯／取消申請），僅「待審核」狀態可操作，取消前會跳確認對話框
+// 每一列的操作選單（編輯／取消申請），僅「待審核」「已拒絕」狀態可操作，取消前會跳確認對話框
 export function DataTableRowActions({
   row,
   onDelete,
   onEdit,
 }: DataTableRowActionsProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  // 只有「待審核」的申請能編輯／取消，審核完成後就定案了
-  const canCancel = row.original.status === "待審核";
+  // 「待審核」「已拒絕」的申請都能編輯／取消（編輯「已拒絕」的會自動重送回待審核），審核通過後就定案了
+  const canModify =
+    row.original.status === "待審核" || row.original.status === "已拒絕";
 
   return (
     <>
@@ -48,7 +49,7 @@ export function DataTableRowActions({
           {onEdit && (
             <DropdownMenuItem
               onClick={() => onEdit(row.original)}
-              disabled={!canCancel}
+              disabled={!canModify}
             >
               <Edit className="size-3.5" />
               編輯
@@ -57,7 +58,7 @@ export function DataTableRowActions({
           <DropdownMenuItem
             className="text-destructive focus:text-destructive"
             onClick={() => setConfirmOpen(true)}
-            disabled={!canCancel}
+            disabled={!canModify}
           >
             <Trash2 className="size-3.5" />
             取消申請

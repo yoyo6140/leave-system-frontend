@@ -14,6 +14,7 @@ import { DataTable } from "@/components/records/data-table";
 import { createColumns } from "@/components/records/columns";
 import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
 import { EditLeaveDialog } from "@/components/records/edit-leave-dialog";
+import { LEAVE_STATUSES } from "@/lib/leave";
 
 // 個人請假紀錄：不分角色，一律只顯示登入者自己的申請。
 // 用 mine=true 交給後端強制篩選（即使是 admin 也只回傳自己的），
@@ -25,6 +26,7 @@ export default function RecordsPage() {
   // 搜尋框即時輸入 / 實際拿去打 API 的關鍵字（debounce 1 秒再送）
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 1000);
@@ -35,6 +37,7 @@ export default function RecordsPage() {
     limit: 100,
     mine: true,
     search,
+    status: statusFilter || undefined,
   });
   const records = data?.data ?? [];
   const deleteLeave = useDeleteLeave();
@@ -62,7 +65,7 @@ export default function RecordsPage() {
           </Button>
         </div>
 
-        {!loading && records.length === 0 && !searchInput ? (
+        {!loading && records.length === 0 && !searchInput && !statusFilter ? (
           <Card
             variant="dashed"
             padding="none"
@@ -83,6 +86,9 @@ export default function RecordsPage() {
             search={searchInput}
             onSearchChange={setSearchInput}
             searchPlaceholder="搜尋原因..."
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            statusOptions={LEAVE_STATUSES}
             loading={loading}
           />
         )}

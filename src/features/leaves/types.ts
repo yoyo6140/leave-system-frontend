@@ -51,3 +51,14 @@ export type LeavesQueryParams = {
   limit?: number;
   mine?: boolean;
 };
+
+export interface LeaveStatusLog {
+  id: string;
+  from_status: string | null;
+  to_status: string;
+  action: string | null;
+  note: string | null;
+  changes: Record<string, [unknown, unknown]> | null;
+  changed_by: number;
+  changed_at: string;
+}

@@ -73,6 +73,29 @@ export async function forgotPassword(
   }
 }
 
+// 本人登入後，用舊密碼驗證並設定新密碼
+export async function changePassword(
+  oldPassword: string,
+  newPassword: string,
+): Promise<{ ok: boolean; message: string }> {
+  try {
+    const res = await apiClient.post<AuthBody>(
+      API_ENDPOINTS.auth.changePassword,
+      { old_password: oldPassword, new_password: newPassword },
+    );
+    const body = res.data;
+    if (body.success)
+      return { ok: true, message: body.data?.message ?? "密碼已修改" };
+    return { ok: false, message: body.error?.message ?? "發生錯誤" };
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      const body = error.response.data as AuthBody;
+      return { ok: false, message: body.error?.message ?? "發生錯誤" };
+    }
+    return { ok: false, message: "網路錯誤" };
+  }
+}
+
 // 使用信件中的 token 設定新密碼
 export async function resetPassword(
   token: string,

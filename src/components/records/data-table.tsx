@@ -33,6 +33,10 @@ interface DataTableProps<TData, TValue> {
   search: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder?: string;
+  /** 伺服器端狀態篩選（呼叫端已經用 API 的 status 參數篩過 data）；不帶就不顯示下拉選單 */
+  statusFilter?: string;
+  onStatusFilterChange?: (value: string) => void;
+  statusOptions?: readonly string[];
   /** 資料重新載入中；只換表格內容，搜尋框繼續掛著、不會被卸載掉焦點 */
   loading?: boolean;
   /** 每頁筆數，預設 12 */
@@ -56,6 +60,9 @@ export function DataTable<TData, TValue>({
   search,
   onSearchChange,
   searchPlaceholder,
+  statusFilter,
+  onStatusFilterChange,
+  statusOptions,
   loading = false,
   pageSize = DEFAULT_PAGE_SIZE,
   serverPagination,
@@ -121,6 +128,9 @@ export function DataTable<TData, TValue>({
         search={search}
         onSearchChange={onSearchChange}
         searchPlaceholder={searchPlaceholder}
+        statusFilter={statusFilter}
+        onStatusFilterChange={onStatusFilterChange}
+        statusOptions={statusOptions}
       />
 
       <div className="overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
