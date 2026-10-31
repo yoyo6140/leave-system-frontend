@@ -1,17 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ClipboardCheck } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  LEAVE_BADGE_ROUNDED,
-  LEAVE_QUOTAS,
-  LEAVE_TYPE_LABEL,
-  LeaveType,
-} from "@/lib/leave";
 import { cn } from "@/lib/utils";
 import {
   type MonthlyLeaveStat,
@@ -21,8 +12,9 @@ import {
 
 const CURRENT_YEAR = new Date().getFullYear();
 const YEAR_OPTIONS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - i);
+const MAX_BAR_HEIGHT = 160; // px
 
-// 管理者總覽主要內容：待審核數/本月核准數/員工數統計卡、待審核列表與每月請假統計
+// 管理者總覽主要內容：待審核數/本月核准數/員工數統計卡與每月請假次數長條圖
 function AdminOverview() {
   const { data, isLoading: loading } = useOverviewQuery();
   const [year, setYear] = useState(CURRENT_YEAR);
@@ -34,6 +26,7 @@ function AdminOverview() {
     null,
   );
   const hasPeak = !!peakMonth && peakMonth.count > 0;
+  const maxCount = Math.max(0, ...(monthlyData?.months ?? []).map((m) => m.count));
 
   return (
     <div className="space-y-8">
@@ -62,73 +55,6 @@ function AdminOverview() {
             <p className="mt-1 text-xs text-muted-foreground">人</p>
           </Card>
         </div>
-      </section>
-
-      {/* 待審核列表 */}
-      <section>
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-semibold">待審核申請</h2>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/review">前往審核</Link>
-          </Button>
-        </div>
-        {loading ? (
-          <Card
-            padding="default"
-            className="animate-pulse text-center text-sm text-muted-foreground"
-          >
-            載入中…
-          </Card>
-        ) : !data || data.pending_list.length === 0 ? (
-          <Card
-            variant="dashed"
-            padding="default"
-            className="flex items-center justify-center gap-2 text-sm text-muted-foreground"
-          >
-            <ClipboardCheck className="size-4" />
-            目前沒有待審核的申請
-          </Card>
-        ) : (
-          <div className="grid gap-2 sm:grid-cols-2">
-            {data.pending_list.slice(0, 5).map((r) => {
-              const q = LEAVE_QUOTAS[r.type as LeaveType];
-              return (
-                <Card
-                  key={r.id}
-                  padding="sm"
-                  className="flex items-center justify-between gap-4"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-sm font-medium shrink-0">
-                      {r.user_name}
-                    </span>
-                    <span
-                      className={cn(
-                        "shrink-0 px-2.5 py-0.5 text-xs font-medium",
-                        LEAVE_BADGE_ROUNDED,
-                        q?.bgColor,
-                        q?.textColor,
-                      )}
-                    >
-                      {LEAVE_TYPE_LABEL[r.type as LeaveType]}
-                    </span>
-                    <span className="truncate text-sm text-muted-foreground">
-                      {r.hours} 小時
-                    </span>
-                  </div>
-                </Card>
-              );
-            })}
-            {data.pending_count > 5 && (
-              <p className="col-span-full text-center text-xs text-muted-foreground">
-                還有 {data.pending_count - 5} 筆，
-                <Link href="/review" className="underline">
-                  前往查看
-                </Link>
-              </p>
-            )}
-          </div>
-        )}
       </section>
 
       {/* 每月請假統計：可切換年度，看出哪個月是請假尖峰 */}
@@ -166,31 +92,39 @@ function AdminOverview() {
             載入中…
           </Card>
         ) : (
-          <Card padding="none" className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-xs text-muted-foreground">
-                  <th className="px-4 py-3 font-medium">月份</th>
-                  <th className="px-4 py-3 font-medium">請假次數</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(monthlyData?.months ?? []).map((m) => (
-                  <tr
+          <Card padding="default" className="overflow-x-auto">
+            <div className="flex min-w-[480px] items-end gap-2">
+              {(monthlyData?.months ?? []).map((m) => {
+                const isPeak = hasPeak && m.month === peakMonth?.month;
+                const barHeight =
+                  maxCount > 0
+                    ? Math.max(
+                        Math.round((m.count / maxCount) * MAX_BAR_HEIGHT),
+                        6,
+                      )
+                    : 2;
+                return (
+                  <div
                     key={m.month}
-                    className={cn(
-                      "border-b border-border last:border-0",
-                      hasPeak &&
-                        m.month === peakMonth?.month &&
-                        "bg-amber-50",
-                    )}
+                    className="flex flex-1 flex-col items-center gap-1.5"
                   >
-                    <td className="px-4 py-2.5 tabular-nums">{m.month} 月</td>
-                    <td className="px-4 py-2.5 tabular-nums">{m.count} 次</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                      {m.count}
+                    </span>
+                    <div
+                      className={cn(
+                        "w-full max-w-10 rounded-t-md transition-all",
+                        isPeak ? "bg-blue-600" : "bg-blue-200",
+                      )}
+                      style={{ height: `${barHeight}px` }}
+                    />
+                    <span className="text-xs tabular-nums text-muted-foreground">
+                      {m.month} 月
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </Card>
         )}
       </section>
