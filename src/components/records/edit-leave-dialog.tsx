@@ -107,7 +107,9 @@ export function EditLeaveDialog({
       />
       <div className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border">
-          <h2 className="font-semibold">編輯請假申請</h2>
+          <h2 className="font-semibold">
+            {record.status === "已拒絕" ? "重新送出請假申請" : "編輯請假申請"}
+          </h2>
           <button
             onClick={onClose}
             className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
@@ -117,6 +119,12 @@ export function EditLeaveDialog({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 px-6 py-5">
+          {record.status === "已拒絕" && record.review_note && (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-700">
+              拒絕理由：{record.review_note}
+            </p>
+          )}
+
           <Field>
             <FieldLabel>假別</FieldLabel>
             <select
@@ -186,7 +194,11 @@ export function EditLeaveDialog({
               取消
             </Button>
             <Button type="submit" disabled={saving}>
-              {saving ? "儲存中..." : "儲存變更"}
+              {saving
+                ? "送出中..."
+                : record.status === "已拒絕"
+                  ? "重新送出"
+                  : "儲存變更"}
             </Button>
           </div>
         </form>
