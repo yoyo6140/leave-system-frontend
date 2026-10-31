@@ -808,14 +808,13 @@ export default function EmployeesPage() {
                                 <Edit className="size-5" />
                               </Button>
                             )}
-                            <StatusToggle
-                              checked={u.is_active !== false}
-                              disabled={isSelf(u) || !isSupAdmin}
-                              onRequestToggle={() => {
-                                if (isSelf(u) || !isSupAdmin) return;
-                                setStatusTarget(u);
-                              }}
-                            />
+                            {/* 啟用/停用僅限 sup_admin 操作，且任何人都不能改自己的狀態，所以自己的帳號不顯示開關 */}
+                            {isSupAdmin && !isSelf(u) && (
+                              <StatusToggle
+                                checked={u.is_active !== false}
+                                onRequestToggle={() => setStatusTarget(u)}
+                              />
+                            )}
                           </div>
                         </td>
                       </tr>
