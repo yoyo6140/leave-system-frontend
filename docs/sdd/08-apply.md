@@ -2,7 +2,7 @@
 
 路由：`/apply`
 權限：`admin` + `employee`
-原始碼：`src/app/apply/page.tsx`、`src/features/leaves/*`（建立部分）、`src/features/quota/*`（額度檢查）
+原始碼：`src/app/(protected)/apply/page.tsx`、`src/features/leaves/*`（建立部分）、`src/features/quota/*`（額度檢查）
 
 送出新的請假申請，初始狀態一律為「待審核」。
 
@@ -19,9 +19,11 @@
 - 表單卡片：
   - **假別**：下拉選單，每個選項文字動態顯示剩餘額度，例如「特休（剩餘 72 小時 / 約 9 天）」；額度載入中則只顯示假別名稱。
   - **請假日期**：`DateRangePicker`（可選區間，起訖可相同）。
-  - **請假時數**：數字輸入框（`min=1`，`max` 動態帶入該假別剩餘時數，若無上限則不設 `max`）+「小時」單位；下方提示文字：有輸入時數時顯示「約 X 天」，否則顯示該假別目前剩餘額度。
-  - **請假原因**：多行文字框，選填。
-  - 按鈕：「取消」（`router.back()`）、「送出」。
+  - **請假時數**：數字輸入框（`min=1`、`step=1`，`max` 動態帶入該假別剩餘時數，若無上限則不設 `max`；輸入值會 `Math.round` 成整數）+「小時」單位；下方提示文字：有輸入時數時顯示「約 X 天」，否則顯示該假別目前剩餘額度。
+  - **請假原因**：多行文字框，**必填**（標籤有紅色 `*`）。
+  - 按鈕：「取消」、「送出」，兩者在 `createLeave.isPending` 時都 disable，送出按鈕文字變成「送出中...」，避免連點送出兩次。
+
+> 這三項（理由必填、時數正整數、送出防連點）是對照規格書第 7 節後補上的修正，之前這幾點前端沒有真的擋住。
 
 ## 3. 資料流 / API
 
@@ -33,14 +35,15 @@
 - `remaining` 用 `useMemo` 從 `quota.quotas` 算出 `Record<LeaveType, number | null>`；某假別若在 `quotas` 中查無資料，預設視為 `0`（除非該類型本身 `total_hours === null` 代表無上限）。
 - `start_date`/`end_date` 用 `date-fns format(date, "yyyy-MM-dd")` 轉換；若只選了起始日沒選結束日，`end_date` 會 fallback 成跟 `start_date` 一樣（單日請假）。
 
-## 4. 驗證規則（送出前，前端擋）
+## 4. 驗證規則（送出前，前端擋，`leaveFormSchema` in `features/leaves/schema.ts`）
 
-1. 必須選到起始日期（`!startDate` → Alert「請選擇請假日期」）。
-2. 時數必須 > 0（`!hours || hours <= 0` → Alert「請填寫請假時數」）。
-3. 若該假別有上限（`remaining[type] !== null`）且申請時數 > 剩餘時數 → Alert「{假別} 剩餘時數不足（剩餘 X 小時，申請 Y 小時）」，不送出 API。
-4. 以上全部通過才呼叫 `createLeave.mutateAsync(...)`。
+1. 必須選到起始日期（Zod「請選擇請假日期」）。
+2. 時數必須是正整數（`.int().positive()`，Zod「時數必須為正整數」）。
+3. 理由必填（Zod「請填寫請假理由」）。
+4. 若該假別有上限（`remaining[type] !== null`）且申請時數 > 剩餘時數 → Alert「{假別中文名} 剩餘時數不足（剩餘 X 小時，申請 Y 小時）」，不送出 API（`createLeaveFormSchema(maxHours)` 的 `superRefine`）。
+5. 以上全部通過才呼叫 `createLeave.mutateAsync(...)`。
 
-> 注意：這是前端提醒，最終額度判斷仍以後端為準（後端也可能回 `QUOTA_EXCEEDED` 類錯誤，見 `docs/api-spec.md`）。
+> 注意：這是前端提醒，最終驗證仍以後端為準（後端套的是規格書第 7 節同一套規則，完整錯誤碼/訊息見 `docs/spec/leaves-system.md`）。
 
 ## 5. 互動行為
 

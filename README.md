@@ -1,6 +1,6 @@
 # 請假系統 Leave System Frontend
 
-基於 Next.js 16 + React 19 + Tailwind CSS v4 + shadcn/ui 開發的請假管理系統前端。目前以 localStorage 模擬資料，後續可串接後端 API。
+基於 Next.js 16 + React 19 + Tailwind CSS v4 + shadcn/ui 開發的請假管理系統前端，串接後端 repo `leave-system-backend`（FastAPI，部署於 Render）的真實 API。
 
 ## 技術棧
 
@@ -10,54 +10,52 @@
 | UI        | React 19                 |
 | 樣式      | Tailwind CSS v4          |
 | 元件      | Radix UI / shadcn/ui     |
+| 資料請求  | TanStack Query + axios   |
 | 表格      | TanStack Table           |
+| 驗證      | Zod                      |
+| 測試      | Vitest                   |
 | 圖示      | lucide-react             |
 | 語言      | TypeScript               |
 
 ## 功能概覽
 
-### 管理員（admin）
+系統有三種角色：`sup_admin`（總管理員）／`admin`（主管）／`employee`（員工），側邊欄依角色顯示不同選項，無權限頁面會自動導回對應首頁。完整權限規則見 [`docs/spec/leaves-system.md`](docs/spec/leaves-system.md) 第 2 節。
 
-| 路由             | 說明                                 |
-| ---------------- | ------------------------------------ |
-| `/overview`      | 團隊總覽、待審核申請、員工年請假時數 |
-| `/leave-balance` | 假別餘額                             |
-| `/review`        | 審核請假申請（核准 / 拒絕）          |
-| `/employees`     | 員工帳號管理（新增、編輯、刪除）     |
-| `/apply`         | 申請請假                             |
-| `/records`       | 全部請假紀錄                         |
-| `/ai-analysis`   | AI 客服助理（串接 Gemini 後端）      |
+| 路由               | 說明                                       | 可用角色                  |
+| ------------------ | ------------------------------------------ | ------------------------- |
+| `/overview`        | 團隊總覽：待審核數、本月核准數、每月請假次數長條圖 | admin、sup_admin          |
+| `/employees`       | 員工／管理層帳號管理（新增、編輯、啟用停用） | admin、sup_admin          |
+| `/employee-records`| 全公司請假紀錄，可直接核准/拒絕/銷假       | admin、sup_admin          |
+| `/review`          | 審核待審核的請假申請（核准／拒絕）         | admin、sup_admin          |
+| `/ai-analysis`     | AI 客服助理（串接 Gemini 後端）            | admin、sup_admin          |
+| `/leave-balance`   | 假別餘額（員工/主管登入後首頁）            | admin、employee           |
+| `/apply`           | 申請請假                                   | admin、employee           |
+| `/records`         | 個人請假紀錄                               | admin、employee           |
+| `/change-password` | 修改自己的密碼                             | 所有角色                  |
 
-### 員工（employee）
-
-| 路由             | 說明                   |
-| ---------------- | ---------------------- |
-| `/leave-balance` | 假別餘額（登入後首頁） |
-| `/apply`         | 申請請假               |
-| `/records`       | 個人請假紀錄           |
-
-> 側邊欄依角色顯示不同選項；無權限頁面會自動導回對應首頁。
+> `/knowledge-base`（admin、sup_admin）**開發中**，刻意不放進上面的導覽，只能直接輸入網址進入。
 
 ## 測試帳號
 
-| 帳號       | 密碼     | 角色   | 登入後導向       |
-| ---------- | -------- | ------ | ---------------- |
-| `admin`    | `111111` | 管理員 | `/overview`      |
-| `employee` | `111111` | 員工   | `/leave-balance` |
+登入頁（`/login`）點擊即可自動填入，密碼皆為後端的預設密碼：
 
-帳號資料存於瀏覽器 `localStorage`（key: `leave_system_users`）。若登入異常，可清除該 key 後重新整理以還原預設帳號。
+| 帳號    | 密碼       | 角色         |
+| ------- | ---------- | ------------ |
+| `A0006` | `88888888` | 管理員       |
+| `A0001` | `6666666`  | 員工（陳志明）|
+
+帳號一律由後端自動編號產生（`A0001` 起），新增帳號時前端不會收 `username`／`password` 欄位。
 
 ## 環境變數
 
-建立 `.env.local`（選用）：
+建立 `.env.local`（選用，預設直接打正式後端）：
 
 ```env
-# 後端 API（預設 http://localhost:8000）
+# 後端 API base URL，預設 https://leaves-api.yoyodev.win
 NEXT_PUBLIC_API_URL=http://localhost:8000
-
-# AI 聊天 API（預設 http://localhost:8000/chat）
-NEXT_PUBLIC_CHAT_API_URL=http://localhost:8000/chat
 ```
+
+沒有額外的聊天 API 網址設定，`/chat` 走的是同一個 `NEXT_PUBLIC_API_URL`。
 
 ## 開始使用
 
@@ -71,9 +69,11 @@ npm run dev
 其他指令：
 
 ```bash
-npm run build   # 正式建置
-npm run start   # 啟動正式伺服器
-npm run lint    # ESLint 檢查
+npm run build      # 正式建置
+npm run start      # 啟動正式伺服器
+npm run lint        # ESLint 檢查
+npm run test        # Vitest watch 模式
+npm run test:run    # Vitest 單次執行
 ```
 
 ## 專案結構
@@ -81,41 +81,34 @@ npm run lint    # ESLint 檢查
 ```
 src/
 ├── app/
-│   ├── overview/          # 總覽（admin）
-│   ├── leave-balance/     # 假別餘額
-│   ├── review/            # 審核管理（admin）
-│   ├── employees/         # 員工管理（admin）
-│   ├── apply/             # 申請請假
-│   ├── records/           # 請假紀錄
-│   ├── ai-analysis/       # AI 分析（admin）
-│   ├── labor-law/         # 勞基法參考
-│   ├── login/             # 登入
-│   ├── layout.tsx
-│   ├── page.tsx           # 依角色導向首頁
-│   └── globals.css
+│   ├── login/                     # 登入
+│   ├── reset-password/            # 忘記密碼重設
+│   └── (protected)/               # 登入後頁面，統一驗證 + Sidebar/Navbar 外殼
+│       ├── apply/                 # 申請請假
+│       ├── records/               # 個人請假紀錄
+│       ├── leave-balance/         # 假別餘額
+│       ├── change-password/       # 修改密碼
+│       └── (admin-only)/          # admin / sup_admin 專用
+│           ├── overview/
+│           ├── employees/
+│           ├── employee-records/
+│           ├── review/
+│           ├── ai-analysis/
+│           └── knowledge-base/    # 開發中，不在側邊欄
+├── features/                      # 依領域分層：api.ts / hooks.ts / types.ts / keys.ts
+│   ├── auth/ leaves/ users/ quota/ overview/
 ├── components/
-│   ├── ai-analysis/       # AI 聊天元件
-│   ├── records/           # 請假紀錄表格元件
-│   ├── ui/                # shadcn UI 元件
-│   ├── AppLayout.tsx      # 主版面（Sidebar + Navbar）
+│   ├── records/                   # 請假紀錄表格、詳情彈窗、編輯彈窗
+│   ├── ui/                        # shadcn UI 元件
 │   ├── Sidebar.tsx
 │   └── Navbar.tsx
-├── api/
-│   └── useOverview.ts     # 總覽 mock 資料
 └── lib/
-    ├── auth.ts            # 登入、角色、員工管理
-    └── leave.ts           # 請假紀錄、假別額度
+    ├── api-client.ts              # axios 實例、Authorization header、401 處理
+    ├── api-endpoints.ts           # 所有後端路徑常數
+    ├── auth.ts                    # 登入、登出、目前使用者
+    ├── leave.ts                   # 假別代碼、中文對照、樣式常數
+    └── validation.ts              # 共用 zod 規則（密碼、身分證字號遮罩等）
 ```
-
-## 資料儲存（開發階段）
-
-| localStorage Key     | 內容           |
-| -------------------- | -------------- |
-| `leave_system_auth`  | 目前登入使用者 |
-| `leave_system_users` | 使用者帳號列表 |
-| `leave_records`      | 請假申請紀錄   |
-
-API 串接規格可參考 [`docs/api-spec.md`](docs/api-spec.md)。
 
 ## 設計備註
 

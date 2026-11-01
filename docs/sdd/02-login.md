@@ -29,7 +29,7 @@
 - 送出按鈕：loading 時文字變「登入中...」並 disable。
 - 「忘記密碼？」連結 → `/forgot-password`。
 - 黃底提示框：說明後端部署在 Render 免費方案，閒置後首次登入可能要等 10～30 秒。
-- 測試帳號快速填入區：點擊卡片即自動填入帳密並清空錯誤訊息（目前寫死兩組：`admin` / `chen_zhiming`，密碼分別為 `admin1234` / `pass1234`，僅前端展示用，與實際測試帳密是否一致需另行確認）。
+- 測試帳號快速填入區：點擊卡片即自動填入帳密並清空錯誤訊息（目前寫死兩組，帳號都是自動編號格式：管理員 `A0006` / `88888888`、員工（陳志明）`A0001` / `6666666`，僅前端展示用，是後端真的建立過的測試帳號密碼）。
 
 ### 3.2 `/forgot-password`
 
@@ -80,6 +80,6 @@
 
 ## 7. 與其他頁面的關聯
 
-- 登入成功導向：`admin → /overview`、`employee → /leave-balance`（`getHomePath()`，見 `01-summary.md` §3）。
+- 登入成功導向：`admin`、`sup_admin → /overview`、`employee → /leave-balance`（`getHomePath()`，見 `01-summary.md` §3）。
 - 任何受保護頁面偵測到未登入（`(protected)/layout.tsx` 的檢查失敗，或 axios 401 interceptor）都會導回 `/login`。
 - 登出（`Sidebar`）導回 `/login`。

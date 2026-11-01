@@ -2,7 +2,7 @@
 
 路由：`/leave-balance`
 權限：`admin` + `employee`（員工登入後首頁，`getHomePath("employee")`）
-原始碼：`src/app/leave-balance/page.tsx`、`src/features/quota/*`
+原始碼：`src/app/(protected)/leave-balance/page.tsx`、`src/features/quota/*`
 
 顯示登入者本人目前各假別的剩餘時數／天數，是員工最常用的頁面之一。
 

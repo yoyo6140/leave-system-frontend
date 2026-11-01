@@ -8,7 +8,7 @@
 ## 1. 系統目標
 
 提供公司內部「請假申請 / 審核 / 額度查詢 / 員工帳號管理」的 Web 系統。
-使用者分兩種角色，登入後依角色看到不同的功能與導覽選單，所有資料透過後端 API（FastAPI）存取，不再使用 localStorage 模擬資料。
+使用者分三種角色，登入後依角色看到不同的功能與導覽選單，所有資料透過後端 API（FastAPI）存取，不再使用 localStorage 模擬資料。
 
 ## 2. 技術棧
 
@@ -26,15 +26,16 @@
 
 ## 3. 角色模型
 
-| 角色       | 說明                                             | 登入後首頁       |
-| ---------- | ------------------------------------------------ | ---------------- |
-| `admin`    | 管理者。可管理員工帳號、審核請假、查看全公司紀錄與總覽 | `/overview`       |
-| `employee` | 員工。只能申請請假、查看自己的額度與紀錄           | `/leave-balance`  |
+| 角色         | 說明                                             | 登入後首頁       |
+| ------------ | ------------------------------------------------ | ---------------- |
+| `sup_admin`  | 總管理員。唯一能管理 admin／sup_admin 帳號、改角色、改受雇日期的角色；不能申請請假；不能改自己的角色或啟用狀態 | `/overview`       |
+| `admin`      | 主管。可管理 employee 帳號、審核請假、查看全公司紀錄與總覽，但不能碰 admin／sup_admin 帳號（含自己） | `/overview`       |
+| `employee`   | 員工。只能申請請假、查看自己的額度與紀錄           | `/leave-balance`  |
 
 角色判斷與路由保護集中在兩層 Next.js 共用 layout（取代舊版每頁各自包一層 `AppLayout` 元件的寫法）：
 
 - `src/app/(protected)/layout.tsx`：只管「有沒有登入」。進入任何受保護頁面前，先呼叫 `restoreSession()` 取得目前使用者；沒有使用者則導回 `/login`。
-- `src/app/(protected)/(admin-only)/layout.tsx`：疊在上面，只管「角色是不是 admin」；不是則導回 `getHomePath(role)`。
+- `src/app/(protected)/(admin-only)/layout.tsx`：疊在上面，只管「角色是不是 admin 或 sup_admin」；不是則導回 `getHomePath(role)`。
 - 這兩個 route group（括號資料夾）不會出現在網址上，但讓 Sidebar/Navbar 在同一受保護區塊內切頁時維持掛載，不會每次換頁都重新驗證、重新渲染導致側邊欄閃一下消失。細節見 `12-validation-and-data-layer.md`。
 - `Sidebar`（`src/components/Sidebar.tsx`）依角色過濾顯示的導覽項目，員工不會看到 admin 專屬選單，即使手動輸入網址也會被上述 layout 擋掉並導回。
 
@@ -45,20 +46,21 @@
 | 02     | `/login`           | 未登入              | 登入（含忘記密碼、重設密碼）     | `02-login.md` |
 | 02     | `/forgot-password`  | 未登入              | 申請密碼重設信                   | `02-login.md` |
 | 02     | `/reset-password`   | 未登入              | 使用信件連結設定新密碼            | `02-login.md` |
-| 03     | `/overview`         | admin               | 總覽：待審核統計、員工年請假時數 | `03-overview.md` |
-| 04     | `/employees`        | admin               | 員工帳號管理（新增/編輯/啟停用） | `04-employees.md` |
-| 05     | `/employee-records` | admin               | 全公司請假紀錄（唯讀）            | `05-employee-records.md` |
-| 06     | `/review`           | admin               | 審核待審核的請假申請              | `06-review.md` |
+| 03     | `/overview`         | admin + sup_admin   | 總覽：待審核數、本月核准數、員工數、每月請假次數長條圖 | `03-overview.md` |
+| 04     | `/employees`        | admin + sup_admin   | 員工／管理層帳號管理（新增/編輯/啟停用） | `04-employees.md` |
+| 05     | `/employee-records` | admin + sup_admin   | 全公司請假紀錄，可直接核准/拒絕/銷假 | `05-employee-records.md` |
+| 06     | `/review`           | admin + sup_admin   | 審核待審核的請假申請              | `06-review.md` |
 | 07     | `/leave-balance`    | admin + employee    | 假別餘額（員工登入後首頁）        | `07-leave-balance.md` |
 | 08     | `/apply`            | admin + employee    | 申請請假                         | `08-apply.md` |
 | 09     | `/records`          | admin + employee    | 個人請假紀錄（只看自己）          | `09-records.md` |
-| 10     | `/ai-analysis`      | admin               | AI 聊天助理（Gemini）             | `10-ai-analysis.md` |
-| 11     | `/labor-law`        | admin + employee（無側邊欄入口） | 勞基法假別規則參考        | `11-labor-law.md` |
+| —      | `/change-password`  | 所有角色            | 修改自己的密碼                   | 見 `docs/spec/leaves-system.md` 第 3 節 |
+| 10     | `/ai-analysis`      | admin + sup_admin   | AI 聊天助理（Gemini）             | `10-ai-analysis.md` |
+| —      | `/knowledge-base`   | admin + sup_admin（無側邊欄入口，**開發中**） | 知識庫 CRUD，純前端畫面，之後接後端存資料庫並切 chunk 給 AI 助理用 | 尚無獨立規格文件 |
 | —      | `/`                 | 任何已登入           | 依角色導向對應首頁                | 見本文件 §6 |
 
-> `00-informal-notes.md` 是口語化的產品筆記（為什麼這樣設計、取捨考量），不對應特定路由，排在最前面當作背景脈絡。
+> `00-informal-notes.md` 是口語化的產品筆記（為什麼這樣設計、取捨考量），不對應特定路由，排在最前面當作背景脈絡；裡面提到的 `11-labor-law.md` 已經隨著 `/labor-law` 頁面被改成 `/knowledge-base` 而移除，是過時連結。
 
-> Sidebar 實際導覽順序（`src/components/Sidebar.tsx` 的 `ALL_NAV`）：總覽 → 員工管理 → 員工請假紀錄 → 審核管理 → 假別餘額 → 申請請假 → 個別請假紀錄 → AI 分析。本系列規格文件依此順序編號（`/labor-law` 不在選單中，排在最後）。
+> Sidebar 實際導覽順序（`src/components/Sidebar.tsx` 的 `ALL_NAV`）：總覽 → 員工管理 → 員工請假紀錄 → 審核管理 → 假別餘額 → 申請請假 → 個別請假紀錄 → AI 分析 → 修改密碼。本系列規格文件依此順序編號（`/change-password`、`/knowledge-base` 不在原始編號內，排在最後；`/knowledge-base` 刻意不放進 Sidebar）。
 
 ## 5. 前端架構慣例（`src/features/*`）
 
@@ -108,7 +110,7 @@
 | `id`         | `number`                  | 使用者 ID |
 | `username`   | `string`                  | 登入帳號 |
 | `name`       | `string`                  | 姓名 |
-| `role`       | `"admin" \| "employee"`   | 角色 |
+| `role`       | `"sup_admin" \| "admin" \| "employee"` | 角色 |
 | `gender`     | `"男" \| "女"`            | 性別（不另設生理假，需自行用其他假別申請）|
 | `idNumber`   | `string`                  | 身分證字號 |
 | `hireDate`   | `string`（`YYYY-MM-DD`）  | 到職日，特休額度依此起算 |
@@ -122,7 +124,7 @@
 
 ### LeaveStatus
 
-`待審核 / 已通過 / 已拒絕 / 已取消`，對應樣式常數 `LEAVE_STATUS_STYLE`。取消申請不是刪除，而是把狀態改成「已取消」（軟刪除，紀錄永久保留）。
+`待審核 / 已通過 / 已拒絕 / 已取消 / 已銷假`，對應樣式常數 `LEAVE_STATUS_STYLE`（`LEAVE_STATUSES` 是由此常數衍生的陣列，給狀態篩選下拉選單用）。取消申請不是刪除，而是把狀態改成「已取消」（軟刪除，紀錄永久保留）；「已通過」的假單可由 admin／sup_admin 銷假為「已銷假」。
 
 ### 時數換算
 
@@ -152,4 +154,4 @@
 
 ## 11. 本系列文件如何閱讀
 
-每個頁面規格文件（01～10）皆包含：路由與權限、頁面目的、UI 結構、資料流（用到哪些 hooks / API）、互動與驗證規則、邊界情況與錯誤處理、與其他頁面的關聯。內容以目前程式碼實作為準（而非 `docs/api-spec.md` 中偏理想化的草案）；若兩者衝突，以本系列與原始碼為準，`docs/api-spec.md`、`docs/employee-deactivate.md`、`docs/ai-chat.md` 僅作後端串接歷史脈絡參考。
+每個頁面規格文件（01～10）皆包含：路由與權限、頁面目的、UI 結構、資料流（用到哪些 hooks / API）、互動與驗證規則、邊界情況與錯誤處理、與其他頁面的關聯。內容以目前程式碼實作為準；完整 API 合約以 `docs/spec/leaves-system.md` 為準，若本系列與它或原始碼衝突，以後兩者優先。`docs/employee-deactivate.md`、`docs/ai-chat.md` 僅作後端串接歷史脈絡參考，細節可能沒跟上後續的 sup_admin 等異動。
