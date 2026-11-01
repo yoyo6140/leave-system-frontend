@@ -32,12 +32,15 @@
 | `admin`      | 主管。可管理 employee 帳號、審核請假、查看全公司紀錄與總覽，但不能碰 admin／sup_admin 帳號（含自己） | `/overview`       |
 | `employee`   | 員工。只能申請請假、查看自己的額度與紀錄           | `/leave-balance`  |
 
-角色判斷與路由保護集中在兩層 Next.js 共用 layout（取代舊版每頁各自包一層 `AppLayout` 元件的寫法）：
+角色判斷與路由保護集中在單一元件 `AppShell`（取代舊版兩層 `(protected)`/`(admin-only)` route group layout 的寫法，也取代更早期每頁各自包一層 `AppLayout` 元件的寫法）：
 
-- `src/app/(protected)/layout.tsx`：只管「有沒有登入」。進入任何受保護頁面前，先呼叫 `restoreSession()` 取得目前使用者；沒有使用者則導回 `/login`。
-- `src/app/(protected)/(admin-only)/layout.tsx`：疊在上面，只管「角色是不是 admin 或 sup_admin」；不是則導回 `getHomePath(role)`。
-- 這兩個 route group（括號資料夾）不會出現在網址上，但讓 Sidebar/Navbar 在同一受保護區塊內切頁時維持掛載，不會每次換頁都重新驗證、重新渲染導致側邊欄閃一下消失。細節見 `12-validation-and-data-layer.md`。
-- `Sidebar`（`src/components/Sidebar.tsx`）依角色過濾顯示的導覽項目，員工不會看到 admin 專屬選單，即使手動輸入網址也會被上述 layout 擋掉並導回。
+- `src/components/common/AppShell.tsx`：掛在 `src/app/layout.tsx` 的 root layout 底下，包住所有路由。用 `usePathname()` 判斷目前路徑：
+  - 落在 `lib/routes.ts` 的 `PUBLIC_PATHS`（`/`、`/login`、`/forgot-password`、`/reset-password`）就直接渲染 `children`，不做任何檢查、不顯示 Sidebar/Navbar。
+  - 其他路徑：第一次進入時呼叫 `restoreSession()` 驗證登入狀態（沒登入就導回 `/login`），之後在受保護頁面之間切換不會重複打 `/auth/me`。
+  - 落在 `ADMIN_ONLY_PATHS` 的路徑，另外同步比對目前使用者的 `role` 是不是 `admin`／`sup_admin`，不是就導去 `getHomePath(role)`——這一步不打 API，純粹比對已經拿到的使用者資料，所以可以每次切頁都重新檢查。
+- `AppShell` 本身因為掛在 root layout，不管切到哪個路由都不會重新 mount，所以不會每次換頁都重新驗證、重新渲染導致側邊欄閃一下消失，效果跟舊版的兩層 route group layout一樣，但資料夾結構是扁平的（`src/app/<name>/page.tsx`，沒有括號資料夾）。細節見 `12-validation-and-data-layer.md`。
+- **`ADMIN_ONLY_PATHS` 是手動維護的清單**（`src/lib/routes.ts`），不是資料夾結構自動保護：新增一個 admin 專用頁面時，一定要記得把路徑加進這份清單，否則不會有任何錯誤提示、頁面就是沒被保護到。
+- `Sidebar`（`src/components/common/Sidebar.tsx`）依角色過濾顯示的導覽項目，員工不會看到 admin 專屬選單，即使手動輸入網址也會被 `AppShell` 擋掉並導回。
 
 ## 4. 路由總覽
 
@@ -60,7 +63,7 @@
 
 > `00-informal-notes.md` 是口語化的產品筆記（為什麼這樣設計、取捨考量），不對應特定路由，排在最前面當作背景脈絡；裡面提到的 `11-labor-law.md` 已經隨著 `/labor-law` 頁面被改成 `/knowledge-base` 而移除，是過時連結。
 
-> Sidebar 實際導覽順序（`src/components/Sidebar.tsx` 的 `ALL_NAV`）：總覽 → 員工管理 → 員工請假紀錄 → 審核管理 → 假別餘額 → 申請請假 → 個別請假紀錄 → AI 分析 → 修改密碼。本系列規格文件依此順序編號（`/change-password`、`/knowledge-base` 不在原始編號內，排在最後；`/knowledge-base` 刻意不放進 Sidebar）。
+> Sidebar 實際導覽順序（`src/components/common/Sidebar.tsx` 的 `ALL_NAV`）：總覽 → 員工管理 → 員工請假紀錄 → 審核管理 → 假別餘額 → 申請請假 → 個別請假紀錄 → AI 分析 → 修改密碼。本系列規格文件依此順序編號（`/change-password`、`/knowledge-base` 不在原始編號內，排在最後；`/knowledge-base` 刻意不放進 Sidebar）。
 
 ## 5. 前端架構慣例（`src/features/*`）
 
@@ -79,7 +82,7 @@
 ## 6. 認證與 Session
 
 - 認證機制是**純 JWT（`Authorization: Bearer`）**，不是 httpOnly cookie。原本設計是 httpOnly cookie，但前後端部署在不同網域，iOS Safari 會把這種跨站請求的 cookie 擋下（ITP / 第三方 cookie 限制），實測在 iOS 上登入後續的請求全部帶不到 cookie，所以改成登入成功後把 `data.token` 存進 `localStorage: leave_system_token`，之後每個請求由 axios interceptor 手動加上 `Authorization: Bearer <token>`。
-- 前端另外用 `localStorage: leave_system_auth` 快取使用者基本資料（`User`），避免每次切頁都要重新打 `/auth/me`；但仍會在每次進入 `(protected)` layout 時以 `restoreSession()` 重新驗證並覆寫快取。
+- 前端另外用 `localStorage: leave_system_auth` 快取使用者基本資料（`User`），避免每次切頁都要重新打 `/auth/me`；但仍會在每次從公開頁進入受保護頁（`AppShell` 判定需要驗證的那一刻）時以 `restoreSession()` 重新驗證並覆寫快取。
 - `apiClient`（`src/lib/api-client.ts`）的 response interceptor：收到 401 且該次請求不是 `/auth/login`，清除 `leave_system_auth` 並整頁導向 `/login`。
 - 根路徑 `/`（`src/app/page.tsx`）與 `/login` 都會呼叫 `restoreSession()`，若已登入直接導向 `getHomePath(role)`，避免已登入使用者停留在登入頁。
 - 登出（Sidebar 的「登出」按鈕）：呼叫 `POST /auth/logout` → 清除本地快取（`clearCurrentUser()`）→ `queryClient.clear()`（避免下一位使用者看到前一位的快取資料）→ 導向 `/login`。
@@ -144,13 +147,13 @@
 
 | 元件 | 位置 | 用途 |
 | --- | --- | --- |
-| `(protected)/layout.tsx` + `(protected)/(admin-only)/layout.tsx` | `src/app/(protected)/` | 登入檢查、角色守門、Sidebar+Navbar 外框 |
-| `Sidebar` / `Navbar` | `src/components/*.tsx` | 導覽、登出、目前使用者資訊 |
-| `DataTable` / `createColumns` | `src/components/records/*` | 請假紀錄表格（`/records`、`/employee-records` 共用） |
-| `LeaveDetailDialog` | `src/components/records/leave-detail-dialog.tsx` | 請假單詳情彈窗（`/review`、`/records`、`/employee-records` 共用） |
-| `EditLeaveDialog` | `src/components/records/edit-leave-dialog.tsx` | 編輯「待審核」請假單 |
+| `AppShell` | `src/components/common/AppShell.tsx` | 登入檢查、角色守門（依 `lib/routes.ts`）、Sidebar+Navbar 外框，掛在 root layout 底下包住所有路由 |
+| `Sidebar` / `Navbar` | `src/components/common/*.tsx` | 導覽、登出、目前使用者資訊 |
+| `DataTable` / `createColumns` | `src/components/common/*` | 請假紀錄表格（`/records`、`/employee-records` 共用） |
+| `LeaveDetailDialog` | `src/components/common/leave-detail-dialog.tsx` | 請假單詳情彈窗（`/review`、`/records`、`/employee-records` 共用） |
+| `EditLeaveDialog` | `src/components/records/edit-leave-dialog.tsx` | 只有 `/records` 用：編輯「待審核」或「已拒絕」請假單 |
 | `SuccessDialog` / `AlertDialog` / `ConfirmDialog` | `src/components/ui/app-dialog.tsx` | 統一的成功/錯誤/確認跳窗 |
-| `AiChat` | `src/components/ai-analysis/ai-chat.tsx` | AI 聊天介面 |
+| `AiChat` | `src/components/ai-analysis/ai-chat.tsx` | AI 聊天介面，只有 `/ai-analysis` 用 |
 
 ## 11. 本系列文件如何閱讀
 

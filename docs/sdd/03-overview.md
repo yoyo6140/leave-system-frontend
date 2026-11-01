@@ -1,8 +1,8 @@
 # 03 — 總覽（Overview）
 
 路由：`/overview`
-權限：`admin`、`sup_admin`（頁面放在 `(protected)/(admin-only)/` 路由群組下，員工訪問會被該 layout 導回 `/leave-balance`）
-原始碼：`src/app/(protected)/(admin-only)/overview/page.tsx`、`src/features/overview/*`
+權限：`admin`、`sup_admin`（路徑在 `lib/routes.ts` 的 `ADMIN_ONLY_PATHS` 裡，員工訪問會被 `AppShell` 導回 `/leave-balance`）
+原始碼：`src/app/overview/page.tsx`、`src/features/overview/*`
 
 管理者登入後的首頁（`getHomePath("admin"|"sup_admin") === "/overview"`），用於快速掌握目前待辦事項與團隊概況。
 

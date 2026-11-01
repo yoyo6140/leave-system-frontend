@@ -2,7 +2,7 @@
 
 路由：`/records`
 權限：`admin` + `employee`（**不分角色，一律只看自己**）
-原始碼：`src/app/(protected)/records/page.tsx`、`src/components/records/*`
+原始碼：`src/app/records/page.tsx`、`src/components/common/*`（`DataTable`、`createColumns`、`LeaveDetailDialog`）、`src/components/records/edit-leave-dialog.tsx`
 
 每個登入者（無論 admin 或 employee）查看並管理「自己」送出過的請假申請：可查看詳情、編輯「待審核」或「已拒絕」的申請（編輯「已拒絕」會自動重送回待審核）、取消「待審核」或「已拒絕」的申請。
 

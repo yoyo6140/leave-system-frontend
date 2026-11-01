@@ -46,11 +46,11 @@ export function maskIdNumber(idNumber: string): string { ... }
 | `loginSchema` | `src/app/login/page.tsx` | `username`、`password` |
 | `forgotPasswordSchema` | `src/app/forgot-password/page.tsx` | `email` |
 | `resetPasswordSchema` | `src/app/reset-password/page.tsx` | `newPassword`、`confirmPassword`（`.refine` 檢查兩者相符，`path: ["confirmPassword"]`）|
-| `changePasswordSchema` | `src/app/(protected)/change-password/page.tsx` | `oldPassword`（必填）、`newPassword`、`confirmPassword`（`.refine` 檢查兩者相符） |
-| `userCreateSchema` | `src/app/(protected)/(admin-only)/employees/page.tsx` → `handleAdd()` | `UserCreateInput` 全部欄位（不含 `username`/`password`，後端自動產生） |
+| `changePasswordSchema` | `src/app/change-password/page.tsx` | `oldPassword`（必填）、`newPassword`、`confirmPassword`（`.refine` 檢查兩者相符） |
+| `userCreateSchema` | `src/app/employees/page.tsx` → `handleAdd()` | `UserCreateInput` 全部欄位（不含 `username`/`password`，後端自動產生） |
 | `userUpdateSchema` | 同上 → `handleEditSave()` | `UserUpdateInput` 全部欄位 |
 | `leaveFormSchema` | `src/components/records/edit-leave-dialog.tsx` | 假別、日期、時數（正整數）、原因（**必填**）；編輯「已拒絕」的申請送出後會自動重送回待審核，無額度上限檢查 |
-| `createLeaveFormSchema(maxHours)` | `src/app/(protected)/apply/page.tsx` → `handleSubmit()` | 包住 `leaveFormSchema`（同樣要求時數正整數、原因必填），另外依目前假別剩餘時數動態檢查上限 |
+| `createLeaveFormSchema(maxHours)` | `src/app/apply/page.tsx` → `handleSubmit()` | 包住 `leaveFormSchema`（同樣要求時數正整數、原因必填），另外依目前假別剩餘時數動態檢查上限 |
 
 ### 2.4 使用模式：`safeParse` + 既有的 Dialog 錯誤呈現
 
@@ -113,7 +113,7 @@ const [queryClient] = useState(() => new QueryClient({
 - 用 `useState(() => new QueryClient())` 而非 module 頂層 `new QueryClient()`，避免 Next.js 伺服器端渲染時所有使用者共用同一份快取。
 - 全域 `staleTime: 30_000`（30 秒）：大多數清單資料（員工、請假紀錄）30 秒內視為新鮮，不重複打 API；沒有個別頁面覆寫更長的 `staleTime`。
 - `refetchOnWindowFocus: false`：切回分頁不會自動重抓，避免管理者在審核時被意外的重新整理打斷正在看的資料。
-- 掛載點：`src/app/layout.tsx` 用 `<Providers>{children}</Providers>` 包住整個 App Router 樹。
+- 掛載點：`src/app/layout.tsx` 用 `<Providers><AppShell>{children}</AppShell></Providers>` 包住整個 App Router 樹（`AppShell` 要用到 `Sidebar` 的 `useLeavesQuery`，所以必須在 `Providers` 裡面）。
 
 ### 3.2 queryKey 命名慣例（`features/<name>/keys.ts`）
 

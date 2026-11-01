@@ -12,9 +12,9 @@ import {
   useUpdateLeaveStatus,
 } from "@/features/leaves/hooks";
 import { useUsersQuery } from "@/features/users/hooks";
-import { DataTable } from "@/components/records/data-table";
-import { createColumns } from "@/components/records/columns";
-import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
+import { DataTable } from "@/components/common/data-table";
+import { createColumns } from "@/components/common/columns";
+import { LeaveDetailDialog } from "@/components/common/leave-detail-dialog";
 import { LEAVE_STATUSES } from "@/lib/leave";
 
 const PAGE_SIZE = 12;

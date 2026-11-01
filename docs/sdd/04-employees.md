@@ -2,7 +2,7 @@
 
 路由：`/employees`
 權限：`admin`、`sup_admin`
-原始碼：`src/app/(protected)/(admin-only)/employees/page.tsx`、`src/features/users/*`
+原始碼：`src/app/employees/page.tsx`、`src/features/users/*`
 
 管理公司所有帳號（員工 + 主管 + 總管理員）：新增、編輯基本資料、啟用／停用登入權限。**不提供刪除**，帳號只會被停用，請假紀錄永久保留（見 `docs/employee-deactivate.md`）。admin 跟 sup_admin 能管的範圍不一樣，見下方權限分界。
 

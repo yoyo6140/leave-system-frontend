@@ -2,7 +2,7 @@
 
 路由：`/review`
 權限：`admin`、`sup_admin`
-原始碼：`src/app/(protected)/(admin-only)/review/page.tsx`
+原始碼：`src/app/review/page.tsx`
 
 管理者審核所有「待審核」狀態的請假申請：核准或拒絕。`/employee-records` 也能做一樣的核准/拒絕（外加銷假），差別是本頁只列待審核清單，`/employee-records` 可以看任何狀態。
 

@@ -425,8 +425,8 @@ export function useLeave(id: number) {
 | `TOKEN_KEY = 'access_token'` | `src/lib/auth.ts` 的 `TOKEN_KEY = "leave_system_token"` |
 | 登入用 `OAuth2PasswordRequestForm` + `URLSearchParams` | 本專案登入是 JSON body `{ username, password }`，不是 form 格式 |
 | `types/api.ts` 的 `Paginated<T>`（`items`/`page_size`） | 本專案統一分頁格式是 `{ total, page, limit, data: T[] }`，定義在各自 feature 的 `types.ts`，沒有共用的 `Paginated<T>` |
-| `(dashboard)/employees`、`(auth)/login` 路由分組 | 本專案是 `(protected)/(admin-only)/employees`、`app/login`（見 `docs/sdd/01-summary.md` §4） |
-| `middleware.ts` 做路由保護 | 本專案用 `(protected)/layout.tsx` + `(protected)/(admin-only)/layout.tsx` 兩層 layout，不是 middleware |
+| `(dashboard)/employees`、`(auth)/login` 路由分組 | 本專案刻意不用括號 route group，每個路由都扁平放在 `app/<name>/page.tsx`（例如 `app/employees`、`app/login`，見 `docs/sdd/01-summary.md` §4） |
+| `middleware.ts` 做路由保護 | 本專案用單一元件 `components/common/AppShell.tsx`（掛在 root layout）做登入/角色檢查，不是 middleware；哪些路徑要擋，定義在 `lib/routes.ts` |
 | token 存放建議改 httpOnly cookie（文末注意事項提到） | 本專案刻意改回純 localStorage + Bearer token，因為 httpOnly cookie 在跨網域部署下會被 iOS Safari 擋掉（見 `docs/sdd/01-summary.md` §6），不要照這份文件的建議改回 cookie |
 
 現有 feature 模組清單、實際檔案內容，直接看 `src/features/*` 跟 `docs/sdd/12-validation-and-data-layer.md`。

@@ -10,9 +10,9 @@ import {
   useLeavesQuery,
   useDeleteLeave,
 } from "@/features/leaves/hooks";
-import { DataTable } from "@/components/records/data-table";
-import { createColumns } from "@/components/records/columns";
-import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
+import { DataTable } from "@/components/common/data-table";
+import { createColumns } from "@/components/common/columns";
+import { LeaveDetailDialog } from "@/components/common/leave-detail-dialog";
 import { EditLeaveDialog } from "@/components/records/edit-leave-dialog";
 import { LEAVE_STATUSES } from "@/lib/leave";
 

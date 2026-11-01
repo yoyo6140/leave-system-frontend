@@ -2,7 +2,7 @@
 
 路由：`/apply`
 權限：`admin` + `employee`
-原始碼：`src/app/(protected)/apply/page.tsx`、`src/features/leaves/*`（建立部分）、`src/features/quota/*`（額度檢查）
+原始碼：`src/app/apply/page.tsx`、`src/features/leaves/*`（建立部分）、`src/features/quota/*`（額度檢查）
 
 送出新的請假申請，初始狀態一律為「待審核」。
 

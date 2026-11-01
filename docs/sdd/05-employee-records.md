@@ -2,7 +2,7 @@
 
 路由：`/employee-records`
 權限：`admin`、`sup_admin`
-原始碼：`src/app/(protected)/(admin-only)/employee-records/page.tsx`
+原始碼：`src/app/employee-records/page.tsx`
 
 管理者檢視**全公司**所有員工的請假申請紀錄，與 `/records`（個人紀錄、不分角色只看自己）是兩個獨立頁面，刻意不共用查詢邏輯。本頁不提供編輯/取消（別人的紀錄不能動），但「待審核」可以直接核准/拒絕、「已通過」可以銷假——不是純檢視頁。
 
@@ -16,7 +16,7 @@
 
 - 標題「員工請假紀錄」+「共 N 筆全公司請假紀錄」。
 - 空狀態（無任何紀錄、沒有搜尋字串、也沒有狀態篩選）：虛線卡片「尚無任何員工的請假紀錄」。
-- 否則顯示 `DataTable`（`src/components/records/data-table.tsx`），欄位（由 `createColumns(undefined, true)` 產生，`isAdmin=true` 多插入「申請人」欄，`onDelete` 未帶入所以**不顯示列內的編輯/取消操作欄**）：
+- 否則顯示 `DataTable`（`src/components/common/data-table.tsx`），欄位（由 `createColumns(undefined, true)` 產生，`isAdmin=true` 多插入「申請人」欄，`onDelete` 未帶入所以**不顯示列內的編輯/取消操作欄**）：
   - 申請人（姓名，查不到則顯示 `#user_id`）
   - 假別（徽章）
   - 開始日期 / 結束日期

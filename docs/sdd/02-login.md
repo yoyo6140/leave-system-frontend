@@ -81,5 +81,5 @@
 ## 7. 與其他頁面的關聯
 
 - 登入成功導向：`admin`、`sup_admin → /overview`、`employee → /leave-balance`（`getHomePath()`，見 `01-summary.md` §3）。
-- 任何受保護頁面偵測到未登入（`(protected)/layout.tsx` 的檢查失敗，或 axios 401 interceptor）都會導回 `/login`。
+- 任何受保護頁面偵測到未登入（`AppShell` 的檢查失敗，或 axios 401 interceptor）都會導回 `/login`。
 - 登出（`Sidebar`）導回 `/login`。

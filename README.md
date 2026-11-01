@@ -78,34 +78,37 @@ npm run test:run    # Vitest 單次執行
 
 ## 專案結構
 
+每個路由都是 `app/<name>/page.tsx` 的扁平結構，沒有 `(protected)`/`(admin-only)` 這種括號 route group；登入檢查、角色守門、Sidebar/Navbar 外殼統一集中在 `components/common/AppShell.tsx`，哪些路徑需要登入、哪些是 admin-only，定義在 `lib/routes.ts`。
+
 ```
 src/
 ├── app/
 │   ├── login/                     # 登入
-│   ├── reset-password/            # 忘記密碼重設
-│   └── (protected)/               # 登入後頁面，統一驗證 + Sidebar/Navbar 外殼
-│       ├── apply/                 # 申請請假
-│       ├── records/               # 個人請假紀錄
-│       ├── leave-balance/         # 假別餘額
-│       ├── change-password/       # 修改密碼
-│       └── (admin-only)/          # admin / sup_admin 專用
-│           ├── overview/
-│           ├── employees/
-│           ├── employee-records/
-│           ├── review/
-│           ├── ai-analysis/
-│           └── knowledge-base/    # 開發中，不在側邊欄
+│   ├── forgot-password/           # 申請密碼重設信
+│   ├── reset-password/            # 使用信件連結設定新密碼
+│   ├── apply/                     # 申請請假
+│   ├── records/                   # 個人請假紀錄
+│   ├── leave-balance/             # 假別餘額
+│   ├── change-password/           # 修改密碼
+│   ├── overview/                  # admin / sup_admin
+│   ├── employees/                 # admin / sup_admin
+│   ├── employee-records/          # admin / sup_admin
+│   ├── review/                    # admin / sup_admin
+│   ├── ai-analysis/                # admin / sup_admin
+│   ├── knowledge-base/            # admin / sup_admin，開發中、不在側邊欄
+│   └── layout.tsx                 # root layout，掛 Providers + AppShell
 ├── features/                      # 依領域分層：api.ts / hooks.ts / types.ts / keys.ts
 │   ├── auth/ leaves/ users/ quota/ overview/
 ├── components/
-│   ├── records/                   # 請假紀錄表格、詳情彈窗、編輯彈窗
-│   ├── ui/                        # shadcn UI 元件
-│   ├── Sidebar.tsx
-│   └── Navbar.tsx
+│   ├── common/                    # 跨兩個以上路由共用：DataTable、LeaveDetailDialog、Sidebar、Navbar、AppShell
+│   ├── records/                   # 只給 /records 用：編輯請假彈窗
+│   ├── ai-analysis/                # 只給 /ai-analysis 用：AI 聊天元件
+│   └── ui/                        # shadcn UI 元件（通用設計元件，跟業務邏輯無關）
 └── lib/
     ├── api-client.ts              # axios 實例、Authorization header、401 處理
     ├── api-endpoints.ts           # 所有後端路徑常數
     ├── auth.ts                    # 登入、登出、目前使用者
+    ├── routes.ts                  # PUBLIC_PATHS / ADMIN_ONLY_PATHS，給 AppShell 用
     ├── leave.ts                   # 假別代碼、中文對照、樣式常數
     └── validation.ts              # 共用 zod 規則（密碼、身分證字號遮罩等）
 ```
