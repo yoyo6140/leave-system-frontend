@@ -20,7 +20,7 @@
 ```json
 {
   "id": 2,
-  "username": "F12345",
+  "username": "A0002",
   "name": "王小明",
   "role": "employee",
   "email": "emp@example.com",
@@ -31,6 +31,8 @@
   "is_active": true
 }
 ```
+
+> `username` 現在一律是後端自動編號產生的 `A0001` 起格式，不是自己填的（見 `docs/spec/leaves-system.md` 第 3 節）。
 
 ---
 
@@ -70,9 +72,11 @@ PATCH /user/{id}/status
 
 | HTTP | code | 說明 |
 |---|---|---|
-| 400 | `CANNOT_DEACTIVATE_SELF` | admin 不可停用自己的帳號 |
-| 403 | `FORBIDDEN` | 非 admin 呼叫 |
+| 400 | `CANNOT_DEACTIVATE_SELF` | 任何角色都不可停用自己的帳號，不只 admin |
+| 403 | `FORBIDDEN` | 非 admin/sup_admin 呼叫；或 admin 想停用 admin/sup_admin 帳號（這塊只有 sup_admin 能動） |
 | 404 | `USER_NOT_FOUND` | 找不到員工 |
+
+> 系統至少保留一個啟用中的 sup_admin：停用最後一個 sup_admin 會被拒絕（見 `docs/spec/leaves-system.md` 第 2 節）。
 
 ---
 

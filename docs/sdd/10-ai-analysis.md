@@ -1,7 +1,7 @@
 # 10 — AI 分析（AI Analysis）
 
 路由：`/ai-analysis`
-權限：僅 `admin`
+權限：`admin`、`sup_admin`
 原始碼：`src/app/ai-analysis/page.tsx`、`src/components/ai-analysis/ai-chat.tsx`、`src/features/chat/*`
 
 與 Gemini 驅動的 AI 客服助理對話，詢問請假相關問題（例如假別規則、時數換算）。
