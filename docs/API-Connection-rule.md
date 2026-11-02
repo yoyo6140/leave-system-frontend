@@ -2,6 +2,8 @@
 
 Oct 5, 2026 · @yoyo
 
+> **這份文件是教學用的簡化範例**，`employees`/`leaves` 的欄位、路由、`request()`/`Paginated<T>` 等命名都是示意，不是本專案的實際程式碼——架構慣例（`types`/`api`/`keys`/`hooks` 四件套）是真的在用，但範例裡具體的檔名、函式名、資料形狀跟真正的 `src/` 不一樣。對照真實檔案時請看文末「跟真實專案的對照」，不要直接拿這份範例的名字去 `src/` 底下找。
+
 ## 概覽
 
 每個業務功能放在 `features/<名稱>/`，裡面用四個檔案分工：`types` 定義資料長相，`api` 負責去拿，`keys` 決定放在快取哪裡，`hooks` 把三者組起來給元件用。
@@ -412,3 +414,19 @@ export function useLeave(id: number) {
 - **QueryProvider**：不要在 module 頂層 `new QueryClient()`，伺服器端會讓所有使用者共用同一份快取；改用 `useState(() => new QueryClient())`。
 - **動態路由**：Next.js 15 起，`app/leaves/[id]/page.tsx` 的 `params` 是 Promise，要 `await params` 才拿得到 `id`。
 - **hooks 檔不用加 `'use client'`**：指令加在使用這些 hook 的元件檔案第一行即可。
+
+## 跟真實專案的對照
+
+這份文件的範例名稱 → 本專案實際對應的檔案/名稱：
+
+| 範例裡的名稱 | 本專案實際是 |
+| --- | --- |
+| `lib/request.ts`、`request()` | `src/lib/api-client.ts`、`apiFetch()`（+ 另一個 axios instance `apiClient`，用於 `auth`/`chat`） |
+| `TOKEN_KEY = 'access_token'` | `src/lib/auth.ts` 的 `TOKEN_KEY = "leave_system_token"` |
+| 登入用 `OAuth2PasswordRequestForm` + `URLSearchParams` | 本專案登入是 JSON body `{ username, password }`，不是 form 格式 |
+| `types/api.ts` 的 `Paginated<T>`（`items`/`page_size`） | 本專案統一分頁格式是 `{ total, page, limit, data: T[] }`，定義在各自 feature 的 `types.ts`，沒有共用的 `Paginated<T>` |
+| `(dashboard)/employees`、`(auth)/login` 路由分組 | 本專案刻意不用括號 route group，每個路由都扁平放在 `app/<name>/page.tsx`（例如 `app/employees`、`app/login`，見 `docs/sdd/01-summary.md` §4） |
+| `middleware.ts` 做路由保護 | 本專案用單一元件 `components/common/AppShell.tsx`（掛在 root layout）做登入/角色檢查，不是 middleware；哪些路徑要擋，定義在 `lib/routes.ts` |
+| token 存放建議改 httpOnly cookie（文末注意事項提到） | 本專案刻意改回純 localStorage + Bearer token，因為 httpOnly cookie 在跨網域部署下會被 iOS Safari 擋掉（見 `docs/sdd/01-summary.md` §6），不要照這份文件的建議改回 cookie |
+
+現有 feature 模組清單、實際檔案內容，直接看 `src/features/*` 跟 `docs/sdd/12-validation-and-data-layer.md`。

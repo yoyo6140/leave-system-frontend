@@ -2,9 +2,9 @@
 
 路由：`/records`
 權限：`admin` + `employee`（**不分角色，一律只看自己**）
-原始碼：`src/app/records/page.tsx`、`src/components/records/*`
+原始碼：`src/app/records/page.tsx`、`src/components/common/*`（`DataTable`、`createColumns`、`LeaveDetailDialog`）、`src/components/records/edit-leave-dialog.tsx`
 
-每個登入者（無論 admin 或 employee）查看並管理「自己」送出過的請假申請：可查看詳情、編輯待審核的申請、取消待審核的申請。
+每個登入者（無論 admin 或 employee）查看並管理「自己」送出過的請假申請：可查看詳情、編輯「待審核」或「已拒絕」的申請（編輯「已拒絕」會自動重送回待審核）、取消「待審核」或「已拒絕」的申請。
 
 ---
 
@@ -16,18 +16,19 @@
 
 - 標題「個別請假紀錄」+ 右上「新增申請」按鈕（→ `/apply`）。
 - 空狀態（無紀錄且無搜尋字串）：虛線卡片「尚無請假紀錄」+「立即申請」按鈕。
+- 表格上方除了搜尋框，還有狀態篩選下拉（`statusOptions={LEAVE_STATUSES}`），一樣是打後端 `status` 參數做伺服器端篩選，不是前端過濾。
 - 否則顯示 `DataTable`（`createColumns(handleDelete, false, setEditRecord)`，非 admin 模式不顯示「申請人」欄；因為有帶 `onDelete`，所以會顯示「操作」欄）：
   - 假別 / 開始日期 / 結束日期 / 時數（約幾天） / 原因 / 狀態 / 申請日期 / **操作**。
-  - 操作欄為下拉選單（`MoreHorizontal`）：「編輯」「取消申請」，兩者**僅在狀態為「待審核」時可點擊**（`canCancel = status === "待審核"`，否則選項 disabled）。
-- 點擊整列 → 開 `LeaveDetailDialog`（非 admin 模式，不帶 `footerActions`，純檢視）。
-- 點「編輯」→ 開 `EditLeaveDialog`（可改假別、日期區間、時數、原因）。
+  - 操作欄為下拉選單（`MoreHorizontal`）：「編輯」「取消申請」，兩者**在狀態為「待審核」或「已拒絕」時可點擊**（`canModify = status === "待審核" || status === "已拒絕"`，否則選項 disabled）。
+- 點擊整列 → 開 `LeaveDetailDialog`（非 admin 模式，不帶 `footerActions`；右側會顯示異動紀錄時間軸，純檢視不提供審核操作）。
+- 點「編輯」→ 開 `EditLeaveDialog`；若該筆目前是「已拒絕」，標題會變成「重新送出請假申請」、送出按鈕文字變成「重新送出」，並在表單上方顯示上次的拒絕理由（`record.review_note`），讓使用者知道要改什麼。
 - 點「取消申請」→ `ConfirmDialog`（destructive）「確認取消申請？／取消後此紀錄狀態會變成「已取消」，無法復原成待審核。」
 
 ## 3. 資料流 / API
 
 | Hook | API | 端點 | 參數 |
 | --- | --- | --- | --- |
-| `useLeavesQuery({ limit: 100, mine: true, search })` | `leaveApi.getList` | `GET /leaves?mine=true` | 固定帶 `mine=true`；`limit=100`（非伺服器分頁，一次抓較多筆） |
+| `useLeavesQuery({ limit: 100, mine: true, search, status })` | `leaveApi.getList` | `GET /leaves?mine=true` | 固定帶 `mine=true`；`limit=100`（非伺服器分頁，一次抓較多筆）；`status` 對應狀態篩選下拉，不選則不帶 |
 | `useDeleteLeave()` | `leaveApi.delete` | `DELETE /leaves/{id}` | 語意是「取消申請」＝軟刪除，狀態改為「已取消」，紀錄保留 |
 | `EditLeaveDialog` 內部用 `useUpdateLeave()` | `leaveApi.update` | `PUT /leaves/{id}` | body `{ type, start_date, end_date, hours, reason }` |
 
@@ -36,15 +37,15 @@
 
 ## 4. 編輯規則（`EditLeaveDialog`）
 
-- 僅能編輯目前狀態為「待審核」的紀錄（下拉選單「編輯」在非待審核時 disabled，理論上不會開到非待審核的編輯框）。
+- 能編輯目前狀態為「待審核」或「已拒絕」的紀錄（下拉選單「編輯」在其他狀態 disabled）；編輯「已拒絕」的紀錄儲存後，後端會自動把狀態改回「待審核」並重新預扣額度（action=`resubmit`）。
 - 開啟時以該筆紀錄現值初始化表單（假別、日期區間、時數、原因）。
-- 驗證：必須選到日期（否則「請選擇請假日期」）、時數必須 > 0（否則「請填寫請假時數」）。
+- 驗證（`leaveFormSchema`，跟 `/apply` 共用同一份 schema）：必須選到日期（「請選擇請假日期」）、時數必須是正整數（「時數必須為正整數」）、理由必填（「請填寫請假理由」）。
 - 注意：編輯表單**沒有**像 `/apply` 一樣做剩餘額度上限檢查（`Input` 沒設 `max`），完全交由後端把關額度是否足夠。
 - 儲存成功 → 關閉 Modal 並呼叫 `onSaved()`（`refetch()` 重新拉清單）。
 
 ## 5. 取消規則
 
-- 只有「待審核」狀態可取消；一旦被核准或拒絕就不能再取消或編輯（UI 層面 disabled）。
+- 「待審核」或「已拒絕」狀態都可取消；一旦被核准就不能再取消或編輯（UI 層面 disabled）。
 - 取消 = `DELETE /leaves/{id}`，語意上是把狀態改成「已取消」（軟刪除），**不是真的刪除資料**，歷史紀錄仍查得到。
 - 取消後無法復原回「待審核」。
 

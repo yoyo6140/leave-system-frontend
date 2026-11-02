@@ -28,12 +28,16 @@
 ```ts
 export const passwordSchema = z.string().min(6, "...").max(12, "...");
 export const emailSchema = z.string().email("請輸入有效的電子郵件");
-export const idNumberSchema = z.string().min(1, ...).transform(toUpperCase).refine(格式);
-export const idNumberOptionalSchema = z.string().transform(toUpperCase).refine(空字串或符合格式);
+export const idNumberSchema = z.string().transform(toUpperCase).refine(v => v.length === 10);
+export const idNumberOptionalSchema = z.string().transform(toUpperCase).refine(v => v === "" || v.length === 10);
+
+// 畫面顯示用：A123456789 -> A12****789
+export function maskIdNumber(idNumber: string): string { ... }
 ```
 
 - `idNumberSchema`（必填版）用在新增員工；`idNumberOptionalSchema`（選填版）用在編輯員工（EditDialog 欄位沒有標 `*`，允許留空）。兩者都會把輸入值轉大寫（`.transform`），取代過去在元件內手動 `.toUpperCase()`。
-- 之所以拆成必填/選填兩個 schema，而不是用同一個再加 `.optional()`：`idNumberSchema` 的 `.refine` 檢查是「非空字串才驗證格式」，與「欄位本身可不可以不填」是兩個獨立問題，拆開比疊加 `.optional().refine()` 好讀。
+- 之所以拆成必填/選填兩個 schema，而不是用同一個再加 `.optional()`：`idNumberSchema` 的 `.refine` 是「非空字串才檢查長度」，與「欄位本身可不可以不填」是兩個獨立問題，拆開比疊加 `.optional().refine()` 好讀。
+- **只檢查長度是否為 10，不檢查格式**（不限台灣身分證的字母+9位數字格式），對應規格書第 3 節決議；重複值由後端擋（`ID_NUMBER_EXISTS`）。`maskIdNumber()` 跟這兩個 schema 放在同一個檔案，員工列表顯示身分證字號時一律用它遮罩。
 
 ### 2.3 各 feature 的 schema 與對應表單
 
@@ -42,10 +46,11 @@ export const idNumberOptionalSchema = z.string().transform(toUpperCase).refine(�
 | `loginSchema` | `src/app/login/page.tsx` | `username`、`password` |
 | `forgotPasswordSchema` | `src/app/forgot-password/page.tsx` | `email` |
 | `resetPasswordSchema` | `src/app/reset-password/page.tsx` | `newPassword`、`confirmPassword`（`.refine` 檢查兩者相符，`path: ["confirmPassword"]`）|
-| `userCreateSchema` | `src/app/employees/page.tsx` → `handleAdd()` | `UserCreateInput` 全部欄位 |
-| `userUpdateSchema` | `src/app/employees/page.tsx` → `handleEditSave()` | `UserUpdateInput` 全部欄位 |
-| `leaveFormSchema` | `src/components/records/edit-leave-dialog.tsx` | 假別、日期、時數、原因（編輯「待審核」申請，無額度上限檢查）|
-| `createLeaveFormSchema(maxHours)` | `src/app/apply/page.tsx` → `handleSubmit()` | 同上，另外依目前假別剩餘時數動態檢查上限 |
+| `changePasswordSchema` | `src/app/change-password/page.tsx` | `oldPassword`（必填）、`newPassword`、`confirmPassword`（`.refine` 檢查兩者相符） |
+| `userCreateSchema` | `src/app/employees/page.tsx` → `handleAdd()` | `UserCreateInput` 全部欄位（不含 `username`/`password`，後端自動產生） |
+| `userUpdateSchema` | 同上 → `handleEditSave()` | `UserUpdateInput` 全部欄位 |
+| `leaveFormSchema` | `src/components/records/edit-leave-dialog.tsx` | 假別、日期、時數（正整數）、原因（**必填**）；編輯「已拒絕」的申請送出後會自動重送回待審核，無額度上限檢查 |
+| `createLeaveFormSchema(maxHours)` | `src/app/apply/page.tsx` → `handleSubmit()` | 包住 `leaveFormSchema`（同樣要求時數正整數、原因必填），另外依目前假別剩餘時數動態檢查上限 |
 
 ### 2.4 使用模式：`safeParse` + 既有的 Dialog 錯誤呈現
 
@@ -74,13 +79,15 @@ export function createLeaveFormSchema(maxHours: number | null) {
     if (maxHours !== null && data.hours > maxHours) {
       ctx.addIssue({
         code: "custom",
-        message: `${data.type} 剩餘時數不足（剩餘 ${maxHours} 小時，申請 ${data.hours} 小時）`,
+        message: `${LEAVE_TYPE_LABEL[data.type] ?? data.type} 剩餘時數不足（剩餘 ${maxHours} 小時，申請 ${data.hours} 小時）`,
         path: ["hours"],
       });
     }
   });
 }
 ```
+
+`data.type` 存的是英文代碼（`annual`/`sick`/...），不是中文，所以錯誤訊息要用 `LEAVE_TYPE_LABEL` 轉成中文名稱才能顯示給使用者看，不能直接把 `data.type` 塞進訊息字串。
 
 `maxHours === null` 代表該假別無上限（例如公假、其他），直接跳過檢查。呼叫端在送出當下才建立 schema 實例：`createLeaveFormSchema(remaining[type]).safeParse(formValues)`，確保用的是當前下拉選單選到的那個假別的剩餘額度。
 
@@ -106,7 +113,7 @@ const [queryClient] = useState(() => new QueryClient({
 - 用 `useState(() => new QueryClient())` 而非 module 頂層 `new QueryClient()`，避免 Next.js 伺服器端渲染時所有使用者共用同一份快取。
 - 全域 `staleTime: 30_000`（30 秒）：大多數清單資料（員工、請假紀錄）30 秒內視為新鮮，不重複打 API；沒有個別頁面覆寫更長的 `staleTime`。
 - `refetchOnWindowFocus: false`：切回分頁不會自動重抓，避免管理者在審核時被意外的重新整理打斷正在看的資料。
-- 掛載點：`src/app/layout.tsx` 用 `<Providers>{children}</Providers>` 包住整個 App Router 樹。
+- 掛載點：`src/app/layout.tsx` 用 `<Providers><AppShell>{children}</AppShell></Providers>` 包住整個 App Router 樹（`AppShell` 要用到 `Sidebar` 的 `useLeavesQuery`，所以必須在 `Providers` 裡面）。
 
 ### 3.2 queryKey 命名慣例（`features/<name>/keys.ts`）
 
@@ -125,7 +132,7 @@ export const leaveKeys = {
 | `leaves` | `leaveKeys.all` / `.lists()` / `.list(params)` |
 | `users` | `userKeys.all` / `.lists()` / `.list(params)` |
 | `quota` | `quotaKeys.all` / `.me(asOf?)` |
-| `overview` | `overviewKeys.all`（單一端點，無參數變化）|
+| `overview` | `overviewKeys.all`（`GET /overview`，無參數變化）／`overviewKeys.monthly(year)`（`GET /overview/leave-count-monthly`，依年度切出不同 cache entry；`monthly(year)` 的 key 是 `[...all, "monthly", year]`，仍落在 `all` 前綴底下，所以失效 `overviewKeys.all` 會連帶清掉所有年度的月統計快取）|
 
 查詢參數（`params`）直接整包放進 queryKey 陣列最後一格，TanStack Query 用深比對決定要不要重抓；換頁、換搜尋字、切換「顯示已停用帳號」都會因為 `params` 物件不同而視為不同 cache entry。
 
@@ -175,7 +182,9 @@ function useInvalidateUsersAndOverview() {
 }
 ```
 
-三者都一併失效 `overviewKeys.all`，理由不只是 `employee_count`（新增帳號／切換啟停用會改變 `is_active`，進而改變啟用中人數），**編輯姓名（`useUpdateUser`）也需要**：`/overview` 的「員工年請假總時數」排行榜（`top_leave_hours`）裡的姓名是後端 `/overview` 這支 API 直接回傳的，不是前端拿 `users` 查詢結果去對照出來的，如果改名的人剛好在排行榜上，沒有失效 `overview` 的話畫面會停留在改名前的舊名字，直到 30 秒 staleTime 過期才自然更新。因此三個 mutation 統一用同一個失效範圍，不特別區分「這次改的欄位會不會影響 overview」——判斷成本比直接一起失效還高，而且 `/overview` 本身查詢成本低，一起失效沒有明顯代價。
+三者都一併失效 `overviewKeys.all`，理由是 `employee_count`（新增帳號／切換啟停用會改變 `is_active`，進而改變啟用中人數）跟待審核清單的申請人姓名都可能受影響。因此三個 mutation 統一用同一個失效範圍，不特別區分「這次改的欄位會不會影響 overview」——判斷成本比直接一起失效還高，而且 `/overview` 本身查詢成本低，一起失效沒有明顯代價。
+
+> 舊版這裡原本還提到「員工年請假總時數」排行榜（`top_leave_hours`）裡的姓名需要靠這個失效機制同步——該排行榜已經拿掉（見 `03-overview.md`），改成不含姓名的每月請假次數長條圖，這個理由不再適用，但失效範圍本身沒有縮小，保留三者一起失效是合理的（維護成本低，`/overview` 查詢成本也低）。
 
 ### 3.5 登入/登出與快取生命週期
 
@@ -202,5 +211,5 @@ export function createTestQueryClient() {
 ## 4. 與既有規格文件的關係
 
 - `01-summary.md` §5、§7 的「架構慣例」「API 慣例」為本文件的上層總覽；本文件是那兩節的延伸細節。
-- 01（登入）、03（員工管理）、07（申請請假）、08（個別請假紀錄）的「驗證規則」小節，實作上都已改為呼叫本文件 §2 列出的對應 schema；若規則需要調整（例如密碼長度政策改變），只需改 `src/lib/validation.ts` 一處。
-- 02（總覽）、05（審核管理）文件中提到的「核准/拒絕後 `/overview` 數字會更新」，依據即是本文件 §3.4 的 invalidate 規則。
+- 02（登入）、04（員工管理）、08（申請請假）、09（個別請假紀錄）的「驗證規則」小節，實作上都已改為呼叫本文件 §2 列出的對應 schema；若規則需要調整（例如密碼長度政策改變），只需改 `src/lib/validation.ts` 一處。
+- 03（總覽）、06（審核管理）文件中提到的「核准/拒絕後 `/overview` 數字會更新」，依據即是本文件 §3.4 的 invalidate 規則。

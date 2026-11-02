@@ -33,7 +33,7 @@ GEMINI_API_KEY=你的金鑰
 ```
 POST /chat
 Content-Type: application/json
-Cookie: <httpOnly JWT>（需登入）
+Authorization: Bearer <JWT>（需登入；前端由 axios interceptor 自動附上，見 docs/sdd/01-summary.md §6）
 ```
 
 ```json
@@ -55,7 +55,7 @@ Cookie: <httpOnly JWT>（需登入）
 **限制：**
 
 - 最後一則訊息必須是 `role: "user"`
-- 需登入（httpOnly cookie），未登入回傳 401
+- 需登入（Bearer token），未登入回傳 401
 
 ---
 
@@ -165,7 +165,7 @@ curl -X POST http://localhost:8000/chat \
 | 檢查項目            | 預期結果                                |
 | ------------------- | --------------------------------------- |
 | Request URL         | `POST http://localhost:8000/chat`       |
-| Request 帶有 Cookie | ✓（httpOnly JWT 自動附上）              |
+| Request 帶有 Authorization header | ✓（Bearer token 由 interceptor 自動附上） |
 | Request Body        | `{ "messages": [...] }` 最後一則為 user |
 | Response Status     | 200                                     |
 | Response Body       | `{ "reply": "..." }`                    |

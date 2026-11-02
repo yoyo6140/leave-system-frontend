@@ -1,6 +1,6 @@
 # 請假系統規格書（第一階段：核心功能）
  
-Oct 29, 2026 · @yoyo（v3：已與部署中的前後端逐項比對並決議）
+Oct 29, 2026 · @yoyo（v3：已與部署中的前後端逐項比對並決議；v4 Nov 1, 2026：前後端依 v3 決議完成實作後，過程中額外確認/修正的細節，見第 2、10 節與 Schema 變更表）
  
 > 第二階段 AI 助理另見 `specs/ai-assistant-spec.md`
  
@@ -34,7 +34,7 @@ Oct 29, 2026 · @yoyo（v3：已與部署中的前後端逐項比對並決議）
  
 系統有三種角色，所有權限都由後端檢查，前端隱藏按鈕只是介面呈現。
  
-| 動作 | sup\_admin（社長） | admin（主管） | employee（員工） |
+| 動作 | sup\_admin（總管理員） | admin（主管） | employee（員工） |
 | --- | --- | --- | --- |
 | 申請請假 | —（不請假） | 可 | 可 |
 | 審核假單（通過／退回） | 可，所有人 | 可，所有人，含自己與其他 admin | 不可 |
@@ -49,6 +49,7 @@ Oct 29, 2026 · @yoyo（v3：已與部署中的前後端逐項比對並決議）
 - admin 不能把人升為 admin，也不能修改 sup\_admin；`PUT /user/{id}` 由 admin 呼叫時若變更 `role` 或 `hire_date` 一律回 403
 - 系統至少保留一個啟用中的 sup\_admin，不能停用最後一個
 - 任何人都不能停用自己
+- **（v4 新增）sup\_admin 不能修改自己的角色**：`PUT /user/{id}` 若 `id` 為自己且 `role` 有變更一律回 400（`CANNOT_CHANGE_OWN_ROLE`）。角色是每次請求即時從 DB 查（JWT 只帶 user id），改掉自己的角色下一個請求就立刻生效；若剛好是唯一的 sup\_admin，會直接把自己鎖在管理功能外面、無法回頭修正，道理跟「不能停用自己」一樣，所以一併擋下。前端對應：編輯自己的帳號時，角色與受雇日期欄位一律鎖住（不只是非 sup\_admin 鎖住，編輯自己時也鎖住）
 - AI 助理相關權限見 `specs/ai-assistant-spec.md` 第 2 節
 ## 3. 帳號管理
  
@@ -298,7 +299,8 @@ stateDiagram-v2
 | GET | `/leaves/{id}/status-logs` | 假單紀錄 | 變更：多回 `action`、`note`、`changes` |
 | GET | `/leave-quota/me` | 自己的額度（`as_of`） | 變更：預扣、`type` 用代碼 |
 | GET | `/leave-quota/{user_id}` | 指定員工額度 | 同上 |
-| GET | `/overview` | 管理者總覽 | 變更：`type` 用代碼；sup\_admin 可用 |
+| GET | `/overview` | 管理者總覽（待審核數、本月已核准數、員工數、待審核列表） | 變更：`type` 用代碼；sup\_admin 可用；拿掉原本的「年度已核准時數排行」（`top_leave_hours`，因為沒篩期間，到職久的員工會把歷年累計全部算進去，數字失真）；`approved_this_month` 改用 `reviewed_at`（審核時間）篩，不是 `created_at`（申請時間），語意才會真的是「本月核准」 |
+| GET | `/overview/leave-count-monthly` | 每月請假次數統計（`year`，預設今年） | **（v4 新增）**獨立 API，不跟 `/overview` 綁在一起，才能依年度篩選又不影響上面那些即時指標；回傳 1~12 月固定 12 筆，每筆是當月「已通過」的請假次數（依 `start_date` 歸屬月份），讓管理者看出哪個月是請假尖峰；取代原本 `/overview` 裡的時數排行榜 |
  
 **Schema 變更**
  
@@ -314,6 +316,9 @@ stateDiagram-v2
 | `UserLogOut` | `id`、`action`、`changes`、`changed_by`、`changed_at` | 新增 |
 | `QuotaItem` | `type`（代碼）、`total_days`、`total_hours`、`used_hours`、`remaining_hours`、`note`；`used_hours` 含待審核 | 變更 |
 | `PendingLeaveItem` | `type`（代碼） | 變更 |
+| `OverviewData`（**v4**） | `pending_count`、`approved_this_month`、`employee_count`、`pending_list` | 移除 `top_leave_hours`（連同 `TopLeaveHoursItem`） |
+| `MonthlyLeaveStatItem`（**v4 新增**） | `month`（1~12）、`count` | 新增 |
+| `MonthlyLeaveStatsData`（**v4 新增**） | `year`、`months`（固定 12 筆 `MonthlyLeaveStatItem`） | 新增 |
  
 ## 11. 必要測試案例
  

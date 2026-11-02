@@ -6,7 +6,7 @@ import { Check, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SuccessDialog, ConfirmDialog } from "@/components/ui/app-dialog";
-import { LeaveDetailDialog } from "@/components/records/leave-detail-dialog";
+import { LeaveDetailDialog } from "@/components/common/leave-detail-dialog";
 import { cn } from "@/lib/utils";
 import {
   LEAVE_BADGE_ROUNDED,
