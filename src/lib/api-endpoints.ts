@@ -35,4 +35,11 @@ export const API_ENDPOINTS = {
     // 取消申請＝刪除整筆（delete 端點），沒有另外的 cancel 端點
     statusLogs: (id: string) => `/leaves/${id}/status-logs`,
   },
+  kb: {
+    list: "/kb/documents",
+    create: "/kb/documents",
+    update: (id: string) => `/kb/documents/${id}`,
+    delete: (id: string) => `/kb/documents/${id}`,
+    retry: (id: string) => `/kb/documents/${id}/retry`,
+  },
 } as const;
