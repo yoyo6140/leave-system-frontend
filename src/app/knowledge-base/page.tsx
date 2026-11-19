@@ -2,18 +2,60 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Edit, Plus, Trash2, X } from "lucide-react";
+import { Edit, Loader2, Plus, RotateCcw, Trash2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
+import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/app-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  useCreateKbDocument,
+  useDeleteKbDocument,
+  useKbDocumentsQuery,
+  useRetryKbDocument,
+  useUpdateKbDocument,
+} from "@/features/knowledge-base/hooks";
+import type {
+  ApiKbDocument,
+  KbDocumentStatus,
+  KbDocumentType,
+} from "@/features/knowledge-base/hooks";
 
-interface KnowledgeItem {
-  id: string;
-  title: string;
-  content: string;
+const TYPE_LABEL: Record<KbDocumentType, string> = {
+  rule: "公司規章",
+  raw: "法條",
+  letter: "函文/公文",
+};
+
+const STATUS_LABEL: Record<KbDocumentStatus, string> = {
+  processing: "處理中",
+  ready: "已完成",
+  failed: "失敗",
+};
+
+// 文件狀態標籤：處理中用 outline、完成用 default、失敗用 destructive
+function StatusBadge({ status }: { status: KbDocumentStatus }) {
+  if (status === "processing") {
+    return (
+      <Badge variant="outline" className="gap-1">
+        <Loader2 className="size-3 animate-spin" />
+        {STATUS_LABEL[status]}
+      </Badge>
+    );
+  }
+  if (status === "failed") {
+    return <Badge variant="destructive">{STATUS_LABEL[status]}</Badge>;
+  }
+  return <Badge variant="secondary">{STATUS_LABEL[status]}</Badge>;
 }
 
 // 彈出視窗外殼（置中 Modal，掛載到 document.body），跟 employees 頁面的 ModalShell 同一套樣式
@@ -55,23 +97,33 @@ function ModalShell({
   );
 }
 
-// 新增/編輯共用的表單：標題 + 內容，直接貼上整段文字即可，不需要先整理格式
+interface ItemFormValues {
+  title: string;
+  content: string;
+  type: KbDocumentType;
+}
+
+// 新增/編輯共用的表單：標題 + 類型 + 內容，直接貼上整段文字即可，不需要先整理格式
 function ItemForm({
   item,
   onSave,
   onCancel,
+  submitting,
 }: {
-  item?: KnowledgeItem | null;
-  onSave: (data: { title: string; content: string }) => void;
+  item?: ApiKbDocument | null;
+  onSave: (data: ItemFormValues) => void;
   onCancel: () => void;
+  submitting?: boolean;
 }) {
   const [title, setTitle] = useState(item?.title ?? "");
-  const [content, setContent] = useState(item?.content ?? "");
+  const [content, setContent] = useState(""); // 後端列表不回傳 content，編輯時留空代表「不修改內容」
+  const [type, setType] = useState<KbDocumentType>(item?.type ?? "rule");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !content.trim()) return;
-    onSave({ title: title.trim(), content: content.trim() });
+    if (!title.trim()) return;
+    if (!item && !content.trim()) return; // 新增時內容必填，編輯時可留空（不修改）
+    onSave({ title: title.trim(), content: content.trim(), type });
   }
 
   return (
@@ -90,23 +142,51 @@ function ItemForm({
         </Field>
         <Field>
           <FieldLabel>
-            內容 <span className="text-destructive">*</span>
+            類型 <span className="text-destructive">*</span>
+          </FieldLabel>
+          <Select value={type} onValueChange={(v) => setType(v as KbDocumentType)}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="rule">公司規章</SelectItem>
+              <SelectItem value="raw">法條</SelectItem>
+              <SelectItem value="letter">函文/公文</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="mt-1 text-xs text-muted-foreground">
+            依類型決定切段方式：公司規章依段落切、法條依「第 X 條」切、函文整篇不切
+          </p>
+        </Field>
+        <Field>
+          <FieldLabel>
+            內容 {!item && <span className="text-destructive">*</span>}
           </FieldLabel>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={12}
-            placeholder="直接貼上整段內容即可，不需要先整理格式或分段"
-            required
+            placeholder={
+              item
+                ? "留空代表不修改內容，只更新標題/類型"
+                : "直接貼上整段內容即可，不需要先整理格式或分段"
+            }
+            required={!item}
             className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20"
           />
         </Field>
         <div className="grid grid-cols-2 gap-3 pt-1">
-          <Button type="button" variant="outline" className="w-full" onClick={onCancel}>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={onCancel}
+            disabled={submitting}
+          >
             取消
           </Button>
-          <Button type="submit" className="w-full">
-            儲存
+          <Button type="submit" className="w-full" disabled={submitting}>
+            {submitting ? <Loader2 className="size-4 animate-spin" /> : "儲存"}
           </Button>
         </div>
       </form>
@@ -114,43 +194,54 @@ function ItemForm({
   );
 }
 
-// 知識庫：開發中的頁面，先做前端畫面（新增/編輯/刪除），資料目前只存在這次瀏覽的 state，重新整理就會消失。
-// 之後會接後端 API：存進資料庫、依內容類型切成 chunk，供 AI 助理檢索用。
-// 刻意不放進 Sidebar，只能直接輸入網址 /knowledge-base 進入。
 export default function KnowledgeBasePage() {
-  const [items, setItems] = useState<KnowledgeItem[]>([]);
-  const [showAdd, setShowAdd] = useState(false);
-  const [editTarget, setEditTarget] = useState<KnowledgeItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<KnowledgeItem | null>(null);
+  const { data, isLoading, isError } = useKbDocumentsQuery({ limit: 100 });
+  const createMutation = useCreateKbDocument();
+  const updateMutation = useUpdateKbDocument();
+  const deleteMutation = useDeleteKbDocument();
+  const retryMutation = useRetryKbDocument();
 
-  function handleAdd(data: { title: string; content: string }) {
-    setItems((prev) => [{ id: crypto.randomUUID(), ...data }, ...prev]);
-    setShowAdd(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [editTarget, setEditTarget] = useState<ApiKbDocument | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ApiKbDocument | null>(null);
+
+  const items = data?.data ?? [];
+
+  function handleAdd(values: ItemFormValues) {
+    createMutation.mutate(values, { onSuccess: () => setShowAdd(false) });
   }
 
-  function handleEditSave(data: { title: string; content: string }) {
+  function handleEditSave(values: ItemFormValues) {
     if (!editTarget) return;
-    setItems((prev) =>
-      prev.map((item) => (item.id === editTarget.id ? { ...item, ...data } : item)),
+    updateMutation.mutate(
+      {
+        id: editTarget.id,
+        input: {
+          title: values.title,
+          type: values.type,
+          // 編輯時內容留空代表不修改，不要把空字串送給後端觸發重新向量化
+          ...(values.content ? { content: values.content } : {}),
+        },
+      },
+      { onSuccess: () => setEditTarget(null) },
     );
-    setEditTarget(null);
   }
 
   function handleDeleteConfirm() {
     if (!deleteTarget) return;
-    setItems((prev) => prev.filter((item) => item.id !== deleteTarget.id));
-    setDeleteTarget(null);
+    deleteMutation.mutate(deleteTarget.id, {
+      onSuccess: () => setDeleteTarget(null),
+    });
+  }
+
+  function handleRetry(id: string) {
+    retryMutation.mutate(id);
   }
 
   return (
     <div className="max-w-3xl">
       <div className="mb-2 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-semibold">知識庫</h1>
-          <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
-            開發中
-          </span>
-        </div>
+        <h1 className="text-xl font-semibold">知識庫</h1>
         <Button size="sm" variant="outline" onClick={() => setShowAdd(true)}>
           <Plus className="size-3.5" />
           新增知識
@@ -158,11 +249,30 @@ export default function KnowledgeBasePage() {
       </div>
 
       <p className="mb-6 text-sm text-muted-foreground">
-        這裡只是先做好的前端畫面，新增/編輯/刪除都還沒有接後端，重新整理頁面資料就會不見。之後接上 API
-        後，內容會存進資料庫並自動切成 chunk，供 AI 助理檢索使用。
+        貼上規章、法條或函文內容，依類型自動切段並向量化，供 AI 助理檢索使用。新增/修改後狀態會顯示「處理中」，完成後自動變成「已完成」或「失敗」。
       </p>
 
-      {items.length === 0 ? (
+      {isLoading && (
+        <Card
+          variant="dashed"
+          padding="default"
+          className="text-center text-sm text-muted-foreground"
+        >
+          載入中…
+        </Card>
+      )}
+
+      {isError && (
+        <Card
+          variant="dashed"
+          padding="default"
+          className="text-center text-sm text-destructive"
+        >
+          載入知識庫列表失敗，請重新整理頁面
+        </Card>
+      )}
+
+      {!isLoading && !isError && items.length === 0 && (
         <Card
           variant="dashed"
           padding="default"
@@ -170,18 +280,38 @@ export default function KnowledgeBasePage() {
         >
           尚無知識項目，點「新增知識」開始建立
         </Card>
-      ) : (
+      )}
+
+      {!isLoading && !isError && items.length > 0 && (
         <div className="flex flex-col gap-3">
           {items.map((item) => (
             <Card key={item.id} padding="default">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="font-medium">{item.title}</p>
-                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                    {item.content}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{item.title}</p>
+                    <Badge variant="outline">{TYPE_LABEL[item.type]}</Badge>
+                    <StatusBadge status={item.status} />
+                  </div>
+                  {item.status === "failed" && item.error_message && (
+                    <p className="mt-1 text-sm text-destructive">
+                      {item.error_message}
+                    </p>
+                  )}
                 </div>
                 <div className="flex shrink-0 gap-1">
+                  {item.status === "failed" && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => handleRetry(item.id)}
+                      disabled={retryMutation.isPending}
+                      title="重新向量化"
+                    >
+                      <RotateCcw className="size-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -207,12 +337,19 @@ export default function KnowledgeBasePage() {
         </div>
       )}
 
-      {showAdd && <ItemForm onSave={handleAdd} onCancel={() => setShowAdd(false)} />}
+      {showAdd && (
+        <ItemForm
+          onSave={handleAdd}
+          onCancel={() => setShowAdd(false)}
+          submitting={createMutation.isPending}
+        />
+      )}
       {editTarget && (
         <ItemForm
           item={editTarget}
           onSave={handleEditSave}
           onCancel={() => setEditTarget(null)}
+          submitting={updateMutation.isPending}
         />
       )}
 
@@ -222,6 +359,7 @@ export default function KnowledgeBasePage() {
         message={`刪除後「${deleteTarget?.title}」的內容將無法復原。`}
         confirmLabel="確認刪除"
         variant="destructive"
+        loading={deleteMutation.isPending}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
       />
