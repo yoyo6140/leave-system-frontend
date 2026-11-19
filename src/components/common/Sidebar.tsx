@@ -9,6 +9,7 @@ import { useLeavesQuery } from "@/features/leaves/hooks";
 import { getCurrentUser, clearCurrentUser, type UserRole } from "@/lib/auth";
 import {
   Bot,
+  BookOpen,
   CalendarDays,
   CalendarPlus,
   ClipboardCheck,
@@ -77,6 +78,12 @@ const ALL_NAV: NavItem[] = [
     href: "/ai-analysis",
     icon: Bot,
     label: "AI 分析",
+    roles: ["admin", "sup_admin"],
+  },
+  {
+    href: "/knowledge-base",
+    icon: BookOpen,
+    label: "知識庫",
     roles: ["admin", "sup_admin"],
   },
   {
