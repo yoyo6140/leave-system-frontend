@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import {
   useSendChatMessage,
   type ChatMessage,
+  type ChatSource,
 } from "@/features/chat/hooks";
 
 type Message = {
@@ -16,7 +17,37 @@ type Message = {
   role: "user" | "model";
   content: string;
   isError?: boolean;
+  sources?: ChatSource[];
 };
+
+// 引用來源依 document_id 去重，同一份文件只顯示一次
+function dedupeSources(sources: ChatSource[]): ChatSource[] {
+  const seen = new Set<string>();
+  return sources.filter((s) => {
+    if (seen.has(s.document_id)) return false;
+    seen.add(s.document_id);
+    return true;
+  });
+}
+
+// AI 回覆下方顯示引用的規章來源
+function SourceList({ sources }: { sources: ChatSource[] }) {
+  const unique = dedupeSources(sources);
+  if (unique.length === 0) return null;
+
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1.5">
+      {unique.map((s) => (
+        <span
+          key={s.document_id}
+          className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs text-primary"
+        >
+          來源：{s.title}
+        </span>
+      ))}
+    </div>
+  );
+}
 
 // 聊天訊息旁顯示的機器人頭像圖示
 function BotAvatar() {
@@ -103,10 +134,15 @@ export default function AiChat() {
         role: m.role,
         content: m.content,
       }));
-      const reply = await sendChat.mutateAsync(history);
+      const result = await sendChat.mutateAsync(history);
       setMessages((prev) => [
         ...prev,
-        { id: Date.now() + 1, role: "model", content: reply },
+        {
+          id: Date.now() + 1,
+          role: "model",
+          content: result.reply,
+          sources: result.sources,
+        },
       ]);
     } catch {
       setMessages((prev) => [
@@ -159,17 +195,22 @@ export default function AiChat() {
             )}
           >
             {msg.role === "model" && <BotAvatar />}
-            <div
-              className={cn(
-                "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap",
-                msg.role === "user"
-                  ? "bg-primary text-primary-foreground"
-                  : msg.isError
-                    ? "border border-destructive/20 bg-destructive/10 text-destructive"
-                    : "bg-muted text-foreground",
+            <div className="max-w-[80%]">
+              <div
+                className={cn(
+                  "rounded-2xl px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap",
+                  msg.role === "user"
+                    ? "bg-primary text-primary-foreground"
+                    : msg.isError
+                      ? "border border-destructive/20 bg-destructive/10 text-destructive"
+                      : "bg-muted text-foreground",
+                )}
+              >
+                {msg.content}
+              </div>
+              {msg.role === "model" && msg.sources && msg.sources.length > 0 && (
+                <SourceList sources={msg.sources} />
               )}
-            >
-              {msg.content}
             </div>
           </div>
         ))}
