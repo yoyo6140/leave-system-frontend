@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Edit, Loader2, Plus, RotateCcw, Trash2, X } from "lucide-react";
 
+import { useMounted } from "@/lib/use-mounted";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,6 +21,7 @@ import {
 import {
   useCreateKbDocument,
   useDeleteKbDocument,
+  useKbDocumentDetail,
   useKbDocumentsQuery,
   useRetryKbDocument,
   useUpdateKbDocument,
@@ -68,10 +70,7 @@ function ModalShell({
   onClose: () => void;
   children: React.ReactNode;
 }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
   if (!mounted) return null;
 
   return createPortal(
@@ -116,8 +115,16 @@ function ItemForm({
   submitting?: boolean;
 }) {
   const [title, setTitle] = useState(item?.title ?? "");
-  const [content, setContent] = useState(""); // 後端列表不回傳 content，編輯時留空代表「不修改內容」
   const [type, setType] = useState<KbDocumentType>(item?.type ?? "rule");
+
+  // 編輯時另外呼叫單一文件 API 取得完整 content 預填；新增時 item 為 undefined，不會發請求
+  const { data: detail, isLoading: loadingDetail } = useKbDocumentDetail(
+    item?.id,
+  );
+  // content 是派生狀態：使用者還沒動過就用 detail.content（新增時沒有 detail，就是空字串），
+  // 使用者一旦輸入過，draftContent 就不再是 null，之後一律顯示使用者輸入的版本
+  const [draftContent, setDraftContent] = useState<string | null>(null);
+  const content = draftContent ?? detail?.content ?? "";
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -162,18 +169,21 @@ function ItemForm({
           <FieldLabel>
             內容 {!item && <span className="text-destructive">*</span>}
           </FieldLabel>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={12}
-            placeholder={
-              item
-                ? "留空代表不修改內容，只更新標題/類型"
-                : "直接貼上整段內容即可，不需要先整理格式或分段"
-            }
-            required={!item}
-            className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20"
-          />
+          {item && loadingDetail ? (
+            <div className="flex h-[calc(12*1.5rem)] items-center justify-center rounded-lg border border-input bg-muted/30 text-sm text-muted-foreground">
+              <Loader2 className="mr-2 size-4 animate-spin" />
+              載入原始內容中…
+            </div>
+          ) : (
+            <textarea
+              value={content}
+              onChange={(e) => setDraftContent(e.target.value)}
+              rows={12}
+              placeholder="直接貼上整段內容即可，不需要先整理格式或分段"
+              required={!item}
+              className="w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-blue-500 focus:ring-3 focus:ring-blue-500/20"
+            />
+          )}
         </Field>
         <div className="grid grid-cols-2 gap-3 pt-1">
           <Button
@@ -185,7 +195,11 @@ function ItemForm({
           >
             取消
           </Button>
-          <Button type="submit" className="w-full" disabled={submitting}>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={submitting || (!!item && loadingDetail)}
+          >
             {submitting ? <Loader2 className="size-4 animate-spin" /> : "儲存"}
           </Button>
         </div>

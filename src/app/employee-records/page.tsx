@@ -65,9 +65,13 @@ export default function EmployeeRecordsPage() {
   const total = leavesData?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  useEffect(() => {
-    if (!leavesLoading && page > pageCount) setPage(pageCount);
-  }, [leavesLoading, page, pageCount]);
+  // 篩選條件變動後若當頁沒資料，退回最後一頁；用渲染期間比較 pageCount
+  // 取代 useEffect 裡 setState，避免多一次 render
+  const [lastPageCount, setLastPageCount] = useState(pageCount);
+  if (!leavesLoading && pageCount !== lastPageCount) {
+    setLastPageCount(pageCount);
+    if (page > pageCount) setPage(pageCount);
+  }
 
   const userMap = useMemo(() => {
     if (!usersData) return {} as Record<number, string>;

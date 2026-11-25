@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useMounted } from "@/lib/use-mounted";
 import {
   hoursToApproxDays,
   LEAVE_BADGE_ROUNDED,
@@ -120,10 +120,7 @@ export function LeaveDetailDialog({
   onClose,
   footerActions,
 }: LeaveDetailDialogProps) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useMounted();
 
   if (!record || !mounted) return null;
 

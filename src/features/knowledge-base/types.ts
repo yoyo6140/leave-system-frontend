@@ -13,6 +13,10 @@ export interface ApiKbDocument {
   updated_at: string;
 }
 
+export interface ApiKbDocumentDetail extends ApiKbDocument {
+  content: string;
+}
+
 export interface KbDocumentListData {
   total: number;
   page: number;

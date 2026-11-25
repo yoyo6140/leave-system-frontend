@@ -83,6 +83,9 @@ export function DataTable<TData, TValue>({
     ? Math.max(1, Math.ceil(serverPagination.total / pageSize))
     : undefined;
 
+  // TanStack Table 的 useReactTable() 設計上每次 render 都回傳新的函式參照，
+  // 無法被 React Compiler 安全記憶化，這是官方已知、無法在呼叫端避免的情況
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,

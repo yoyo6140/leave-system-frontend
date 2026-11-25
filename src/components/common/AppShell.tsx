@@ -33,9 +33,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const roleOk = !needsAdmin || (!!user && (user.role === "admin" || user.role === "sup_admin"));
   const allowed = checked && roleOk;
 
-  // 進入公開頁時重置驗證狀態，離開時才會重新觸發下面的驗證 effect
+  // 進入公開頁時重置驗證狀態，離開時才會重新觸發下面的驗證 effect。
+  // 這裡是刻意要讓 checked/user 跨越多次路由切換持續存在，只有在
+  // isPublic 的值真正改變時才重置，不是能在 render 期間算出來的派生值，
+  // 也不能靠 key remount（AppShell 本身就是設計成全站不重新 mount）。
   useEffect(() => {
     if (isPublic) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setChecked(false);
       setUser(null);
     }

@@ -478,16 +478,21 @@ export default function EmployeesPage() {
   const updateUserMut = useUpdateUser();
   const updateStatusMut = useUpdateUserStatus();
 
-  useEffect(() => {
-    if (isError) {
-      setAlertMsg(error instanceof Error ? error.message : "查詢員工列表失敗");
-    }
-  }, [isError, error]);
+  // 查詢失敗時跳出提示；用「渲染期間比較上一次 error 參照」取代 useEffect 裡
+  // setState，一個新的錯誤只會觸發一次，使用者按確認關掉後、同一個錯誤不會
+  // 因為重新渲染又跳出來
+  const [lastSyncedError, setLastSyncedError] = useState<unknown>(null);
+  if (isError && error !== lastSyncedError) {
+    setLastSyncedError(error);
+    setAlertMsg(error instanceof Error ? error.message : "查詢員工列表失敗");
+  }
 
-  // 停用後若當頁沒資料，退回上一頁
-  useEffect(() => {
-    if (!loading && page > pageCount) setPage(pageCount);
-  }, [loading, page, pageCount]);
+  // 停用後若當頁沒資料，退回上一頁；同樣用渲染期間比較 pageCount 取代 effect
+  const [lastPageCount, setLastPageCount] = useState(pageCount);
+  if (!loading && pageCount !== lastPageCount) {
+    setLastPageCount(pageCount);
+    if (page > pageCount) setPage(pageCount);
+  }
 
   // 驗證表單後新增員工帳號
   async function handleAdd(form: UserCreateInput) {

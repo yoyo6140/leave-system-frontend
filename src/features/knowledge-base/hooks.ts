@@ -8,6 +8,7 @@ import type {
 
 export type {
   ApiKbDocument,
+  ApiKbDocumentDetail,
   KbDocumentCreateInput,
   KbDocumentListData,
   KbDocumentStatus,
@@ -28,6 +29,15 @@ export function useKbDocumentsQuery(params: KbDocumentsQueryParams = {}) {
       );
       return hasProcessing ? 3000 : false;
     },
+  });
+}
+
+// 查詢單一文件的完整內容，編輯視窗開啟時用來預填 content；只有拿到 id 才會發請求
+export function useKbDocumentDetail(id: string | undefined) {
+  return useQuery({
+    queryKey: kbKeys.detail(id ?? ""),
+    queryFn: () => kbApi.getDetail(id as string),
+    enabled: !!id,
   });
 }
 

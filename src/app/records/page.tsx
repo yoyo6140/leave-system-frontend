@@ -99,6 +99,7 @@ export default function RecordsPage() {
         onClose={() => setDetailRecord(null)}
       />
       <EditLeaveDialog
+        key={editRecord?.id ?? "none"}
         record={editRecord}
         onClose={() => setEditRecord(null)}
         onSaved={() => {
