@@ -37,6 +37,7 @@ export const API_ENDPOINTS = {
   },
   kb: {
     list: "/kb/documents",
+    get: (id: string) => `/kb/documents/${id}`,
     create: "/kb/documents",
     update: (id: string) => `/kb/documents/${id}`,
     delete: (id: string) => `/kb/documents/${id}`,
