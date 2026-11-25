@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { format } from "date-fns";
 import { type DateRange } from "react-day-picker";
 import { X } from "lucide-react";
 
+import { useMounted } from "@/lib/use-mounted";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -30,30 +31,21 @@ export function EditLeaveDialog({
   onSaved,
 }: EditLeaveDialogProps) {
   const updateLeave = useUpdateLeave();
-  const [mounted, setMounted] = useState(false);
-  const [type, setType] = useState<LeaveType>("annual");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [hours, setHours] = useState<number | "">("");
-  const [reason, setReason] = useState("");
+  const mounted = useMounted();
+  // 父層用 key={record.id} 讓每筆不同紀錄都是全新的元件實例，
+  // 所以這裡可以直接用 record 的資料做初始值，不需要額外 effect 在換紀錄時重設表單
+  const [type, setType] = useState<LeaveType>(
+    () => (record?.type as LeaveType) ?? "annual",
+  );
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() =>
+    record
+      ? { from: new Date(record.start_date), to: new Date(record.end_date) }
+      : undefined,
+  );
+  const [hours, setHours] = useState<number | "">(() => record?.hours ?? "");
+  const [reason, setReason] = useState(() => record?.reason ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // 每次換一筆要編輯的紀錄，用它的資料重新初始化表單
-  useEffect(() => {
-    if (!record) return;
-    setType(record.type as LeaveType);
-    setDateRange({
-      from: new Date(record.start_date),
-      to: new Date(record.end_date),
-    });
-    setHours(record.hours);
-    setReason(record.reason ?? "");
-    setError("");
-  }, [record]);
 
   if (!record || !mounted) return null;
 

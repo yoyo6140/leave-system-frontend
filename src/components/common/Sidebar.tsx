@@ -115,9 +115,12 @@ export default function Sidebar({ open = false, onClose }: SidebarProps) {
   const pendingCount =
     leavesData?.data.filter((r) => r.status === "待審核").length ?? 0;
 
-  // 手機導航後自動關閉抽屜
+  // 手機導航後自動關閉抽屜；故意只在 pathname 變動時觸發，不把 onClose 放進
+  // deps——上層每次重新渲染都會傳一個新的 inline function，放進 deps 會導致
+  // 抽屜在無關的重新渲染時也被關閉
   useEffect(() => {
     onClose?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   const navLinks = ALL_NAV.filter((link) => link.roles.includes(role));

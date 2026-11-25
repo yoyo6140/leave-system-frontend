@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CalendarDays, Eye, EyeOff } from "lucide-react";
@@ -22,10 +22,8 @@ function ResetPasswordForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (!token) setError("無效的重設連結，請重新申請。");
-  }, [token]);
+  // 沒有 token 是從網址判斷出來的固定狀態，直接算出來顯示，不用額外 state/effect 同步
+  const displayError = error || (!token ? "無效的重設連結，請重新申請。" : "");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -116,9 +114,9 @@ function ResetPasswordForm() {
         />
       </div>
 
-      {error && (
+      {displayError && (
         <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {error}
+          {displayError}
         </p>
       )}
 
