@@ -19,6 +19,10 @@ function handleUnauthorized() {
     typeof window !== "undefined" &&
     !window.location.pathname.startsWith("/login")
   ) {
+    // 這裡在 axios interceptor 裡，不在元件樹內，拿不到 useRouter()；
+    // 而且故意要整頁刷新清掉所有記憶體中的狀態（React Query 快取等），
+    // 不能用 soft navigation，所以維持 window.location.href
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination
     window.location.href = "/login";
   }
 }

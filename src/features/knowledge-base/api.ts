@@ -2,6 +2,7 @@ import { API_ENDPOINTS } from "@/lib/api-endpoints";
 import { apiFetch } from "@/lib/api-client";
 import type {
   ApiKbDocument,
+  ApiKbDocumentDetail,
   KbDocumentCreateInput,
   KbDocumentListData,
   KbDocumentUpdateInput,
@@ -22,6 +23,13 @@ export const kbApi = {
     const res = await apiFetch<KbDocumentListData>(url);
     if (res.success && res.data) return res.data;
     throw new Error(res.error?.message ?? "查詢知識庫文件失敗");
+  },
+
+  // 查詢單一文件（含原始 content），編輯前用來預填內容
+  getDetail: async (id: string): Promise<ApiKbDocumentDetail> => {
+    const res = await apiFetch<ApiKbDocumentDetail>(API_ENDPOINTS.kb.get(id));
+    if (res.success && res.data) return res.data;
+    throw new Error(res.error?.message ?? "查詢文件內容失敗");
   },
 
   // 新增文件：直接貼上文字內容，後端會依 type 自動切段、向量化
