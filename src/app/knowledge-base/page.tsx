@@ -2,7 +2,17 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Edit, Loader2, Plus, RotateCcw, Trash2, X } from "lucide-react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Edit,
+  Loader2,
+  Plus,
+  RotateCcw,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react";
 
 import { useMounted } from "@/lib/use-mounted";
 import { Button } from "@/components/ui/button";
@@ -208,6 +218,62 @@ function ItemForm({
   );
 }
 
+// 右側操作說明面板：不給現成內容照抄，只給方向，讓使用者自己決定要貼什麼、
+// 問什麼，藉此體會 RAG（檢索增強生成）的效果——AI 是根據你貼的內容回答，
+// 不是憑空亂答
+function GuidePanel() {
+  return (
+    <Card padding="default" className="flex flex-col gap-5">
+      <div>
+        <h2 className="mb-1 flex items-center gap-1.5 text-sm font-semibold">
+          <Sparkles className="size-4 text-primary" />
+          怎麼玩這個功能
+        </h2>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          這裡串接的是 RAG：你貼的內容會被切段、向量化存進資料庫，AI 客服回答前
+          會先檢索相關段落，再根據段落內容回答。
+        </p>
+      </div>
+
+      <div>
+        <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
+          可以試著貼
+        </span>
+        <ul className="flex flex-col gap-1.5 text-xs text-foreground">
+          <li className="rounded-lg bg-muted/40 px-2.5 py-1.5">
+            公司內部規定（類型選「公司規章」）——最好是<strong>法律本身沒寫</strong>
+            的細節，例如病假要不要附診斷書、特休能不能延到明年
+          </li>
+          <li className="rounded-lg bg-muted/40 px-2.5 py-1.5">
+            完整法條全文（類型選「法條」）——會自動依「第 X 條」切段
+          </li>
+          <li className="rounded-lg bg-muted/40 px-2.5 py-1.5">
+            一封公文或書信（類型選「函文/公文」）——整篇當一段，不會被切開
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
+          貼完之後
+        </span>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          等狀態變成「已完成」，到「AI 客服」問一個跟你剛貼的內容有關的問題，
+          看回覆是否正確附上引用來源；也可以問一個你<strong>沒貼過</strong>
+          的細節，驗證 AI 會不會老實說沒有足夠資訊，而不是自己亂猜。
+        </p>
+      </div>
+
+      <Link href="/ai-analysis">
+        <Button variant="outline" size="sm" className="w-full">
+          前往 AI 客服測試
+          <ArrowRight className="size-3.5" />
+        </Button>
+      </Link>
+    </Card>
+  );
+}
+
 export default function KnowledgeBasePage() {
   const { data, isLoading, isError } = useKbDocumentsQuery({ limit: 100 });
   const createMutation = useCreateKbDocument();
@@ -253,7 +319,8 @@ export default function KnowledgeBasePage() {
   }
 
   return (
-    <div className="max-w-3xl">
+    <div className="grid grid-cols-1 gap-6 lg:max-w-5xl lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="min-w-0">
       <div className="mb-2 flex items-center justify-between gap-4">
         <h1 className="text-xl font-semibold">知識庫</h1>
         <Button size="sm" variant="outline" onClick={() => setShowAdd(true)}>
@@ -377,6 +444,11 @@ export default function KnowledgeBasePage() {
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
       />
+      </div>
+
+      <div className="lg:sticky lg:top-6 lg:self-start">
+        <GuidePanel />
+      </div>
     </div>
   );
 }

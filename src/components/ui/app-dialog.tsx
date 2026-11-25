@@ -56,7 +56,7 @@ export function SuccessDialog({
     <Portal>
       <Shell onBackdropClick={onClose}>
         <div className="mb-5 flex justify-center">
-          <div className="flex size-20 items-center justify-center rounded-full bg-green-100 ring-8 ring-green-50">
+          <div className="flex size-20 items-center justify-center rounded-full bg-green-100">
             <Check className="size-10 text-green-600" strokeWidth={2.5} />
           </div>
         </div>
